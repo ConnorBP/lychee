@@ -1,0 +1,3 @@
+[submodule "hazedumper"]
+	path = hazedumper
+	url = https://github.com/frk1/hazedumper

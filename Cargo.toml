@@ -1,0 +1,20 @@
+[package]
+name = "lyche"
+version = "0.1.0"
+authors = ["segfault <segfault#1337>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+memflow = "0.2.0-beta7"
+memflow-win32 = "0.2.0-beta7"
+memflow-pcileech = { git = "https://github.com/memflow/memflow-pcileech", branch = "main" }
+log = "0.4"
+clap = { version = "^3.0.5", features = ["cargo"]}
+simplelog = "^0.12"
+patternscan = "1.2"
+regex = "^1.5"
+config = { version = "^0.13", features = ["toml"]}
+lazy_static = "^1.4"
+serialport = "^4.2"
