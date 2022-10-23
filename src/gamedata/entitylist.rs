@@ -64,6 +64,22 @@ impl Default for EntityList {
 
 
 impl EntityList {
+
+    // Getter Funcs
+    // For retreiving data that was loaded in the data retreival step
+
+    /// Get the team number for an entity index
+    pub fn get_team_for(&self, idx: usize) -> Option<i32> {
+        if self.entities[idx].dormant &1 == 1 { return None }
+        Some(self.entities[idx].team_num)
+    }
+
+    //
+    // data retreival
+    //
+
+    /// Takes in a reference to the game process and the client module base address and then walks the entity list tree
+    /// Data retreived from this is stored into the EntityList struct this is called on
     pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address) -> Result<()> {
         trace!("entering pop playerlist");
         let mut bat1 = proc.batcher();
@@ -91,10 +107,10 @@ impl EntityList {
             if ent.address.is_valid() && !ent.address.is_null() {
                 // address is not null and is valid and read successfully so now read some netvars
                 trace!("reading netvars");
-                bat2.read_into(ent.address.add(*M_BDORMANT), &mut ent.dormant);
-                bat2.read_into(ent.address.add(*NET_HEALTH), &mut ent.health);
-                bat2.read_into(ent.address.add(*NET_TEAM), &mut ent.team_num);
-                bat2.read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate);
+                bat2.read_into(ent.address.add(*M_BDORMANT), &mut ent.dormant)
+                    .read_into(ent.address.add(*NET_HEALTH), &mut ent.health)
+                    .read_into(ent.address.add(*NET_TEAM), &mut ent.team_num)
+                    .read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate);
                 
             } else {
                 ent.dormant = 1;

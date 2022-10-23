@@ -46,6 +46,9 @@ impl GameData {
                     address: local_player_addr,
                     health: 0,
                     incross: 0,
+                    dormant: 0,
+                    lifestate: 0,
+                    team_num: 0,
                 },
                 entity_list: EntityList::default(),
             };
@@ -55,6 +58,15 @@ impl GameData {
     /// Load the data from the game in place using a batcher
     pub fn load_data(&mut self, proc: &mut (impl Process + MemoryView),client_base: Address) -> Result<()> {
         trace!("entering load data");
+
+        // first update local player
+        let local_player = proc.read_addr32(client_base.add(*DW_LOCALPLAYER)).data()?;
+
+        if local_player.is_null() || !local_player.is_valid() {
+            return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("Local Player Address is not valid."));
+        }
+
+
         let mut bat = proc.batcher();
         self.local_player.load_data(&mut bat);
         // finally, commit all the reads and writes at once:
@@ -75,8 +87,13 @@ impl GameData {
 #[derive(Debug)]
 pub struct LocalPlayer {
     pub address: Address,
-    pub health: i32,
     pub incross: i32,
+
+    pub dormant: u8,
+    pub lifestate: i32,
+    pub health: i32,
+    pub team_num: i32,
+
 }
 
 impl LocalPlayer {
@@ -86,7 +103,10 @@ impl LocalPlayer {
         //if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data()
         bat
         .read_into(self.address.add(*crate::offsets::NET_HEALTH), &mut self.health)
-        .read_into(self.address.add(*crate::offsets::NET_CROSSHAIRID), &mut self.incross);
+        .read_into(self.address.add(*crate::offsets::NET_CROSSHAIRID), &mut self.incross)
+        .read_into(self.address.add(*M_BDORMANT), &mut self.dormant)
+        .read_into(self.address.add(*NET_TEAM), &mut self.team_num)
+        .read_into(self.address.add(*NET_LIFESTATE), &mut self.lifestate);
         trace!("exiting localplayer load data");
     }
 }
