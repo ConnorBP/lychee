@@ -9,22 +9,22 @@ lazy_static! {
 
     // Offsets
 
-    pub static ref DW_CLIENTSTATE: u32 = load_offset("signatures.dwClientState").unwrap();
-    pub static ref DW_CLIENTSTATE_GETLOCALPLAYER: u32 = load_offset("signatures.dwClientState_GetLocalPlayer").unwrap();
-    pub static ref DW_CLIENTSTATE_VIEWANGLES: u32 = load_offset("signatures.dwClientState_ViewAngles").unwrap();
-    pub static ref DW_LOCALPLAYER: u32 = load_offset("signatures.dwLocalPlayer").unwrap();
-    pub static ref DW_ENTITYLIST: u32 = load_offset("signatures.dwEntityList").unwrap();
-    pub static ref M_BDORMANT: u32 = load_offset("signatures.m_bDormant").unwrap();
+    pub static ref DW_CLIENTSTATE: u32 = load_offset("signatures.dwClientState");
+    pub static ref DW_CLIENTSTATE_GETLOCALPLAYER: u32 = load_offset("signatures.dwClientState_GetLocalPlayer");
+    pub static ref DW_CLIENTSTATE_VIEWANGLES: u32 = load_offset("signatures.dwClientState_ViewAngles");
+    pub static ref DW_LOCALPLAYER: u32 = load_offset("signatures.dwLocalPlayer");
+    pub static ref DW_ENTITYLIST: u32 = load_offset("signatures.dwEntityList");
+    pub static ref M_BDORMANT: u32 = load_offset("signatures.m_bDormant");
     
 
     // Netvars
 
-    pub static ref NET_HEALTH: u32 = load_offset("netvars.m_iHealth").unwrap();
-    pub static ref NET_CROSSHAIRID: u32 = load_offset("netvars.m_iCrosshairId").unwrap();
-    pub static ref NET_TEAM: u32 = load_offset("netvars.m_iTeamNum").unwrap();
-    pub static ref NET_LIFESTATE: u32 = load_offset("netvars.m_lifeState").unwrap();
-    pub static ref NET_SHOTSFIRED: u32 = load_offset("netvars.m_iShotsFired").unwrap();
-    pub static ref NET_AIMPUNCH_ANGLE: u32 = load_offset("netvars.m_aimPunchAngle").unwrap();
+    pub static ref NET_HEALTH: u32 = load_offset("netvars.m_iHealth");
+    pub static ref NET_CROSSHAIRID: u32 = load_offset("netvars.m_iCrosshairId");
+    pub static ref NET_TEAM: u32 = load_offset("netvars.m_iTeamNum");
+    pub static ref NET_LIFESTATE: u32 = load_offset("netvars.m_lifeState");
+    pub static ref NET_SHOTSFIRED: u32 = load_offset("netvars.m_iShotsFired");
+    pub static ref NET_AIMPUNCH_ANGLE: u32 = load_offset("netvars.m_aimPunchAngle");
     // viewpunch
     // aimpunch velocity
     //vec origin
@@ -41,8 +41,8 @@ fn init_offsets() -> std::result::Result<Config, Box<dyn std::error::Error>>{
     Ok(offsets)
 }
 
-fn load_offset(key: &str) -> std::result::Result<u32, Box<dyn std::error::Error>>{
-    let offset = SETTINGS.read()?.get::<u32>(key)?;
+fn load_offset(key: &str) -> u32 {
+    let offset = SETTINGS.read().expect("error getting read lock on settings").get::<u32>(key).expect(format!("could not find offset in config file for key {}", key).as_str());
     info!("loaded offset {}: {}", key, offset);
-    Ok(offset)
+    offset
 }
