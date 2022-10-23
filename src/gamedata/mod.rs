@@ -4,7 +4,7 @@
 
 // todo move all of the reading into here on a batcher
 
-use log::{info, warn, Level};
+use log::{info, warn, Level, trace};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 use memflow_win32::prelude::v1::*;
 use patternscan::scan;
@@ -19,18 +19,22 @@ use std::sync::RwLock;
 use crate::offsets::*;
 
 pub mod entitylist;
+use entitylist::{EntityList, EntityInfo};
 
 #[derive(Debug)]
 pub struct GameData {
     // Addresses
     pub client_state: Address,
 
-
+    /// Local Player Info
     pub local_player: LocalPlayer,
+
+    /// Entity List
+    pub entity_list: EntityList,
 }
 
 impl GameData {
-    pub fn new(proc: &mut (impl Process + MemoryView + Clone), engine_base: Address, client_base: Address) -> Result<Self> {
+    pub fn new(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> Result<Self> {
         let client_state = proc.read_addr32(engine_base.add(*DW_CLIENTSTATE)).data()?;
         let local_player_addr = proc.read_addr32(client_base.add(*DW_LOCALPLAYER)).data()?;
 
@@ -42,17 +46,28 @@ impl GameData {
                     address: local_player_addr,
                     health: 0,
                     incross: 0,
-                }
+                },
+                entity_list: EntityList::default(),
             };
-        gd.load_data(proc.batcher())?;
+        gd.load_data(proc, client_base)?;
         Ok(gd)
     }
     /// Load the data from the game in place using a batcher
-    pub fn load_data<'bat>(&'bat mut self, mut bat: MemoryViewBatcher<'bat, impl Process + MemoryView>) -> Result<()> {
+    pub fn load_data(&mut self, proc: &mut (impl Process + MemoryView),client_base: Address) -> Result<()> {
+        trace!("entering load data");
+        let mut bat = proc.batcher();
         self.local_player.load_data(&mut bat);
-
         // finally, commit all the reads and writes at once:
         bat.commit_rw().data_part()?;
+
+        // drop the batcher now that we are done with it
+        std::mem::drop(bat);
+
+        // retreive the entity list data:
+
+        self.entity_list.populate_player_list(proc, client_base)?;
+
+        trace!("exiting load data");
         Ok(())
     }
 }
@@ -66,11 +81,12 @@ pub struct LocalPlayer {
 
 impl LocalPlayer {
     fn load_data<'bat>(&'bat mut self, bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>) {
+        trace!("entering localplayer load data");
         //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
         //if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data()
         bat
         .read_into(self.address.add(*crate::offsets::NET_HEALTH), &mut self.health)
         .read_into(self.address.add(*crate::offsets::NET_CROSSHAIRID), &mut self.incross);
-
+        trace!("exiting localplayer load data");
     }
 }

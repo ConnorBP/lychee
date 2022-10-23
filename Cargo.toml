@@ -18,3 +18,4 @@ regex = "^1.5"
 config = { version = "^0.13", features = ["toml"]}
 lazy_static = "^1.4"
 serialport = "^4.2"
+clearscreen = "^1.0"

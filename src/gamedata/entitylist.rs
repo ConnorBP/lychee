@@ -1,17 +1,19 @@
-use ::std::ops::Add;
+use ::std::{ops::{Add, IndexMut}, cell::RefCell, default};
 
 use memflow::prelude::v1::*;
-use log::info;
+use log::{info,trace};
+
+use crate::offsets::*;
 
 #[repr(C)]
-#[derive(Copy, Clone,Debug, Pod)]
+#[derive(Copy, Clone,Debug, Default, Pod)]
 pub struct tmp_vec2 {
     x: f32,
     y: f32,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone,Debug, Pod)]
+#[derive(Copy, Clone,Debug, Default, Pod)]
 pub struct tmp_vec3 {
     x: f32,
     y: f32,
@@ -22,68 +24,96 @@ pub struct tmp_vec3 {
 #[derive(Copy, Clone,Debug)]
 #[repr(C)]
 pub struct EntityInfo {
-    b_dormant: u8,
-    b_is_local_player: u8,
-    health: i32,
-    team_num: i32,
-    b_is_enemy: u8,
+    u32address: u32,
+    address: Address,
+    pub dormant: u8,
+    //b_is_local_player: bool,
+    //is_enemy: bool,
 
-    vec_origin: tmp_vec3,
-    vec_view_offset: tmp_vec3,
-    view_angles: tmp_vec3,
+    pub lifestate: i32,
+    pub health: i32,
+    pub team_num: i32,
 
-    vec_feet: tmp_vec2,
-    vec_head: tmp_vec2,
+    // vec_origin: tmp_vec3,
+    // vec_view_offset: tmp_vec3,
+    // view_angles: tmp_vec3,
+
+    // vec_feet: tmp_vec2,
+    // vec_head: tmp_vec2,
 }
 
-// unsafe impl Pod for EntityInfo {
-//     fn zeroed() -> Self where Self: Sized {
-// 		unsafe { ::std::mem::zeroed() }
-// 	}
+impl Default for EntityInfo {
+    fn default() -> EntityInfo {
+        EntityInfo { dormant: 1, u32address: Default::default(), address: Default::default(), lifestate: Default::default(), health: Default::default(), team_num: Default::default() }
+    }
+}
 
-//     fn as_bytes(&self) -> &[u8] {
-// 		unsafe { core::slice::from_raw_parts(self as *const _ as *const u8, ::std::mem::size_of_val(self)) }
-// 	}
+#[derive(Debug)]
+pub struct EntityList {
+    pub entities: [EntityInfo; 64],
+}
 
-//     fn as_bytes_mut(&mut self) -> &mut [u8] {
-// 		unsafe { core::slice::from_raw_parts_mut(self as *mut _ as *mut u8, ::std::mem::size_of_val(self)) }
-// 	}
+impl Default for EntityList {
+    fn default() -> EntityList {
+        EntityList {
+            entities: [EntityInfo::default(); 64],
+        }
+    }
+}
 
-//     fn as_data_view(&self) -> &DataView {
-// 		unsafe { ::std::mem::transmute(self.as_bytes()) }
-// 	}
 
-//     fn as_data_view_mut(&mut self) -> &mut DataView {
-// 		unsafe { ::std::mem::transmute(self.as_bytes_mut()) }
-// 	}
 
-//     fn transmute<T: Pod>(self) -> T where Self: Sized {
-// 		assert_eq!(mem::size_of::<Self>(), mem::size_of::<T>(), "Self must have equal size to target type");
-// 		let result = unsafe { ::std::mem::transmute_copy(&self) };
-// 		::std::mem::forget(self);
-// 		result
-// 	}
+impl EntityList {
+    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address) -> Result<()> {
+        trace!("entering pop playerlist");
+        let mut bat1 = proc.batcher();
+        for (i, ent) in self.entities.iter_mut().enumerate() {
+            // clear the spot first so if there is an error reading it ends up not valid
+            ent.u32address = 0;
+            // add a u32 sized read at the expected adress for the entity address to be at
+            bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (i as u32 * 0x10)), &mut ent.u32address);
+        }
+        trace!("comitting first playerlist batcher");
+        bat1.commit_rw().data_part()?;
 
-//     fn transmute_ref<T: Pod>(&self) -> &T where Self: Sized {
-// 		assert_eq!(mem::size_of_val(self), mem::size_of::<T>(), "Self must have equal size to target type");
-// 		assert!(mem::align_of_val(self) >= mem::align_of::<T>(), "Align of `Self` must be ge than `T`");
-// 		unsafe { &*(self as *const Self as *const T) }
-// 	}
+        trace!("done comitting first playerlist batcher");
 
-//     fn transmute_mut<T: Pod>(&mut self) -> &mut T where Self: Sized {
-// 		assert_eq!(mem::size_of_val(self), mem::size_of::<T>(), "Self must have equal size to target type");
-// 		assert!(mem::align_of_val(self) >= mem::align_of::<T>(), "Align of `Self` must be ge than `T`");
-// 		unsafe { &mut *(self as *mut Self as *mut T) }
-// 	}
+        std::mem::drop(bat1);
 
-//     fn _static_assert() {}
+        trace!("dropped first playerlist batcher");
+
+        trace!("starting second playerlist batcher");
+        let mut bat2 = proc.batcher();
+        trace!("created second playerlist batcher");
+        for (i, ent) in self.entities.iter_mut().enumerate() {
+            trace!("converting u32 to address");
+            ent.address = Address::from(ent.u32address);
+            if ent.address.is_valid() && !ent.address.is_null() {
+                // address is not null and is valid and read successfully so now read some netvars
+                trace!("reading netvars");
+                bat2.read_into(ent.address.add(*M_BDORMANT), &mut ent.dormant);
+                bat2.read_into(ent.address.add(*NET_HEALTH), &mut ent.health);
+                bat2.read_into(ent.address.add(*NET_TEAM), &mut ent.team_num);
+                bat2.read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate);
+                
+            } else {
+                ent.dormant = 1;
+                continue;
+            }
+        }
+        trace!("comitting second playerlist batcher");
+        bat2.commit_rw().data_part()?;// tbh idk if its better to use data() or data_part() here
+        trace!("done comitting second playerlist batcher");
+        trace!("exiting pop playerlist");
+        Ok(())
+    }
+}
+
+// pub fn read_entity_addr_by_index(proc: &mut (impl Process + MemoryView), client_module_addr: Address, for_index: u32) -> Result<Address> {
+//     let entity = proc.read_addr32(client_module_addr.add(*crate::offsets::DW_ENTITYLIST + (for_index * 0x10))).data()?;
+//     info!("got entity: {:?} for index {}", entity, for_index);
+//     Ok(entity)
 // }
-
-pub fn get_entity_addr(proc: &mut (impl Process + MemoryView), client_module_addr: Address, for_index: u32) -> Result<Address> {
-    let entity = proc.read_addr32(client_module_addr.add(*crate::offsets::DW_ENTITYLIST + (for_index * 0x10))).data()?;
-    info!("got entity: {:?} for index {}", entity, for_index);
-    Ok(entity)
-}
 
 // pub fn yeet<P>(proc: &mut P) where P: Process + MemoryView {
 

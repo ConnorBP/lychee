@@ -92,8 +92,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("{:?}", game_data);
 
         loop {
-            //game_data.load_data(process.batcher())?;
-            // println!("{:?}", game_data);
+            clearscreen::clear()?;
+            game_data.load_data(&mut process, clientModule.base)?;
+            for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
+                if (ent.dormant &1) == 0 {
+                    println!("({}) || {:?}", i, ent);
+                }
+            }
             //std::thread::sleep(Duration::from_millis(10));
             if let Ok(local_player) = process.read_addr32(clientModule.base.add(*offsets::DW_LOCALPLAYER)).data() {
                 //info!("found local player addr via offset: {:?}", local_player);
@@ -103,8 +108,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                     continue;
                 }
 
-                    let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
-                    if health <= 0 {
+                    //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
+                    if game_data.local_player.health <= 0 {
                         info!("player dead. Sleeping for a bit");
                         std::thread::sleep(Duration::from_secs(5));
                     }
@@ -113,12 +118,12 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                         //features::bhop(&mut keyboard, &mut port);
                         if !keyboard.is_down(0x06) {continue}
     
-                        if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data() {
-                            if incross > 0 && incross <= 64 {
+                        //if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data() {
+                            if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
                                 //info!("incross: {}", game_data.local_player.incross);
                                 port.write(b"m0\n")?;
                             }
-                        }
+                        //}
                 
             }
         }
