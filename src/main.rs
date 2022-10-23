@@ -92,9 +92,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("{:?}", game_data);
 
         loop {
-            game_data.load_data(process.batcher())?;
-            println!("{:?}", game_data);
-            std::thread::sleep(Duration::from_millis(10));
+            //game_data.load_data(process.batcher())?;
+            // println!("{:?}", game_data);
+            //std::thread::sleep(Duration::from_millis(10));
             if let Ok(local_player) = process.read_addr32(clientModule.base.add(*offsets::DW_LOCALPLAYER)).data() {
                 //info!("found local player addr via offset: {:?}", local_player);
                 if local_player.is_null() || !local_player.is_valid() {
@@ -115,7 +115,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     
                         if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data() {
                             if incross > 0 && incross <= 64 {
-                                info!("incross: {}", incross);
+                                //info!("incross: {}", game_data.local_player.incross);
                                 port.write(b"m0\n")?;
                             }
                         }
