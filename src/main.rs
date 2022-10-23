@@ -1,6 +1,5 @@
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
 use log::{info, warn, Level};
-/// A simple process list example using memflow
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use patternscan::scan;
@@ -12,41 +11,16 @@ use config::Config;
 use lazy_static::lazy_static;
 use std::sync::RwLock;
 
-mod entitylist;
-
-lazy_static! {
-    static ref SETTINGS: RwLock<Config> = RwLock::new(init_offsets().unwrap());
-
-    static ref DW_CLIENTSTATE: u32 = load_offset("signatures.dwClientState").unwrap();
-    static ref DW_CLIENTSTATE_GETLOCALPLAYER: u32 = load_offset("signatures.dwClientState_GetLocalPlayer").unwrap();
-    static ref DW_LOCALPLAYER: u32 = load_offset("signatures.dwLocalPlayer").unwrap();
-    static ref DW_ENTITYLIST: u32 = load_offset("signatures.dwEntityList").unwrap();
-
-    //netvars
-    static ref NET_HEALTH: u32 = load_offset("netvars.m_iHealth").unwrap();
-    static ref NET_CROSSHAIRID: u32 = load_offset("netvars.m_iCrosshairId").unwrap();
-}
-
-// TODO: also add a source in here from a passed in config arg
-fn init_offsets() -> std::result::Result<Config, Box<dyn std::error::Error>>{
-    info!("initializing offsets config");
-     let offsets = Config::builder()
-    .add_source(config::File::with_name("hazedumper/csgo").required(false))
-    .add_source(config::File::with_name("csgo").required(false))
-    .build()?;
-    Ok(offsets)
-}
-
-fn load_offset(key: &str) -> std::result::Result<u32, Box<dyn std::error::Error>>{
-    let offset = SETTINGS.read()?.get::<u32>(key)?;
-    info!("loaded offset {}: {}", key, offset);
-    Ok(offset)
-}
+mod gamedata;
+mod offsets;
+mod features;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    // parse args and act accordingly
     let matches = parse_args();
     extract_args(&matches);
 
+    // init the connection to the serial port for mouse and keyboard output
     println!("Fetching Serial Ports...");
     let ports = serialport::available_ports()?;
     for p in ports {
@@ -55,35 +29,38 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut port = serialport::new("COM3", 115_200)
         .timeout(Duration::from_millis(10))
         .open()?;
+    // example usage for mouse 0 click:
     //port.write(b"m0\n")?;
 
     // create inventory + os
     let connector_args : ConnectorArgs = ":device=FPGA".parse()?;
     let connector = memflow_pcileech::create_connector(&connector_args)?;
 
-    //let inventory = Inventory::scan();
-    //let mut os = inventory.builder().os_chain(chain).build()?;
     let mut os = Win32Kernel::builder(connector)
         .build_default_caches()
         //.arch(ArchitectureIdent::X86(64, false))
         .build()?;
 
-    //let process_list = os.process_info_list()?;
+    // get process info from victim computer
+
     let base_info = os.process_info_by_name("csgo.exe")?;
     let process_info = os.process_info_from_base_info(base_info)?;
     //let mut process = Win32Process::with_kernel(os, process_info.clone());
     let mut process = os.clone().into_process_by_name("csgo.exe")?;
     info!("Got Proccess:\n {:?}", process_info);
+
+    // load keyboard reader
     let mut keyboard = os.into_keyboard()?;
 
+    // fetch info about modules from the process
     let clientModule = process.module_by_name("client.dll")?;
     info!("Got Client Module:\n {:?}", clientModule);
     //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
     
-
     let engineModule = process.module_by_name("engine.dll")?;
     info!("Got Engine Module:\n {:?}", engineModule);
 
+    //let bat = process.batcher();
 
     // info!("Dumping Client Module");
     // let client_buf = process
@@ -95,7 +72,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     //     .read_raw(engineModule.base, engineModule.size as usize)
     //     .data_part()?;
     
-    let client_state = process.read_addr32(engineModule.base.add(*DW_CLIENTSTATE)).data_part()?;
+    let client_state = process.read_addr32(engineModule.base.add(*offsets::DW_CLIENTSTATE)).data_part()?;
     if client_state.is_valid() && !client_state.is_null() {
         println!("got client state {}", client_state);
         // if let Ok(local_player) = process.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data_part() {
@@ -111,8 +88,14 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         //     }
         // }
 
+        let mut game_data = gamedata::GameData::new(&mut process, engineModule.base, clientModule.base)?;
+        println!("{:?}", game_data);
+
         loop {
-            if let Ok(local_player) = process.read_addr32(clientModule.base.add(*DW_LOCALPLAYER)).data() {
+            game_data.load_data(process.batcher())?;
+            println!("{:?}", game_data);
+            std::thread::sleep(Duration::from_millis(10));
+            if let Ok(local_player) = process.read_addr32(clientModule.base.add(*offsets::DW_LOCALPLAYER)).data() {
                 //info!("found local player addr via offset: {:?}", local_player);
                 if local_player.is_null() || !local_player.is_valid() {
                     info!("local player invalid. Sleeping for a bit");
@@ -120,18 +103,17 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                     continue;
                 }
 
-                    let health: i32 = process.read(local_player.add(*NET_HEALTH)).data()?;
+                    let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
                     if health <= 0 {
                         info!("player dead. Sleeping for a bit");
                         std::thread::sleep(Duration::from_secs(5));
                     }
         
-                        std::thread::sleep(Duration::from_millis(10));
                         //println!("down: {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20));
-                        //bhop(&mut keyboard, &mut port);
+                        //features::bhop(&mut keyboard, &mut port);
                         if !keyboard.is_down(0x06) {continue}
     
-                        if let Ok(incross) = process.read::<i32>(local_player.add(*NET_CROSSHAIRID)).data() {
+                        if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data() {
                             if incross > 0 && incross <= 64 {
                                 info!("incross: {}", incross);
                                 port.write(b"m0\n")?;
@@ -164,13 +146,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 
     Ok(())
-}
-
-fn bhop(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>) {
-    if kb.is_down(0x20) {
-        println!("space down");
-        port.write(b"ju\n").expect("could not write to serial");
-    }
 }
 
 trait SigScanner {

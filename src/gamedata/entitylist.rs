@@ -80,7 +80,7 @@ pub struct EntityInfo {
 // }
 
 pub fn get_entity_addr(proc: &mut (impl Process + MemoryView), client_module_addr: Address, for_index: u32) -> Result<Address> {
-    let entity = proc.read_addr32(client_module_addr.add(*crate::DW_ENTITYLIST + (for_index * 0x10))).data()?;
+    let entity = proc.read_addr32(client_module_addr.add(*crate::offsets::DW_ENTITYLIST + (for_index * 0x10))).data()?;
     info!("got entity: {:?} for index {}", entity, for_index);
     Ok(entity)
 }
