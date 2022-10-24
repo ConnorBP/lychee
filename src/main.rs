@@ -56,7 +56,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let clientModule = process.module_by_name("client.dll")?;
     info!("Got Client Module:\n {:?}", clientModule);
     //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
-    
     let engineModule = process.module_by_name("engine.dll")?;
     info!("Got Engine Module:\n {:?}", engineModule);
 
@@ -120,7 +119,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                 //info!("incross: {}", game_data.local_player.incross);
                 if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
                     //println!("enemy team: {}", enemy_team);
-                    if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.1 {
+                    if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.18 {
                         port.write(b"m0\n")?;
                         //print!("firing {}", game_data.local_player.aimpunch_angle);
                     }
