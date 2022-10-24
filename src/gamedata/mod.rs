@@ -49,6 +49,7 @@ impl GameData {
                     dormant: 0,
                     lifestate: 0,
                     team_num: 0,
+                    aimpunch_angle: 0.,
                 },
                 entity_list: EntityList::default(),
             };
@@ -65,6 +66,8 @@ impl GameData {
         if local_player.is_null() || !local_player.is_valid() {
             return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("Local Player Address is not valid."));
         }
+
+        self.local_player.address = local_player;
 
 
         let mut bat = proc.batcher();
@@ -93,6 +96,7 @@ pub struct LocalPlayer {
     pub lifestate: i32,
     pub health: i32,
     pub team_num: i32,
+    pub aimpunch_angle: f32,
 
 }
 
@@ -106,7 +110,8 @@ impl LocalPlayer {
         .read_into(self.address.add(*crate::offsets::NET_CROSSHAIRID), &mut self.incross)
         .read_into(self.address.add(*M_BDORMANT), &mut self.dormant)
         .read_into(self.address.add(*NET_TEAM), &mut self.team_num)
-        .read_into(self.address.add(*NET_LIFESTATE), &mut self.lifestate);
+        .read_into(self.address.add(*NET_LIFESTATE), &mut self.lifestate)
+        .read_into(self.address.add(*NET_AIMPUNCH_ANGLE), &mut self.aimpunch_angle);
         trace!("exiting localplayer load data");
     }
 }

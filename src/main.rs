@@ -92,37 +92,37 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         println!("{:?}", game_data);
 
         loop {
-            clearscreen::clear()?;
+            //clearscreen::clear()?;
             if  game_data.load_data(&mut process, clientModule.base).is_err() {
                 invalid_pause("game data");
             }
 
             // print out a list of currently non dormant entities
-            for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
-                if (ent.dormant &1) == 0 {
-                    println!("({}) || {:?}", i, ent);
-                }
-            }
+            // for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
+            //     if (ent.dormant &1) == 0 {
+            //         println!("({}) || {:?}", i, ent);
+            //     }
+            // }
 
             //std::thread::sleep(Duration::from_millis(10));
 
             //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
-            if game_data.local_player.health <= 0 /*|| game_data.local_player.lifestate != 0 */ {
+            if game_data.local_player.health <= 0 || game_data.local_player.lifestate != 0 {
                 info!("player dead. Sleeping for a bit");
                 std::thread::sleep(Duration::from_secs(5));
             }
 
-            println!("down: {} {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20), keyboard.is_down(0x06));
+            //println!("down: {} {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20), keyboard.is_down(0x06));
             //features::bhop(&mut keyboard, &mut port);
             if !keyboard.is_down(0x06) {continue}
 
             if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
-                info!("incross: {}", game_data.local_player.incross);
+                //info!("incross: {}", game_data.local_player.incross);
                 if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
-                    println!("enemy team: {}", enemy_team);
-                    if enemy_team != game_data.local_player.team_num {
-                        //port.write(b"m0\n")?;
-                        print!("firing");
+                    //println!("enemy team: {}", enemy_team);
+                    if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.1 {
+                        port.write(b"m0\n")?;
+                        //print!("firing {}", game_data.local_player.aimpunch_angle);
                     }
                 }
             }
