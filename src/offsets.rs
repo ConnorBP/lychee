@@ -27,8 +27,9 @@ lazy_static! {
     pub static ref NET_AIMPUNCH_ANGLE: u32 = load_offset("netvars.m_aimPunchAngle");
     // viewpunch
     // aimpunch velocity
-    //vec origin
-    //vecViewOffset
+    pub static ref NET_VEC_ORIGIN: u32 = load_offset("netvars.m_vecOrigin");
+    pub static ref NET_VEC_VIEWOFFSET: u32 = load_offset("netvars.m_vecViewOffset");
+    pub static ref NET_VEC_VELOCITY: u32 = load_offset("netvars.m_vecVelocity");
 }
 
 // TODO: also add a source in here from a passed in config arg
