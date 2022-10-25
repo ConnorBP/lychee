@@ -18,11 +18,14 @@ mod gamedata;
 mod offsets;
 mod features;
 mod math;
+mod render;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // parse args and act accordingly
     let matches = parse_args();
     extract_args(&matches);
+
+    let tx = render::start_window_render()?;
 
     // init the connection to the serial port for mouse and keyboard output
     println!("Fetching Serial Ports...");
@@ -136,6 +139,23 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             info!("player dead. Sleeping for a bit");
             std::thread::sleep(Duration::from_secs(5));
         }
+
+        let mut framedata = render::FrameData::default();
+        // send location data to renderer
+        for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
+            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
+            if !math::is_world_point_visible_on_screen(&worldpos, &game_data.view_matrix) {continue}
+            if let Some(screenpos) = math::transform_world_point_into_screen_space(
+                &worldpos,
+                &game_data.view_matrix,
+                None,
+                None
+            ) {
+                framedata.locations.push(screenpos);
+            }
+        }
+        tx.send(framedata)?;
 
         //println!("down: {} {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20), keyboard.is_down(0x06));
         //features::bhop(&mut keyboard, &mut port);
