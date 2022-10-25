@@ -36,14 +36,17 @@ pub struct GameData {
 impl GameData {
     pub fn new(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> Result<Self> {
         let client_state = proc.read_addr32(engine_base.add(*DW_CLIENTSTATE)).data()?;
-        let local_player_addr = proc.read_addr32(client_base.add(*DW_LOCALPLAYER)).data()?;
+        //if let Ok(local_player_idx) = process.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data_part()
 
+        if !client_state.is_valid() || client_state.is_null() {
+            return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("client state address was not valid."));
+        }
 
         let mut gd =
             GameData {
             client_state,
                 local_player: LocalPlayer {
-                    address: local_player_addr,
+                    address: Address::null(), // this will be loaded in when gd.load_data is called
                     health: 0,
                     incross: 0,
                     dormant: 0,

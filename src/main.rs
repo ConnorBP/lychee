@@ -84,91 +84,75 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     //     .data_part()?;
 
 
-    // TODO: Move client state into game_data
-    let mut client_state = process.read_addr32(engine_module.base.add(*offsets::DW_CLIENTSTATE)).data_part()?;
-    if client_state.is_valid() && !client_state.is_null() {
-        println!("got client state {}", client_state);
-        // if let Ok(local_player) = process.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data_part() {
-            
-        //     info!("found localplayer index: {:?}", local_player);
-        //     for i in 0..64 {
-        //         let player = entitylist::get_entity_addr(&mut process, clientModule.address, i)?;
-        //         println!("local player address null: {} valid: {}", player.is_null(),player.is_valid());
-        //         if !player.is_null() && player.is_valid() {
-        //             let health: u32 = process.read(player.add(*NET_HEALTH)).data_part()?;
-        //             println!("got health: {}", health);
-        //         }
+    let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
+    println!("{:?}", game_data);
+
+    loop {
+        // check if process is valid
+
+        if process.state().is_dead() {
+            process = {
+                let mut ret_proc;
+                loop {
+                    if let Ok(proc) = os.clone().into_process_by_name("csgo.exe") {
+                        ret_proc = proc;
+                        // now that we have a new working proc we also need to reset some stuff
+
+                        // TODO: make the initialization such as getting client and engine module bases into a re usable function
+                        // and call it here. and also make those global vars maybe
+
+                        client_module = process.module_by_name("client.dll")?;
+                        engine_module = process.module_by_name("engine.dll")?;
+
+                        game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
+                        
+                        break;
+                    }
+                }
+                ret_proc
+            }
+        }
+
+
+        //clearscreen::clear()?;
+        if  game_data.load_data(&mut process, client_module.base).is_err() {
+            invalid_pause("game data");
+        }
+
+        // print out a list of currently non dormant entities
+        // for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
+        //     if (ent.dormant &1) == 0 {
+        //         println!("({}) || {:?}", i, ent);
         //     }
         // }
 
-        let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
-        println!("{:?}", game_data);
+        //std::thread::sleep(Duration::from_millis(10));
 
-        loop {
-            // check if process is valid
-
-            if process.state().is_dead() {
-                process = {
-                    let mut ret_proc;
-                    loop {
-                        if let Ok(proc) = os.clone().into_process_by_name("csgo.exe") {
-                            ret_proc = proc;
-                            // now that we have a new working proc we also need to reset some stuff
-
-                            // TODO: make the initialization such as getting client and engine module bases into a re usable function
-                            // and call it here. and also make those global vars maybe
-
-                            client_module = process.module_by_name("client.dll")?;
-                            engine_module = process.module_by_name("engine.dll")?;
-                            client_state = process.read_addr32(engine_module.base.add(*offsets::DW_CLIENTSTATE)).data_part()?;
-                            game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
-                            break;
-                        }
-                    }
-                    ret_proc
-                }
-            }
-
-
-            //clearscreen::clear()?;
-            if  game_data.load_data(&mut process, client_module.base).is_err() {
-                invalid_pause("game data");
-            }
-
-            // print out a list of currently non dormant entities
-            // for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
-            //     if (ent.dormant &1) == 0 {
-            //         println!("({}) || {:?}", i, ent);
-            //     }
-            // }
-
-            //std::thread::sleep(Duration::from_millis(10));
-
-            //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
-            if game_data.local_player.health <= 0 || game_data.local_player.lifestate != 0 {
-                info!("player dead. Sleeping for a bit");
-                std::thread::sleep(Duration::from_secs(5));
-            }
-
-            //println!("down: {} {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20), keyboard.is_down(0x06));
-            //features::bhop(&mut keyboard, &mut port);
-            if !keyboard.is_down(0x06) {continue}
-
-            if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
-                //info!("incross: {}", game_data.local_player.incross);
-                if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
-                    //println!("enemy team: {}", enemy_team);
-                    if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.18 {
-                        port.write(b"m0\n")?;
-                        //print!("firing {}", game_data.local_player.aimpunch_angle);
-                    }
-                }
-            }
-                
-            
+        //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
+        if game_data.local_player.health <= 0 || game_data.local_player.lifestate != 0 {
+            info!("player dead. Sleeping for a bit");
+            std::thread::sleep(Duration::from_secs(5));
         }
 
+        //println!("down: {} {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20), keyboard.is_down(0x06));
+        //features::bhop(&mut keyboard, &mut port);
+        if !keyboard.is_down(0x06) {continue}
+
+        if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
+            //info!("incross: {}", game_data.local_player.incross);
+            if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
+                //println!("enemy team: {}", enemy_team);
+                if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.18 {
+                    port.write(b"m0\n")?;
+                    //print!("firing {}", game_data.local_player.aimpunch_angle);
+                }
+            }
+        }
+            
+        
     }
+
+    
     // let client_state_sig = "A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0";
     // let entity_list_sig = "BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8";
     // let local_player_sig = "8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF";
