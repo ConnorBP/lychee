@@ -1,3 +1,5 @@
+extern crate nalgebra_glm as glm;
+
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
 use gamedata::GameData;
 use log::{info, warn, Level};
@@ -15,6 +17,7 @@ use std::sync::RwLock;
 mod gamedata;
 mod offsets;
 mod features;
+mod math;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // parse args and act accordingly
@@ -105,7 +108,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                         engine_module = process.module_by_name("engine.dll")?;
 
                         game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
-                        
+
                         break;
                     }
                 }
