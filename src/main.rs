@@ -1,4 +1,5 @@
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
+use gamedata::GameData;
 use log::{info, warn, Level};
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
@@ -41,23 +42,34 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         //.arch(ArchitectureIdent::X86(64, false))
         .build()?;
 
+    // load keyboard reader
+    let mut keyboard = os.clone().into_keyboard()?;
+
     // get process info from victim computer
 
-    let base_info = os.process_info_by_name("csgo.exe")?;
+    let base_info = {
+        let mut proc_info;
+        loop {
+            println!("Waiting for process handle");
+            if let Ok(res) = os.process_info_by_name("csgo.exe") {
+                proc_info = res;
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_secs(5));
+        }
+        proc_info
+    };
     let process_info = os.process_info_from_base_info(base_info)?;
     //let mut process = Win32Process::with_kernel(os, process_info.clone());
     let mut process = os.clone().into_process_by_name("csgo.exe")?;
     info!("Got Proccess:\n {:?}", process_info);
 
-    // load keyboard reader
-    let mut keyboard = os.into_keyboard()?;
-
     // fetch info about modules from the process
-    let clientModule = process.module_by_name("client.dll")?;
-    info!("Got Client Module:\n {:?}", clientModule);
+    let mut client_module = process.module_by_name("client.dll")?;
+    info!("Got Client Module:\n {:?}", client_module);
     //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
-    let engineModule = process.module_by_name("engine.dll")?;
-    info!("Got Engine Module:\n {:?}", engineModule);
+    let mut engine_module = process.module_by_name("engine.dll")?;
+    info!("Got Engine Module:\n {:?}", engine_module);
 
     //let bat = process.batcher();
 
@@ -70,8 +82,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // let engine_buf = process
     //     .read_raw(engineModule.base, engineModule.size as usize)
     //     .data_part()?;
-    
-    let client_state = process.read_addr32(engineModule.base.add(*offsets::DW_CLIENTSTATE)).data_part()?;
+
+
+    // TODO: Move client state into game_data
+    let mut client_state = process.read_addr32(engine_module.base.add(*offsets::DW_CLIENTSTATE)).data_part()?;
     if client_state.is_valid() && !client_state.is_null() {
         println!("got client state {}", client_state);
         // if let Ok(local_player) = process.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data_part() {
@@ -87,12 +101,37 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         //     }
         // }
 
-        let mut game_data = gamedata::GameData::new(&mut process, engineModule.base, clientModule.base)?;
+        let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
         println!("{:?}", game_data);
 
         loop {
+            // check if process is valid
+
+            if process.state().is_dead() {
+                process = {
+                    let mut ret_proc;
+                    loop {
+                        if let Ok(proc) = os.clone().into_process_by_name("csgo.exe") {
+                            ret_proc = proc;
+                            // now that we have a new working proc we also need to reset some stuff
+
+                            // TODO: make the initialization such as getting client and engine module bases into a re usable function
+                            // and call it here. and also make those global vars maybe
+
+                            client_module = process.module_by_name("client.dll")?;
+                            engine_module = process.module_by_name("engine.dll")?;
+                            client_state = process.read_addr32(engine_module.base.add(*offsets::DW_CLIENTSTATE)).data_part()?;
+                            game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
+                            break;
+                        }
+                    }
+                    ret_proc
+                }
+            }
+
+
             //clearscreen::clear()?;
-            if  game_data.load_data(&mut process, clientModule.base).is_err() {
+            if  game_data.load_data(&mut process, client_module.base).is_err() {
                 invalid_pause("game data");
             }
 
@@ -152,6 +191,19 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 
     Ok(())
+}
+
+fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> GameData {
+    let mut gd_ret;
+    loop {
+        if let Ok(gd) = gamedata::GameData::new(proc, engine_base, client_base) {
+            gd_ret = gd;
+            break;
+        } else {
+            invalid_pause("initialization game data");
+        }
+    }
+    gd_ret
 }
 
 fn invalid_pause(name: &str) {
