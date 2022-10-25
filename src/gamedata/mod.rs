@@ -90,6 +90,10 @@ impl GameData {
         // drop the batcher now that we are done with it
         std::mem::drop(bat);
 
+        
+        clearscreen::clear().unwrap();
+        info!("Constructing View Matrix with pos: {:?} and ang: {:?}", self.local_player.vec_origin + self.local_player.vec_view_offset, self.local_player.view_angles);
+
         // construct the viewmatrix
         self.view_matrix = math::create_projection_viewmatrix_euler(
             &(self.local_player.vec_origin + self.local_player.vec_view_offset).into(),
@@ -103,7 +107,6 @@ impl GameData {
         // retreive the entity list data:
 
         self.entity_list.populate_player_list(proc, client_base)?;
-        clearscreen::clear().unwrap();
         // temporary test of view matrix
         for (i, ent) in self.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
@@ -115,7 +118,7 @@ impl GameData {
                 None,
                 None
             ) {
-                println!("({}) || vel: {:?} h: {} x{}y{}", i, ent.vec_velocity, ent.health, screenpos.x, screenpos.y);
+                println!("({}) || offset: {:?} h: {} x{}y{}", i, ent.vec_view_offset, ent.health, screenpos.x, screenpos.y);
             }
         }
 
