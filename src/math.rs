@@ -21,7 +21,7 @@ namespace math
 */
 
 //const glm::vec3& cameraPosition, const glm::vec3& cameraEulerAngles, float aspectRatio, float fieldOfViewYDegrees, float zNear, float zFar
-fn create_projection_viewmatrix_euler(
+pub fn create_projection_viewmatrix_euler(
     camera_position: &glm::Vec3,
     camera_euler_angles: &glm::Vec3,
     aspect_ratio: Option<f32>,
@@ -52,7 +52,7 @@ fn create_projection_viewmatrix_euler(
     create_projection_viewmatrix_quat(camera_position, &camera_rotation, aspect_ratio, field_of_view_y_degrees, z_near, z_far)
 }
 
-fn create_projection_viewmatrix_quat(
+pub fn create_projection_viewmatrix_quat(
     camera_position: &glm::Vec3,
     camera_rotation: &glm::Quat,
     aspect_ratio: Option<f32>,
@@ -83,7 +83,7 @@ fn create_projection_viewmatrix_quat(
     return projection_matrix * view_matrix;
 }
 
-fn transform_world_point_into_screen_space(world_point: &glm::Vec3, projection_view_matrix: &glm::Mat4x4, screen_width: Option<f32>, screen_height: Option<f32>) -> Option<glm::Vec2> {
+pub fn transform_world_point_into_screen_space(world_point: &glm::Vec3, projection_view_matrix: &glm::Mat4x4, screen_width: Option<f32>, screen_height: Option<f32>) -> Option<glm::Vec2> {
     let screenpoint_homogenous_space = projection_view_matrix * glm::vec4(world_point.x, world_point.y, world_point.z, 1.0);
     let screen_point = screenpoint_homogenous_space.xyz() / screenpoint_homogenous_space.w;
     if screen_point.x < -1. || screen_point.x > 1. || screen_point.y < -1. || screen_point.y > 1. {
@@ -94,6 +94,10 @@ fn transform_world_point_into_screen_space(world_point: &glm::Vec3, projection_v
             screen_height.unwrap_or(1080.) * (1.0 - (screen_point.y + 1.0) / 2.0)
         ))
     }
+}
+
+pub fn is_world_point_visible_on_screen(world_point: &glm::Vec3, projection_view_matrix: &glm::Mat4x4) -> bool {
+    return transform_world_point_into_screen_space(world_point, projection_view_matrix, Some(1.0), Some(1.0)).is_some()
 }
 
 /*
