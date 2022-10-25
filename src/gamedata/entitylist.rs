@@ -20,6 +20,30 @@ pub struct tmp_vec3 {
     z: f32,
 }
 
+impl Add for tmp_vec3 {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl Into<glm::Vec2> for tmp_vec2 {
+    fn into(self) -> glm::Vec2 {
+        glm::vec2(self.x, self.y)
+    }
+}
+
+impl Into<glm::Vec3> for tmp_vec3 {
+    fn into(self) -> glm::Vec3 {
+        glm::vec3(self.x,self.y,self.z)
+    }
+}
+
 
 #[derive(Copy, Clone,Debug)]
 #[repr(C)]
@@ -34,17 +58,27 @@ pub struct EntityInfo {
     pub health: i32,
     pub team_num: i32,
 
-    // vec_origin: tmp_vec3,
-    // vec_view_offset: tmp_vec3,
-    // view_angles: tmp_vec3,
+    pub vec_origin: tmp_vec3,
+    pub vec_view_offset: tmp_vec3,
+    pub vec_velocity: tmp_vec3,
 
-    // vec_feet: tmp_vec2,
-    // vec_head: tmp_vec2,
+    //vec_feet: tmp_vec2,
+    //vec_head: tmp_vec2,
 }
 
 impl Default for EntityInfo {
     fn default() -> EntityInfo {
-        EntityInfo { dormant: 1, u32address: Default::default(), address: Default::default(), lifestate: Default::default(), health: Default::default(), team_num: Default::default() }
+        EntityInfo {
+            dormant: 1,
+            u32address: Default::default(),
+            address: Default::default(),
+            lifestate: Default::default(),
+            health: Default::default(),
+            team_num: Default::default(),
+            vec_origin: Default::default(),
+            vec_view_offset: Default::default(),
+            vec_velocity: Default::default(),
+        }
     }
 }
 
@@ -110,7 +144,10 @@ impl EntityList {
                 bat2.read_into(ent.address.add(*M_BDORMANT), &mut ent.dormant)
                     .read_into(ent.address.add(*NET_HEALTH), &mut ent.health)
                     .read_into(ent.address.add(*NET_TEAM), &mut ent.team_num)
-                    .read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate);
+                    .read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate)
+                    .read_into(ent.address.add(*NET_VEC_ORIGIN), &mut ent.vec_origin)
+                    .read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset)
+                    .read_into(ent.address.add(*NET_VEC_VELOCITY), &mut ent.vec_velocity);
                 
             } else {
                 ent.dormant = 1;

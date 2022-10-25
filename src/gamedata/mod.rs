@@ -20,6 +20,7 @@ use crate::offsets::*;
 
 pub mod entitylist;
 use entitylist::{EntityList, EntityInfo};
+use crate::math;
 
 #[derive(Debug)]
 pub struct GameData {
@@ -31,6 +32,9 @@ pub struct GameData {
 
     /// Entity List
     pub entity_list: EntityList,
+
+    /// Local Player View Matrix
+    pub view_matrix: glm::Mat4x4,
 }
 
 impl GameData {
@@ -53,8 +57,14 @@ impl GameData {
                     lifestate: 0,
                     team_num: 0,
                     aimpunch_angle: 0.,
+                    vec_origin: Default::default(),
+                    vec_view_offset: Default::default(),
+                    view_angles: Default::default(),
+                    vec_velocity: Default::default(),
+                    
                 },
-                entity_list: EntityList::default(),
+                entity_list: Default::default(),
+                view_matrix: Default::default(),
             };
         gd.load_data(proc, client_base)?;
         Ok(gd)
@@ -72,18 +82,42 @@ impl GameData {
 
         self.local_player.address = local_player;
 
-
         let mut bat = proc.batcher();
-        self.local_player.load_data(&mut bat);
+        self.local_player.load_data(&mut bat, self.client_state);
+
         // finally, commit all the reads and writes at once:
         bat.commit_rw().data_part()?;
-
         // drop the batcher now that we are done with it
         std::mem::drop(bat);
+
+        // construct the viewmatrix
+        self.view_matrix = math::create_projection_viewmatrix_euler(
+            &(self.local_player.vec_origin + self.local_player.vec_view_offset).into(),
+            &self.local_player.view_angles.into(),
+            None,
+            None,
+            None,
+            None,
+        );
 
         // retreive the entity list data:
 
         self.entity_list.populate_player_list(proc, client_base)?;
+        clearscreen::clear().unwrap();
+        // temporary test of view matrix
+        for (i, ent) in self.entity_list.entities.iter().enumerate() {
+            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
+            if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
+            if let Some(screenpos) = math::transform_world_point_into_screen_space(
+                &worldpos,
+                &self.view_matrix,
+                None,
+                None
+            ) {
+                println!("({}) || vel: {:?} h: {} x{}y{}", i, ent.vec_velocity, ent.health, screenpos.x, screenpos.y);
+            }
+        }
 
         trace!("exiting load data");
         Ok(())
@@ -101,20 +135,29 @@ pub struct LocalPlayer {
     pub team_num: i32,
     pub aimpunch_angle: f32,
 
+    vec_origin: entitylist::tmp_vec3,
+    vec_view_offset: entitylist::tmp_vec3,
+    view_angles: entitylist::tmp_vec3,
+    vec_velocity: entitylist::tmp_vec3,
 }
 
 impl LocalPlayer {
-    fn load_data<'bat>(&'bat mut self, bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>) {
+    fn load_data<'bat>(&'bat mut self, bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, client_state: Address) {
         trace!("entering localplayer load data");
         //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
         //if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data()
         bat
-        .read_into(self.address.add(*crate::offsets::NET_HEALTH), &mut self.health)
-        .read_into(self.address.add(*crate::offsets::NET_CROSSHAIRID), &mut self.incross)
+        .read_into(self.address.add(*NET_HEALTH), &mut self.health)
+        .read_into(self.address.add(*NET_CROSSHAIRID), &mut self.incross)
         .read_into(self.address.add(*M_BDORMANT), &mut self.dormant)
         .read_into(self.address.add(*NET_TEAM), &mut self.team_num)
         .read_into(self.address.add(*NET_LIFESTATE), &mut self.lifestate)
-        .read_into(self.address.add(*NET_AIMPUNCH_ANGLE), &mut self.aimpunch_angle);
+        .read_into(self.address.add(*NET_AIMPUNCH_ANGLE), &mut self.aimpunch_angle)
+        .read_into(self.address.add(*NET_VEC_ORIGIN), &mut self.vec_origin)
+        .read_into(self.address.add(*NET_VEC_VIEWOFFSET), &mut self.vec_view_offset)
+        .read_into(self.address.add(*NET_VEC_VELOCITY), &mut self.vec_velocity)
+
+        .read_into(client_state.add(*DW_CLIENTSTATE_VIEWANGLES), &mut self.view_angles);
         trace!("exiting localplayer load data");
     }
 }
