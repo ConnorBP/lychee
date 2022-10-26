@@ -42,12 +42,22 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
                         event: WindowEvent::CloseRequested,
                         ..
                     } => *control_flow = ControlFlow::Exit,
+                    Event::WindowEvent {
+                        event: WindowEvent::Resized(s),
+                        ..
+                    } => {
+                        // TODO: Send the main thread the new window size
+                    },
                     Event::MainEventsCleared => ctx.window().request_redraw(),
                     Event::RedrawRequested(_) => {
                         let mut surface = ctx.surface();
+                        let (w,h) = ctx.window_dimensions();
                         ctx.clear_color(&mut surface, (0.4, 0.4, 0.8, 1.0));
                         for (i,pos) in framedata.locations.iter().enumerate() {
-                            ctx.draw(&mut surface, &texture, (pos.x as i32, pos.y as i32), &DrawConfig::default());
+                            // crow seems to render from bottom left up instead of top left down so we flip it here
+                            // TODO: replace hard coded 1080 with adaptive window res
+                            let posy = 1080 - pos.y as i32;
+                            ctx.draw(&mut surface, &texture, (pos.x as i32, posy), &DrawConfig::default());
                         }
                         ctx.present(surface).unwrap();
                     }
