@@ -33,6 +33,8 @@ pub struct GameData {
     /// Entity List
     pub entity_list: EntityList,
 
+    /// Temp Viewmatrix for reading into
+    pub vm : [[f32;4];4],
     /// Local Player View Matrix
     pub view_matrix: glm::Mat4x4,
 }
@@ -64,6 +66,7 @@ impl GameData {
                     
                 },
                 entity_list: Default::default(),
+                vm: Default::default(),
                 view_matrix: Default::default(),
             };
         gd.load_data(proc, client_base)?;
@@ -81,9 +84,11 @@ impl GameData {
         }
 
         self.local_player.address = local_player;
-
+        
         let mut bat = proc.batcher();
         self.local_player.load_data(&mut bat, self.client_state);
+
+        bat.read_into(client_base + *DW_VIEWMATRIX, &mut self.vm);
 
         // finally, commit all the reads and writes at once:
         bat.commit_rw().data_part()?;
@@ -94,15 +99,19 @@ impl GameData {
         clearscreen::clear().unwrap();
         info!("Constructing View Matrix with pos: {:?} and ang: {:?}", self.local_player.vec_origin + self.local_player.vec_view_offset, self.local_player.view_angles);
 
+
+        // copy viewmatrix data into the mat4
+        //self.view_matrix =  glm::mat4(self.vm[0],self.vm[1],self.vm[2],self.vm[3],self.vm[4],self.vm[5],self.vm[6],self.vm[7],self.vm[8],self.vm[9],self.vm[10],self.vm[11],self.vm[12],self.vm[13],self.vm[14],self.vm[15]);
+
         // construct the viewmatrix
-        self.view_matrix = math::create_projection_viewmatrix_euler(
-            &(self.local_player.vec_origin + self.local_player.vec_view_offset).into(),
-            &self.local_player.view_angles.into(),
-            None,
-            None,
-            None,
-            None,
-        );
+        // self.view_matrix = math::create_projection_viewmatrix_euler(
+        //     &(self.local_player.vec_origin + self.local_player.vec_view_offset).into(),
+        //     &self.local_player.view_angles.into(),
+        //     Some(4./3.),
+        //     Some(70.),
+        //     Some(1.0),
+        //     None,
+        // );
 
         // retreive the entity list data:
 
@@ -111,10 +120,10 @@ impl GameData {
         for (i, ent) in self.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
-            if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-            if let Some(screenpos) = math::transform_world_point_into_screen_space(
+            //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
+            if let Some(screenpos) = math::world_2_screen(
                 &worldpos,
-                &self.view_matrix,
+                &self.vm,
                 None,
                 None
             ) {

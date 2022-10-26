@@ -100,8 +100,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             process = {
                 let mut ret_proc;
                 loop {
+                    info!("process dead. Waiting for new one.");
+                    std::thread::sleep(std::time::Duration::from_secs(5));
                     if let Ok(proc) = os.clone().into_process_by_name("csgo.exe") {
                         ret_proc = proc;
+                        info!("process found. Waiting for modules to load.");
+                        std::thread::sleep(std::time::Duration::from_secs(20));//todo make the modules wait until success
+
                         // now that we have a new working proc we also need to reset some stuff
 
                         // TODO: make the initialization such as getting client and engine module bases into a re usable function
@@ -144,15 +149,17 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // send location data to renderer
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
-            if !math::is_world_point_visible_on_screen(&worldpos, &game_data.view_matrix) {continue}
-            if let Some(screenpos) = math::transform_world_point_into_screen_space(
-                &worldpos,
-                &game_data.view_matrix,
-                None,
-                None
-            ) {
+            let worldpos:glm::Vec3 = (ent.vec_origin + ent.vec_view_offset).into();
+            //if !math::is_world_point_visible_on_screen(&worldpos, &game_data.view_matrix) {continue}
+            // if let Some(screenpos) = math::transform_world_point_into_screen_space(
+            //     &worldpos,
+            //     &game_data.view_matrix,
+            //     None,
+            //     None
+            // ) {
+            if let Some(screenpos) = math::world_2_screen(&worldpos, &game_data.vm, None, None) {
                 framedata.locations.push(screenpos);
+
             }
         }
         tx.send(framedata)?;
@@ -165,7 +172,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             //info!("incross: {}", game_data.local_player.incross);
             if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
                 //println!("enemy team: {}", enemy_team);
-                if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.18 {
+                if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.04 {
                     port.write(b"m0\n")?;
                     //print!("firing {}", game_data.local_player.aimpunch_angle);
                 }

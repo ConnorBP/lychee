@@ -24,7 +24,7 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
         //let event_loop = EventLoop::new();
         let mut ctx = Context::new(WindowBuilder::new(), &event_loop).expect("couldn't build the window context");
 
-        let texture = Texture::load(&mut ctx, "./textures/player.png").expect("couldn't find the player texture on the disk");
+        let texture = Texture::load(&mut ctx, "./textures/ct.png").expect("couldn't find the player texture on the disk");
 
         // our frame data to be rendered (a list of player screen positions)
         let mut framedata = FrameData::default();
@@ -33,7 +33,7 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
             move |event: Event<()>, _window_target: _, control_flow: &mut ControlFlow|
             {
                 // first update the frame data if it was received
-                if let Ok(frame) = rx.recv() {
+                if let Ok(frame) = rx.try_recv() {
                     framedata = frame;
                 }
 
