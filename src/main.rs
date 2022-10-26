@@ -20,6 +20,20 @@ mod features;
 mod math;
 mod render;
 
+/// Blocks thread until result returns success
+fn wait_for<T>(result:Result<T>, delay: Duration) -> T 
+{
+    let mut ret;
+    loop {
+        if let Ok(val) = result {
+            ret = val;
+            break;
+        }
+        std::thread::sleep(delay);
+    }
+    ret
+}
+
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // parse args and act accordingly
     let matches = parse_args();
@@ -71,10 +85,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     info!("Got Proccess:\n {:?}", process_info);
 
     // fetch info about modules from the process
-    let mut client_module = process.module_by_name("client.dll")?;
+    let mut client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
     info!("Got Client Module:\n {:?}", client_module);
     //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
-    let mut engine_module = process.module_by_name("engine.dll")?;
+    let mut engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
     info!("Got Engine Module:\n {:?}", engine_module);
 
     //let bat = process.batcher();
@@ -112,8 +126,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                         // TODO: make the initialization such as getting client and engine module bases into a re usable function
                         // and call it here. and also make those global vars maybe
 
-                        client_module = process.module_by_name("client.dll")?;
-                        engine_module = process.module_by_name("engine.dll")?;
+                        client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
+                        engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
 
                         game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
 
@@ -163,18 +177,19 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
         //println!("down: {} {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20), keyboard.is_down(0x06));
         //features::bhop(&mut keyboard, &mut port);
-        if !keyboard.is_down(0x06) {continue}
+        features::incross_trigger(&mut keyboard, &mut port, &game_data);
+        // if !keyboard.is_down(0x06) {continue}
 
-        if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
-            //info!("incross: {}", game_data.local_player.incross);
-            if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
-                //println!("enemy team: {}", enemy_team);
-                if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.04 {
-                    port.write(b"m0\n")?;
-                    //print!("firing {}", game_data.local_player.aimpunch_angle);
-                }
-            }
-        }
+        // if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
+        //     //info!("incross: {}", game_data.local_player.incross);
+        //     if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
+        //         //println!("enemy team: {}", enemy_team);
+        //         if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.04 {
+        //             port.write(b"m0\n")?;
+        //             //print!("firing {}", game_data.local_player.aimpunch_angle);
+        //         }
+        //     }
+        // }
             
         
     }

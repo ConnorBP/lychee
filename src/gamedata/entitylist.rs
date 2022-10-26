@@ -3,7 +3,7 @@ use ::std::{ops::{Add, IndexMut}, cell::RefCell, default};
 use memflow::prelude::v1::*;
 use log::{info,trace};
 
-use crate::offsets::*;
+use crate::{offsets::*, math};
 
 #[repr(C)]
 #[derive(Copy, Clone,Debug, Default, Pod)]
@@ -62,8 +62,8 @@ pub struct EntityInfo {
     pub vec_view_offset: tmp_vec3,
     pub vec_velocity: tmp_vec3,
 
-    //vec_feet: tmp_vec2,
-    //vec_head: tmp_vec2,
+    pub vec_feet: glm::Vec2,
+    pub vec_head: glm::Vec2,
 }
 
 impl Default for EntityInfo {
@@ -78,6 +78,8 @@ impl Default for EntityInfo {
             vec_origin: Default::default(),
             vec_view_offset: Default::default(),
             vec_velocity: Default::default(),
+            vec_feet: Default::default(),
+            vec_head: Default::default(),
         }
     }
 }
@@ -114,7 +116,7 @@ impl EntityList {
 
     /// Takes in a reference to the game process and the client module base address and then walks the entity list tree
     /// Data retreived from this is stored into the EntityList struct this is called on
-    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address) -> Result<()> {
+    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, vm: &[[f32;4];4]) -> Result<()> {
         trace!("entering pop playerlist");
         let mut bat1 = proc.batcher();
         for (i, ent) in self.entities.iter_mut().enumerate() {
@@ -157,6 +159,32 @@ impl EntityList {
         trace!("comitting second playerlist batcher");
         bat2.commit_rw().data_part()?;// tbh idk if its better to use data() or data_part() here
         trace!("done comitting second playerlist batcher");
+        std::mem::drop(bat2);
+        trace!("running world to screen on entities");
+        // get world2screen data
+        for (i, ent) in self.entities.iter_mut().enumerate() {
+            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            let feetpos = (ent.vec_origin).into();
+            let headpos = (ent.vec_origin + ent.vec_view_offset).into();
+            //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
+            if let Some(screenpos) = math::world_2_screen(
+                &headpos,
+                vm,
+                None,
+                None
+            ) {
+                ent.vec_head = screenpos;
+            }
+            if let Some(screenpos) = math::world_2_screen(
+                &feetpos,
+                vm,
+                None,
+                None
+            ) {
+                ent.vec_feet = screenpos;
+            }
+        }
+
         trace!("exiting pop playerlist");
         Ok(())
     }

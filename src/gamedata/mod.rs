@@ -116,21 +116,21 @@ impl GameData {
 
         // retreive the entity list data:
 
-        self.entity_list.populate_player_list(proc, client_base)?;
+        self.entity_list.populate_player_list(proc, client_base, &self.vm)?;
         // temporary test of view matrix
-        for (i, ent) in self.entity_list.entities.iter().enumerate() {
-            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
-            //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-            if let Some(screenpos) = math::world_2_screen(
-                &worldpos,
-                &self.vm,
-                None,
-                None
-            ) {
-                println!("({}) || offset: {:?} h: {} x{}y{}", i, ent.vec_view_offset, ent.health, screenpos.x, screenpos.y);
-            }
-        }
+        // for (i, ent) in self.entity_list.entities.iter().enumerate() {
+        //     if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+        //     let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
+        //     //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
+        //     if let Some(screenpos) = math::world_2_screen(
+        //         &worldpos,
+        //         &self.vm,
+        //         None,
+        //         None
+        //     ) {
+        //         println!("({}) || offset: {:?} h: {} x{}y{}", i, ent.vec_view_offset, ent.health, screenpos.x, screenpos.y);
+        //     }
+        // }
 
         trace!("exiting load data");
         Ok(())
