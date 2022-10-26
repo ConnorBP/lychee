@@ -42,7 +42,7 @@ pub struct GameData {
 impl GameData {
     pub fn new(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> Result<Self> {
         let client_state = proc.read_addr32(engine_base.add(*DW_CLIENTSTATE)).data()?;
-        //if let Ok(local_player_idx) = process.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data_part()
+        //let get_local_idx = proc.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data()?;
 
         if !client_state.is_valid() || client_state.is_null() {
             return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("client state address was not valid."));
@@ -59,6 +59,7 @@ impl GameData {
                     lifestate: 0,
                     team_num: 0,
                     aimpunch_angle: 0.,
+                    ent_idx: 0,
                     vec_origin: Default::default(),
                     vec_view_offset: Default::default(),
                     view_angles: Default::default(),
@@ -147,6 +148,8 @@ pub struct LocalPlayer {
     pub team_num: i32,
     pub aimpunch_angle: f32,
 
+    pub ent_idx: i32,
+
     vec_origin: entitylist::tmp_vec3,
     vec_view_offset: entitylist::tmp_vec3,
     view_angles: entitylist::tmp_vec3,
@@ -169,7 +172,8 @@ impl LocalPlayer {
         .read_into(self.address.add(*NET_VEC_VIEWOFFSET), &mut self.vec_view_offset)
         .read_into(self.address.add(*NET_VEC_VELOCITY), &mut self.vec_velocity)
 
-        .read_into(client_state.add(*DW_CLIENTSTATE_VIEWANGLES), &mut self.view_angles);
+        .read_into(client_state.add(*DW_CLIENTSTATE_VIEWANGLES), &mut self.view_angles)
+        .read_into(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER), &mut self.ent_idx);
         trace!("exiting localplayer load data");
     }
 }

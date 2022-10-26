@@ -149,16 +149,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // send location data to renderer
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            if i == game_data.local_player.ent_idx as usize {continue}
             let worldpos:glm::Vec3 = (ent.vec_origin + ent.vec_view_offset).into();
-            //if !math::is_world_point_visible_on_screen(&worldpos, &game_data.view_matrix) {continue}
-            // if let Some(screenpos) = math::transform_world_point_into_screen_space(
-            //     &worldpos,
-            //     &game_data.view_matrix,
-            //     None,
-            //     None
-            // ) {
             if let Some(screenpos) = math::world_2_screen(&worldpos, &game_data.vm, None, None) {
-                framedata.locations.push(screenpos);
+                framedata.locations.push(render::PlayerLoc{
+                    pos: screenpos,
+                    team: ent.team_num,
+                });
 
             }
         }

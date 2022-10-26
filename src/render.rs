@@ -10,9 +10,14 @@ use crow::{
 use std::sync::mpsc;
 use std::thread;
 
+pub struct PlayerLoc {
+    pub pos: glm::Vec2,
+    pub team: i32,
+}
+
 #[derive(Default)]
 pub struct FrameData {
-    pub locations: Vec<glm::Vec2>,
+    pub locations: Vec<PlayerLoc>,
 }
 
 pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
@@ -24,7 +29,8 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
         //let event_loop = EventLoop::new();
         let mut ctx = Context::new(WindowBuilder::new(), &event_loop).expect("couldn't build the window context");
 
-        let texture = Texture::load(&mut ctx, "./textures/ct.png").expect("couldn't find the player texture on the disk");
+        let ct_texture = Texture::load(&mut ctx, "./textures/ct.png").expect("couldn't find the ct player texture on the disk");
+        let t_texture = Texture::load(&mut ctx, "./textures/t.png").expect("couldn't find the t player texture on the disk");
 
         // our frame data to be rendered (a list of player screen positions)
         let mut framedata = FrameData::default();
@@ -53,11 +59,17 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
                         let mut surface = ctx.surface();
                         let (w,h) = ctx.window_dimensions();
                         ctx.clear_color(&mut surface, (0.4, 0.4, 0.8, 1.0));
-                        for (i,pos) in framedata.locations.iter().enumerate() {
+                        for (i,player) in framedata.locations.iter().enumerate() {
                             // crow seems to render from bottom left up instead of top left down so we flip it here
                             // TODO: replace hard coded 1080 with adaptive window res
-                            let posy = 1080 - pos.y as i32;
-                            ctx.draw(&mut surface, &texture, (pos.x as i32, posy), &DrawConfig::default());
+                            let posy = 1080 - player.pos.y as i32;
+
+                            // 3 = ct 2 = t 1= spec maybe
+                            if player.team == 3 {
+                                ctx.draw(&mut surface, &ct_texture, (player.pos.x as i32, posy), &DrawConfig::default());
+                            } else {
+                                ctx.draw(&mut surface, &t_texture, (player.pos.x as i32, posy), &DrawConfig::default());
+                            }
                         }
                         ctx.present(surface).unwrap();
                     }
