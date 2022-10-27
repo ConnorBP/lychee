@@ -11,7 +11,8 @@ use std::sync::mpsc;
 use std::thread;
 
 pub struct PlayerLoc {
-    pub pos: glm::Vec2,
+    pub head_pos: Option<glm::Vec2>,
+    pub feet_pos: Option<glm::Vec2>,
     pub team: i32,
 }
 
@@ -62,13 +63,20 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
                         for (i,player) in framedata.locations.iter().enumerate() {
                             // crow seems to render from bottom left up instead of top left down so we flip it here
                             // TODO: replace hard coded 1080 with adaptive window res
-                            let posy = 1080 - player.pos.y as i32;
+                            if let Some(head_pos) = player.head_pos {
+                                let posy = 1080 - head_pos.y as i32;
 
-                            // 3 = ct 2 = t 1= spec maybe
-                            if player.team == 3 {
-                                ctx.draw(&mut surface, &ct_texture, (player.pos.x as i32, posy), &DrawConfig::default());
-                            } else {
-                                ctx.draw(&mut surface, &t_texture, (player.pos.x as i32, posy), &DrawConfig::default());
+                                if let Some(feet_pos) = player.feet_pos {
+                                    let feet_posy = 1080 - feet_pos.y as i32;
+                                    ctx.debug_line(&mut surface, (head_pos.x as i32, posy), (feet_pos.x as i32, feet_posy), (0.5,0.3,0.8,0.8))
+                                }
+
+                                // 3 = ct 2 = t 1= spec maybe
+                                if player.team == 3 {
+                                    ctx.draw(&mut surface, &ct_texture, (head_pos.x as i32, posy), &DrawConfig::default());
+                                } else {
+                                    ctx.draw(&mut surface, &t_texture, (head_pos.x as i32, posy), &DrawConfig::default());
+                                }
                             }
                         }
                         ctx.present(surface).unwrap();

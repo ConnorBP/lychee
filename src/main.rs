@@ -29,6 +29,7 @@ fn wait_for<T>(result:Result<T>, delay: Duration) -> T
             ret = val;
             break;
         }
+        info!("waiting for valid result");
         std::thread::sleep(delay);
     }
     ret
@@ -140,58 +141,25 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 
         //clearscreen::clear()?;
-        if  game_data.load_data(&mut process, client_module.base).is_err() {
-            invalid_pause("game data");
-        }
-
-        // print out a list of currently non dormant entities
-        // for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
-        //     if (ent.dormant &1) == 0 {
-        //         println!("({}) || {:?}", i, ent);
-        //     }
-        // }
-
-        //std::thread::sleep(Duration::from_millis(10));
-
-        //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
-        if game_data.local_player.health <= 0 || game_data.local_player.lifestate != 0 {
-            info!("player dead. Sleeping for a bit");
-            std::thread::sleep(Duration::from_secs(5));
-        }
+        wait_for(game_data.load_data(&mut process, client_module.base), Duration::from_secs(5));
 
         let mut framedata = render::FrameData::default();
         // send location data to renderer
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             if i == game_data.local_player.ent_idx as usize {continue}
-            let worldpos:glm::Vec3 = (ent.vec_origin + ent.vec_view_offset).into();
-            if let Some(screenpos) = math::world_2_screen(&worldpos, &game_data.vm, None, None) {
-                framedata.locations.push(render::PlayerLoc{
-                    pos: screenpos,
-                    team: ent.team_num,
-                });
 
-            }
+            framedata.locations.push(render::PlayerLoc{
+                head_pos: ent.vec_head,
+                feet_pos: ent.vec_feet,
+                team: ent.team_num,
+            });
         }
         tx.send(framedata)?;
 
-        //println!("down: {} {} {}", keyboard.is_down(0x12), keyboard.is_down(0x20), keyboard.is_down(0x06));
-        //features::bhop(&mut keyboard, &mut port);
-        features::incross_trigger(&mut keyboard, &mut port, &game_data);
-        // if !keyboard.is_down(0x06) {continue}
-
-        // if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
-        //     //info!("incross: {}", game_data.local_player.incross);
-        //     if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
-        //         //println!("enemy team: {}", enemy_team);
-        //         if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.04 {
-        //             port.write(b"m0\n")?;
-        //             //print!("firing {}", game_data.local_player.aimpunch_angle);
-        //         }
-        //     }
-        // }
-            
-        
+        if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
+            features::incross_trigger(&mut keyboard, &mut port, &game_data);
+        }
     }
 
     

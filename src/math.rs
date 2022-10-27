@@ -161,7 +161,7 @@ pub fn world_2_screen(world_pos: &glm::Vec3, view_matrix: &[[f32;4];4], screen_w
     let mut _x:f32 = view_matrix[0][0] * world_pos.x + view_matrix[0][1] * world_pos.y + view_matrix[0][2] * world_pos.z + view_matrix[0][3];
     let mut _y:f32 = view_matrix[1][0] * world_pos.x + view_matrix[1][1] * world_pos.y + view_matrix[1][2] * world_pos.z + view_matrix[1][3];
     let w:f32 = view_matrix[3][0] * world_pos.x + view_matrix[3][1] * world_pos.y + view_matrix[3][2] * world_pos.z + view_matrix[3][3];
-    if w < 0.01 {
+    if w < 0.1 {
         None
     } else {
         let inverse_w = 1. / w;

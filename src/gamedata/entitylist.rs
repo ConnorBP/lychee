@@ -62,8 +62,8 @@ pub struct EntityInfo {
     pub vec_view_offset: tmp_vec3,
     pub vec_velocity: tmp_vec3,
 
-    pub vec_feet: glm::Vec2,
-    pub vec_head: glm::Vec2,
+    pub vec_feet: Option<glm::Vec2>,
+    pub vec_head: Option<glm::Vec2>,
 }
 
 impl Default for EntityInfo {
@@ -164,25 +164,24 @@ impl EntityList {
         // get world2screen data
         for (i, ent) in self.entities.iter_mut().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            if ent.vec_view_offset.z == 0. {
+                ent.vec_view_offset.z = 64.06256;
+            }
             let feetpos = (ent.vec_origin).into();
             let headpos = (ent.vec_origin + ent.vec_view_offset).into();
             //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-            if let Some(screenpos) = math::world_2_screen(
+            ent.vec_head = math::world_2_screen(
                 &headpos,
                 vm,
                 None,
                 None
-            ) {
-                ent.vec_head = screenpos;
-            }
-            if let Some(screenpos) = math::world_2_screen(
+            );
+            ent.vec_feet = math::world_2_screen(
                 &feetpos,
                 vm,
                 None,
                 None
-            ) {
-                ent.vec_feet = screenpos;
-            }
+            );
         }
 
         trace!("exiting pop playerlist");

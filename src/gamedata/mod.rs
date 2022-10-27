@@ -103,7 +103,7 @@ impl GameData {
 
         // copy viewmatrix data into the mat4
         //self.view_matrix =  glm::mat4(self.vm[0],self.vm[1],self.vm[2],self.vm[3],self.vm[4],self.vm[5],self.vm[6],self.vm[7],self.vm[8],self.vm[9],self.vm[10],self.vm[11],self.vm[12],self.vm[13],self.vm[14],self.vm[15]);
-
+        
         // construct the viewmatrix
         // self.view_matrix = math::create_projection_viewmatrix_euler(
         //     &(self.local_player.vec_origin + self.local_player.vec_view_offset).into(),
@@ -118,19 +118,19 @@ impl GameData {
 
         self.entity_list.populate_player_list(proc, client_base, &self.vm)?;
         // temporary test of view matrix
-        // for (i, ent) in self.entity_list.entities.iter().enumerate() {
-        //     if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-        //     let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
-        //     //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-        //     if let Some(screenpos) = math::world_2_screen(
-        //         &worldpos,
-        //         &self.vm,
-        //         None,
-        //         None
-        //     ) {
-        //         println!("({}) || offset: {:?} h: {} x{}y{}", i, ent.vec_view_offset, ent.health, screenpos.x, screenpos.y);
-        //     }
-        // }
+        for (i, ent) in self.entity_list.entities.iter().enumerate() {
+            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
+            //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
+            if let Some(screenpos) = math::world_2_screen(
+                &worldpos,
+                &self.vm,
+                None,
+                None
+            ) {
+                println!("({}) || offset: {:?} h: {} x{}y{}", i, ent.vec_view_offset, ent.health, screenpos.x, screenpos.y);
+            }
+        }
 
         trace!("exiting load data");
         Ok(())
