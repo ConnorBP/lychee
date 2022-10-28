@@ -128,7 +128,7 @@ impl GameData {
                 None,
                 None
             ) {
-                println!("({}) || offset: {:?} h: {} x{}y{}", i, ent.vec_view_offset, ent.health, screenpos.x, screenpos.y);
+                println!("({}) || offset: {:?} h: {} x{}y{}", i, ent.head_pos, ent.health, screenpos.x, screenpos.y);
             }
         }
 

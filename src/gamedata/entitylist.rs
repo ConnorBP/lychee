@@ -64,6 +64,9 @@ pub struct EntityInfo {
 
     pub vec_feet: Option<glm::Vec2>,
     pub vec_head: Option<glm::Vec2>,
+
+    pub bone_matrix: u32,//address
+    pub head_pos: tmp_vec3,
 }
 
 impl Default for EntityInfo {
@@ -80,6 +83,8 @@ impl Default for EntityInfo {
             vec_velocity: Default::default(),
             vec_feet: Default::default(),
             vec_head: Default::default(),
+            bone_matrix: Default::default(),
+            head_pos: Default::default(),
         }
     }
 }
@@ -146,10 +151,11 @@ impl EntityList {
                 bat2.read_into(ent.address.add(*M_BDORMANT), &mut ent.dormant)
                     .read_into(ent.address.add(*NET_HEALTH), &mut ent.health)
                     .read_into(ent.address.add(*NET_TEAM), &mut ent.team_num)
-                    .read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate)
-                    .read_into(ent.address.add(*NET_VEC_ORIGIN), &mut ent.vec_origin)
                     .read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset)
-                    .read_into(ent.address.add(*NET_VEC_VELOCITY), &mut ent.vec_velocity);
+                    //.read_into(ent.address.add(*NET_VEC_VELOCITY), &mut ent.vec_velocity)
+                    .read_into(ent.address.add(*NET_VEC_ORIGIN), &mut ent.vec_origin)
+                    .read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate)
+                    .read_into(ent.address.add(*NET_DW_BONEMATRIX), &mut ent.bone_matrix);
                 
             } else {
                 ent.dormant = 1;
@@ -161,14 +167,31 @@ impl EntityList {
         trace!("done comitting second playerlist batcher");
         std::mem::drop(bat2);
         trace!("running world to screen on entities");
+
+        // get head positions
+        let mut bat3 = proc.batcher();
+        for (i, ent) in self.entities.iter_mut().enumerate() {
+            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            let addr = Address::from(ent.bone_matrix);
+            if !addr.is_valid() || addr.is_null() {continue}
+            // read out bone pos 8 from the bone matrix address.
+            bat3.read_into(addr.add(0x30*8+0x0C), &mut ent.head_pos.x)
+                .read_into(addr.add(0x30*8+0x1C), &mut ent.head_pos.y)
+                .read_into(addr.add(0x30*8+0x2C), &mut ent.head_pos.z);
+        }
+        bat3.commit_rw().data_part()?;
+        std::mem::drop(bat3);
+
         // get world2screen data
         for (i, ent) in self.entities.iter_mut().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            if ent.vec_view_offset.z == 0. {
-                ent.vec_view_offset.z = 64.06256;
-            }
+            // if ent.vec_view_offset.z == 0. {
+            //     proc.read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset).data()?;
+            //     //ent.vec_view_offset.z = 64.06256;
+            // }
+
             let feetpos = (ent.vec_origin).into();
-            let headpos = (ent.vec_origin + ent.vec_view_offset).into();
+            let headpos = (ent.head_pos).into();
             //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
             ent.vec_head = math::world_2_screen(
                 &headpos,
