@@ -11,8 +11,8 @@ use std::sync::mpsc;
 use std::thread;
 
 pub struct PlayerLoc {
-    pub head_pos: Option<glm::Vec2>,
-    pub feet_pos: Option<glm::Vec2>,
+    pub head_pos: Option<glm::Vec3>,
+    pub feet_pos: Option<glm::Vec3>,
     pub team: i32,
 }
 
@@ -65,6 +65,9 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
                             // TODO: replace hard coded 1080 with adaptive window res
                             if let Some(head_pos) = player.head_pos {
                                 let posy = 1080 - head_pos.y as i32;
+                                let posx = head_pos.x as i32;
+
+                                let scale = (1.+ head_pos.z * 1000.) as u32;
 
                                 if let Some(feet_pos) = player.feet_pos {
                                     let feet_posy = 1080 - feet_pos.y as i32;
@@ -72,11 +75,18 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
                                 }
                                 //let scale = head_pos.y - feet_pos
                                 // 3 = ct 2 = t 1= spec maybe
-                                if player.team == 3 {
-                                    ctx.draw(&mut surface, &ct_texture, (head_pos.x as i32, posy), &DrawConfig{scale:(6,6), ..Default::default()});
+                                let tex = if player.team == 3 {
+                                    &ct_texture
                                 } else {
-                                    ctx.draw(&mut surface, &t_texture, (head_pos.x as i32, posy), &DrawConfig{scale:(6,6), ..Default::default()});
-                                }
+                                    &t_texture
+                                };
+
+                                let tex_x = posx - ((tex.width() * scale / 2) as i32);
+                                let tex_y = posy - ((tex.height() * scale) as i32);
+
+                                ctx.draw(&mut surface, &tex, (tex_x as i32, tex_y), &DrawConfig{scale:(scale,scale), ..Default::default()});
+
+
                             }
                         }
                         ctx.present(surface).unwrap();

@@ -150,8 +150,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             if i == game_data.local_player.ent_idx as usize {continue}
 
             framedata.locations.push(render::PlayerLoc{
-                head_pos: ent.vec_head,
-                feet_pos: ent.vec_feet,
+                head_pos: ent.screen_head,
+                feet_pos: ent.screen_feet,
                 team: ent.team_num,
             });
         }

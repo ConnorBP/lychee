@@ -157,7 +157,7 @@ vec2_t utilities::world_to_screen(vec3_t world_position)
 
 */
 
-pub fn world_2_screen(world_pos: &glm::Vec3, view_matrix: &[[f32;4];4], screen_width: Option<f32>, screen_height: Option<f32>) -> Option<glm::Vec2> {
+pub fn world_2_screen(world_pos: &glm::Vec3, view_matrix: &[[f32;4];4], screen_width: Option<f32>, screen_height: Option<f32>) -> Option<glm::Vec3> {
     let mut _x:f32 = view_matrix[0][0] * world_pos.x + view_matrix[0][1] * world_pos.y + view_matrix[0][2] * world_pos.z + view_matrix[0][3];
     let mut _y:f32 = view_matrix[1][0] * world_pos.x + view_matrix[1][1] * world_pos.y + view_matrix[1][2] * world_pos.z + view_matrix[1][3];
     let w:f32 = view_matrix[3][0] * world_pos.x + view_matrix[3][1] * world_pos.y + view_matrix[3][2] * world_pos.z + view_matrix[3][3];
@@ -169,9 +169,10 @@ pub fn world_2_screen(world_pos: &glm::Vec3, view_matrix: &[[f32;4];4], screen_w
         _y *= inverse_w;
         let res_x = screen_width.unwrap_or(1920.);
         let res_y = screen_height.unwrap_or(1080.);
-        Some(glm::vec2(
+        Some(glm::vec3(
             (res_x * 0.5) + 0.5 * _x * res_x + 0.5,
-            (res_y * 0.5) - 0.5 * _y * res_y + 0.5
+            (res_y * 0.5) - 0.5 * _y * res_y + 0.5,
+            inverse_w
         ))
     }
 }

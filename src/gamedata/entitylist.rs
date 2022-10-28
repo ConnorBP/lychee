@@ -62,8 +62,8 @@ pub struct EntityInfo {
     pub vec_view_offset: tmp_vec3,
     pub vec_velocity: tmp_vec3,
 
-    pub vec_feet: Option<glm::Vec2>,
-    pub vec_head: Option<glm::Vec2>,
+    pub screen_feet: Option<glm::Vec3>,
+    pub screen_head: Option<glm::Vec3>,
 
     pub bone_matrix: u32,//address
     pub head_pos: tmp_vec3,
@@ -81,8 +81,8 @@ impl Default for EntityInfo {
             vec_origin: Default::default(),
             vec_view_offset: Default::default(),
             vec_velocity: Default::default(),
-            vec_feet: Default::default(),
-            vec_head: Default::default(),
+            screen_feet: Default::default(),
+            screen_head: Default::default(),
             bone_matrix: Default::default(),
             head_pos: Default::default(),
         }
@@ -193,13 +193,13 @@ impl EntityList {
             let feetpos = (ent.vec_origin).into();
             let headpos = (ent.head_pos).into();
             //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-            ent.vec_head = math::world_2_screen(
+            ent.screen_head = math::world_2_screen(
                 &headpos,
                 vm,
                 None,
                 None
             );
-            ent.vec_feet = math::world_2_screen(
+            ent.screen_feet = math::world_2_screen(
                 &feetpos,
                 vm,
                 None,
