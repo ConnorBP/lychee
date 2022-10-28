@@ -70,12 +70,12 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
                                     let feet_posy = 1080 - feet_pos.y as i32;
                                     ctx.debug_line(&mut surface, (head_pos.x as i32, posy), (feet_pos.x as i32, feet_posy), (0.5,0.3,0.8,0.8))
                                 }
-
+                                //let scale = head_pos.y - feet_pos
                                 // 3 = ct 2 = t 1= spec maybe
                                 if player.team == 3 {
-                                    ctx.draw(&mut surface, &ct_texture, (head_pos.x as i32, posy), &DrawConfig::default());
+                                    ctx.draw(&mut surface, &ct_texture, (head_pos.x as i32, posy), &DrawConfig{scale:(6,6), ..Default::default()});
                                 } else {
-                                    ctx.draw(&mut surface, &t_texture, (head_pos.x as i32, posy), &DrawConfig::default());
+                                    ctx.draw(&mut surface, &t_texture, (head_pos.x as i32, posy), &DrawConfig{scale:(6,6), ..Default::default()});
                                 }
                             }
                         }
