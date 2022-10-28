@@ -151,7 +151,7 @@ impl EntityList {
                 bat2.read_into(ent.address.add(*M_BDORMANT), &mut ent.dormant)
                     .read_into(ent.address.add(*NET_HEALTH), &mut ent.health)
                     .read_into(ent.address.add(*NET_TEAM), &mut ent.team_num)
-                    .read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset)
+                    //.read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset)
                     //.read_into(ent.address.add(*NET_VEC_VELOCITY), &mut ent.vec_velocity)
                     .read_into(ent.address.add(*NET_VEC_ORIGIN), &mut ent.vec_origin)
                     .read_into(ent.address.add(*NET_LIFESTATE), &mut ent.lifestate)
