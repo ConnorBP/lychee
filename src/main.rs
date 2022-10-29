@@ -148,6 +148,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             if i == game_data.local_player.ent_idx as usize {continue}
+            if i == game_data.local_player.observing_id as usize -1 {continue}
 
             framedata.locations.push(render::PlayerLoc{
                 head_pos: ent.screen_head,

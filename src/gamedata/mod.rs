@@ -64,6 +64,7 @@ impl GameData {
                     vec_view_offset: Default::default(),
                     view_angles: Default::default(),
                     vec_velocity: Default::default(),
+                    observing_id: 0,
                     
                 },
                 entity_list: Default::default(),
@@ -95,6 +96,10 @@ impl GameData {
         bat.commit_rw().data_part()?;
         // drop the batcher now that we are done with it
         std::mem::drop(bat);
+
+        println!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
+        // apply the bit mask for our target to only get entity id
+        self.local_player.observing_id &= 0xFFF;
 
         
         clearscreen::clear().unwrap();
@@ -149,6 +154,7 @@ pub struct LocalPlayer {
     pub aimpunch_angle: f32,
 
     pub ent_idx: i32,
+    pub observing_id: u64,
 
     vec_origin: entitylist::tmp_vec3,
     vec_view_offset: entitylist::tmp_vec3,
@@ -171,7 +177,7 @@ impl LocalPlayer {
         .read_into(self.address.add(*NET_VEC_ORIGIN), &mut self.vec_origin)
         .read_into(self.address.add(*NET_VEC_VIEWOFFSET), &mut self.vec_view_offset)
         .read_into(self.address.add(*NET_VEC_VELOCITY), &mut self.vec_velocity)
-
+        .read_into(self.address.add(*NET_OBSERVER_TARGET), &mut self.observing_id)
         .read_into(client_state.add(*DW_CLIENTSTATE_VIEWANGLES), &mut self.view_angles)
         .read_into(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER), &mut self.ent_idx);
         trace!("exiting localplayer load data");
