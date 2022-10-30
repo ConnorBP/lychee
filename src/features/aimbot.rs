@@ -15,27 +15,53 @@ pub fn aimbot(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn Serial
     if let Some(closest_player) = game_data.entity_list.closest_player {
 
         let angles = game_data.local_player.view_angles - game_data.local_player.aimpunch_angle;
-        println!("angle: {:?}",game_data.local_player.aimpunch_angle);
+
+        // get where the crosshair is + aimpunch in world coords at the distance of the enemy
+        let crosshair_world = get_crosshair_world_point(
+            game_data.entity_list.entities[closest_player].head_pos,
+            game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+            angles
+        );
 
         // TODO: Store the distance_from_bone values in game_data to re use in both the triggerbot and in the aimbot
         // then make a nearest bone aimbot
-        if let Some(screen) = math::world_2_screen(
+        if let Some(player_screen) = math::world_2_screen(
             &game_data.entity_list.entities[closest_player].head_pos.into(),
             &game_data.vm,
             None,
             None
         ) {
-            let diff: tmp_vec2 = tmp_vec2::from(screen.xy()) - tmp_vec2{ x: 1920./2., y: 1080./2.};
-            let direction = diff.norm(diff.magnitude()) * 20.;
+            if let Some(crosshair_screen) = math::world_2_screen(
+                &crosshair_world.into(),
+                &game_data.vm,
+                None,
+                None,
+            ) {
+                let diff: tmp_vec2 = tmp_vec2::from(player_screen.xy()) -  tmp_vec2::from(crosshair_screen.xy());
+                let direction = diff.norm(diff.magnitude()) * 20.;
 
-            println!("sending move x{} y{}", direction.x, direction.y);
+                println!("sending move x{} y{}", direction.x, direction.y);
 
-            send_mouse_move(port, direction.x as i32, direction.y as i32)
-                .expect("failed to communicate with microcontroller in mouse move");
+                send_mouse_move(port, direction.x as i32, direction.y as i32)
+                    .expect("failed to communicate with microcontroller in mouse move");
+                }
         }
         
     }
 
+}
+
+fn get_crosshair_world_point(to_pos: tmp_vec3, our_pos: tmp_vec3, eye_ang: tmp_vec3) -> tmp_vec3 {
+    // difference
+    let diff = to_pos - our_pos;
+    // get direction vector for our view angles
+    let eye_vec = math::angle_to_vec(eye_ang.x, eye_ang.y);
+    // get the magnitide (distance) between to and from
+    let dmag = diff.magnitude();
+
+    // now that we have a direction vector (unit) and a magnitude
+    // we can get the point along our look direction line with origin + dist*unit
+    our_pos + eye_vec*dmag
 }
 
 fn send_mouse_move(port: &mut Box<dyn SerialPort>, xin:i32,yin:i32) ->std::result::Result<usize, std::io::Error> {
