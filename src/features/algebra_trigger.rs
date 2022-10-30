@@ -11,7 +11,7 @@ use crate::math;
 pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>, game_data: &GameData) {
     if !kb.is_down(0x06) {return}
     //println!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
-    if game_data.local_player.vec_velocity.magnitude() > 0.1 {return}
+    //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
     if let Some(closest_player) = game_data.entity_list.closest_player {
 
         let angles = game_data.local_player.view_angles - game_data.local_player.aimpunch_angle;
