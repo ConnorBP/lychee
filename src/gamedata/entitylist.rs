@@ -1,6 +1,6 @@
-use ::std::{ops::{Add, IndexMut}, cell::RefCell, default};
+use ::std::{ops::{Add, IndexMut, Sub, Mul}, cell::RefCell, default};
 
-use memflow::prelude::v1::*;
+use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 use log::{info,trace};
 
 use crate::{offsets::*, math};
@@ -8,26 +8,90 @@ use crate::{offsets::*, math};
 #[repr(C)]
 #[derive(Copy, Clone,Debug, Default, Pod)]
 pub struct tmp_vec2 {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone,Debug, Default, Pod)]
 pub struct tmp_vec3 {
-    x: f32,
-    y: f32,
-    z: f32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+impl tmp_vec3 {
+    fn add(self, rhs: Self) -> Self {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+    fn sub(self, rhs: Self) -> Self {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+    pub fn magnitude(&self) -> f32 {
+        f32::sqrt(self.x.powf(2.)+self.y.powf(2.)+self.z.powf(2.))
+    }
+    pub fn norm(&self, magnitude: f32) -> Self {
+        Self {
+            x: self.x / magnitude,
+            y: self.y / magnitude,
+            z: self.z / magnitude,
+        }
+    }
 }
 
 impl Add for tmp_vec3 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
+        self.add(rhs)
+    }
+}
+impl Add<tmp_vec2> for tmp_vec3 {
+    type Output = Self;
+
+    fn add(self, rhs: tmp_vec2) -> Self::Output {
         Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
-            z: self.z + rhs.z,
+            z: self.z
+        }
+    }
+}
+
+impl Sub for tmp_vec3 {
+    type Output = Self;
+    fn sub(self,rhs: Self) -> Self::Output {
+        self.sub(rhs)
+    }
+}
+
+impl Sub<tmp_vec2> for tmp_vec3 {
+    type Output = Self;
+
+    fn sub(self, rhs: tmp_vec2) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z
+        }
+    }
+}
+
+impl Mul<f32> for tmp_vec3 {
+    type Output = Self;
+    fn mul(self,rhs:f32) -> Self::Output {
+        Self{
+            x: self.x*rhs,
+            y: self.y*rhs,
+            z: self.z*rhs
         }
     }
 }
@@ -67,8 +131,14 @@ pub struct EntityInfo {
 
     pub bone_matrix: u32,//address
     pub head_pos: tmp_vec3,
+    pub neck_pos: tmp_vec3,
+    pub upper_body_pos: tmp_vec3,
+    pub middle_body_pos: tmp_vec3,
+    pub lower_body_pos: tmp_vec3,
+    pub pelvis_pos: tmp_vec3,
+    
 
-    pub spotted_by_mask: i32,
+    pub spotted_by_mask: u64,
 }
 
 impl Default for EntityInfo {
@@ -87,6 +157,11 @@ impl Default for EntityInfo {
             screen_head: Default::default(),
             bone_matrix: Default::default(),
             head_pos: Default::default(),
+            neck_pos: Default::default(),
+            upper_body_pos: Default::default(),
+            middle_body_pos: Default::default(),
+            lower_body_pos: Default::default(),
+            pelvis_pos: Default::default(),
             spotted_by_mask: Default::default(),
         }
     }
@@ -95,12 +170,14 @@ impl Default for EntityInfo {
 #[derive(Debug)]
 pub struct EntityList {
     pub entities: [EntityInfo; 64],
+    pub closest_player: Option<usize>
 }
 
 impl Default for EntityList {
     fn default() -> EntityList {
         EntityList {
             entities: [EntityInfo::default(); 64],
+            closest_player: None
         }
     }
 }
@@ -124,10 +201,11 @@ impl EntityList {
 
     /// Takes in a reference to the game process and the client module base address and then walks the entity list tree
     /// Data retreived from this is stored into the EntityList struct this is called on
-    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, vm: &[[f32;4];4]) -> Result<()> {
+    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, vm: &[[f32;4];4], local_player_idx: usize) -> Result<()> {
         trace!("entering pop playerlist");
         let mut bat1 = proc.batcher();
         for (i, ent) in self.entities.iter_mut().enumerate() {
+            if i == local_player_idx {continue};
             // clear the spot first so if there is an error reading it ends up not valid
             ent.u32address = 0;
             // add a u32 sized read at the expected adress for the entity address to be at
@@ -146,6 +224,7 @@ impl EntityList {
         let mut bat2 = proc.batcher();
         trace!("created second playerlist batcher");
         for (i, ent) in self.entities.iter_mut().enumerate() {
+            if i == local_player_idx {continue};
             trace!("converting u32 to address");
             ent.address = Address::from(ent.u32address);
             if ent.address.is_valid() && !ent.address.is_null() {
@@ -175,19 +254,30 @@ impl EntityList {
         // get head positions
         let mut bat3 = proc.batcher();
         for (i, ent) in self.entities.iter_mut().enumerate() {
+            if i == local_player_idx {continue};
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             let addr = Address::from(ent.bone_matrix);
             if !addr.is_valid() || addr.is_null() {continue}
             // read out bone pos 8 from the bone matrix address.
-            bat3.read_into(addr.add(0x30*8+0x0C), &mut ent.head_pos.x)
-                .read_into(addr.add(0x30*8+0x1C), &mut ent.head_pos.y)
-                .read_into(addr.add(0x30*8+0x2C), &mut ent.head_pos.z);
+            // bat3.read_into(addr.add(0x30*8+0x0C), &mut ent.head_pos.x)
+            //     .read_into(addr.add(0x30*8+0x1C), &mut ent.head_pos.y)
+            //     .read_into(addr.add(0x30*8+0x2C), &mut ent.head_pos.z);
+            load_bone_batch(&mut bat3, 8, addr, &mut ent.head_pos); // head bone
+            load_bone_batch(&mut bat3, 7, addr, &mut ent.neck_pos); // neck bone
+            load_bone_batch(&mut bat3, 6, addr, &mut ent.upper_body_pos); // upper chest bone
+            load_bone_batch(&mut bat3, 5, addr, &mut ent.middle_body_pos); // middle body bone
+            load_bone_batch(&mut bat3, 4, addr, &mut ent.lower_body_pos); // belly bone
+            //load_bone_batch(&mut bat3, 0, addr, &mut ent.pelvis_pos); // pelvis bone
+
         }
         bat3.commit_rw().data_part()?;
         std::mem::drop(bat3);
 
+        self.closest_player = None;
+        let mut closest_dist = None;
         // get world2screen data
         for (i, ent) in self.entities.iter_mut().enumerate() {
+            if i == local_player_idx {continue};
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             // if ent.vec_view_offset.z == 0. {
             //     proc.read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset).data()?;
@@ -209,11 +299,29 @@ impl EntityList {
                 None,
                 None
             );
+            // set closest entity
+            if let Some (head) = ent.screen_head {
+                // only check for closest on visible entities
+                if ent.spotted_by_mask & (1 << local_player_idx) > 0 {
+                    let dist = glm::distance2(&head.xy(), &glm::vec2(1920./2.,1080./2.));
+                    if self.closest_player.is_none() || dist < closest_dist.unwrap() {
+                        closest_dist = Some(dist);
+                        self.closest_player = Some(i);
+                    }
+                }
+            }
+            
         }
 
         trace!("exiting pop playerlist");
         Ok(())
     }
+}
+
+fn load_bone_batch<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, bone_id: i32, bone_matrix: Address, out: &'bat mut tmp_vec3) {
+    bat.read_into(bone_matrix.add(0x30*bone_id+0x0C), &mut out.x)
+                .read_into(bone_matrix.add(0x30*bone_id+0x1C), &mut out.y)
+                .read_into(bone_matrix.add(0x30*bone_id+0x2C), &mut out.z);
 }
 
 // pub fn read_entity_addr_by_index(proc: &mut (impl Process + MemoryView), client_module_addr: Address, for_index: u32) -> Result<Address> {

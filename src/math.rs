@@ -2,6 +2,8 @@
 
 use lazy_static::lazy_static;
 
+use crate::gamedata::entitylist::tmp_vec3;
+
 lazy_static! {
     /*
 #define FORWARD_DIRECTION_UNIT glm::vec3(1.0f, 0.0f, 0.0f)
@@ -175,4 +177,20 @@ pub fn world_2_screen(world_pos: &glm::Vec3, view_matrix: &[[f32;4];4], screen_w
             inverse_w
         ))
     }
+}
+
+pub fn angle_to_vec(x:f32, y:f32) -> tmp_vec3 {
+    rad_to_vec(d2r(x), d2r(y))
+}
+
+pub fn rad_to_vec(x:f32,y:f32) -> tmp_vec3{
+    tmp_vec3 {
+        x: f32::cos(x) * f32::cos(y),
+        y: f32::cos(x) * f32::sin(y),
+        z: -f32::sin(x)
+    }
+}
+
+pub fn d2r(d:f32)->f32{
+    d*(glm::pi::<f32>()/180.)
 }

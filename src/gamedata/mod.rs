@@ -58,7 +58,7 @@ impl GameData {
                     dormant: 0,
                     lifestate: 0,
                     team_num: 0,
-                    aimpunch_angle: 0.,
+                    aimpunch_angle: Default::default(),
                     ent_idx: 0,
                     vec_origin: Default::default(),
                     vec_view_offset: Default::default(),
@@ -121,7 +121,7 @@ impl GameData {
 
         // retreive the entity list data:
 
-        self.entity_list.populate_player_list(proc, client_base, &self.vm)?;
+        self.entity_list.populate_player_list(proc, client_base, &self.vm, self.local_player.ent_idx as usize)?;
         // temporary test of view matrix
         for (i, ent) in self.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
@@ -151,15 +151,15 @@ pub struct LocalPlayer {
     pub lifestate: i32,
     pub health: i32,
     pub team_num: i32,
-    pub aimpunch_angle: f32,
+    pub aimpunch_angle: entitylist::tmp_vec2,
 
     pub ent_idx: i32,
     pub observing_id: u64,
 
-    vec_origin: entitylist::tmp_vec3,
-    vec_view_offset: entitylist::tmp_vec3,
-    view_angles: entitylist::tmp_vec3,
-    vec_velocity: entitylist::tmp_vec3,
+    pub vec_origin: entitylist::tmp_vec3,
+    pub vec_view_offset: entitylist::tmp_vec3,
+    pub view_angles: entitylist::tmp_vec3,
+    pub vec_velocity: entitylist::tmp_vec3,
 }
 
 impl LocalPlayer {

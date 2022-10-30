@@ -120,7 +120,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                     if let Ok(proc) = os.clone().into_process_by_name("csgo.exe") {
                         ret_proc = proc;
                         info!("process found. Waiting for modules to load.");
-                        std::thread::sleep(std::time::Duration::from_secs(20));//todo make the modules wait until success
 
                         // now that we have a new working proc we also need to reset some stuff
 
@@ -160,6 +159,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         tx.send(framedata)?;
 
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
+            features::algebra_trigger(&mut keyboard, &mut port, &game_data);
             features::incross_trigger(&mut keyboard, &mut port, &game_data);
         }
     }
