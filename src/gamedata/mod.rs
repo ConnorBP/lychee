@@ -133,7 +133,7 @@ impl GameData {
                 None,
                 None
             ) {
-                println!("({}) || offset: {:?} h: {} x{}y{} w:{}", i, ent.head_pos, ent.health, screenpos.x, screenpos.y, screenpos.z);
+                println!("({}) || mask: {:b} spotted: {} x{}y{} w:{}", i, ent.spotted_by_mask, ent.spotted_by_mask & (1 << self.local_player.ent_idx), screenpos.x, screenpos.y, screenpos.z);
             }
         }
 

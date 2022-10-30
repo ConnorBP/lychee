@@ -67,6 +67,8 @@ pub struct EntityInfo {
 
     pub bone_matrix: u32,//address
     pub head_pos: tmp_vec3,
+
+    pub spotted_by_mask: i32,
 }
 
 impl Default for EntityInfo {
@@ -85,6 +87,7 @@ impl Default for EntityInfo {
             screen_head: Default::default(),
             bone_matrix: Default::default(),
             head_pos: Default::default(),
+            spotted_by_mask: Default::default(),
         }
     }
 }
@@ -151,6 +154,7 @@ impl EntityList {
                 bat2.read_into(ent.address.add(*M_BDORMANT), &mut ent.dormant)
                     .read_into(ent.address.add(*NET_HEALTH), &mut ent.health)
                     .read_into(ent.address.add(*NET_TEAM), &mut ent.team_num)
+                    .read_into(ent.address.add(*NET_SPOTTED_BY_MASK), &mut ent.spotted_by_mask)
                     //.read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset)
                     //.read_into(ent.address.add(*NET_VEC_VELOCITY), &mut ent.vec_velocity)
                     .read_into(ent.address.add(*NET_VEC_ORIGIN), &mut ent.vec_origin)
