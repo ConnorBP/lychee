@@ -14,11 +14,14 @@ use format_bytes::format_bytes;
 
 pub fn aimbot(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>, game_data: &GameData) {
     //if !kb.is_down(0x06) {return}
+    if !kb.is_down(0x01) {return}
+    println!("shots:{}",game_data.local_player.shots_fired);
+    if game_data.local_player.shots_fired < 2 {return}
     //println!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
     //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
     if let Some(closest_player) = game_data.entity_list.closest_player {
 
-        let angles = game_data.local_player.view_angles - game_data.local_player.aimpunch_angle;
+        let angles = game_data.local_player.view_angles + (game_data.local_player.aimpunch_angle*2.);
         println!("aimpunch: {:?}", game_data.local_player.aimpunch_angle);
 
         // get where the crosshair is + aimpunch in world coords at the distance of the enemy

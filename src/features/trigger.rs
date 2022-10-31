@@ -6,6 +6,7 @@ use crate::gamedata::GameData;
 
 pub fn incross_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>, game_data: &GameData) {
     if !kb.is_down(0x06) {return}
+    if game_data.local_player.shots_fired > 1 {return}
     //if game_data.local_player.vec_velocity.magnitude() > 0.1 {return}
         if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
             //info!("incross: {}", game_data.local_player.incross);

@@ -59,6 +59,7 @@ impl GameData {
                     lifestate: 0,
                     team_num: 0,
                     aimpunch_angle: Default::default(),
+                    shots_fired: 0,
                     ent_idx: 0,
                     vec_origin: Default::default(),
                     vec_view_offset: Default::default(),
@@ -152,6 +153,7 @@ pub struct LocalPlayer {
     pub health: i32,
     pub team_num: i32,
     pub aimpunch_angle: entitylist::tmp_vec2,
+    pub shots_fired: i32,
 
     pub ent_idx: i32,
     pub observing_id: u64,
@@ -174,6 +176,7 @@ impl LocalPlayer {
         .read_into(self.address.add(*NET_TEAM), &mut self.team_num)
         .read_into(self.address.add(*NET_LIFESTATE), &mut self.lifestate)
         .read_into(self.address.add(*NET_AIMPUNCH_ANGLE), &mut self.aimpunch_angle)
+        .read_into(self.address.add(*NET_SHOTSFIRED), &mut self.shots_fired)
         .read_into(self.address.add(*NET_VEC_ORIGIN), &mut self.vec_origin)
         .read_into(self.address.add(*NET_VEC_VIEWOFFSET), &mut self.vec_view_offset)
         .read_into(self.address.add(*NET_VEC_VELOCITY), &mut self.vec_velocity)
