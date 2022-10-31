@@ -14,7 +14,7 @@ pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<d
     //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
     if let Some(closest_player) = game_data.entity_list.closest_player {
 
-        let angles = game_data.local_player.view_angles - game_data.local_player.aimpunch_angle;
+        let angles = game_data.local_player.view_angles + game_data.local_player.aimpunch_angle;
         println!("angle: {:?}",game_data.local_player.aimpunch_angle);
 
         //let dist_from_head = glm::distance(&point.into(), &to.into());
@@ -51,7 +51,7 @@ pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<d
         || dist_from_lower < 7.
         {
             //game_data.local_player.incross = closest_player as i32;
-            port.write(b"m0\n").unwrap();
+            port.write(b"ml\n").unwrap();
         }
         
     }
