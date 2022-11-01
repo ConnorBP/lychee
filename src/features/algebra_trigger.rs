@@ -1,6 +1,3 @@
-
-use ::std::ops::Div;
-
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
@@ -19,28 +16,30 @@ pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<d
         println!("angle: {:?}",game_data.local_player.aimpunch_angle);
 
         //let dist_from_head = glm::distance(&point.into(), &to.into());
+        let entity = &game_data.entity_list.entities[closest_player];
+        let vel = entity.vec_velocity *2.;
         let dist_from_head = get_dist_from_crosshair(
-            game_data.entity_list.entities[closest_player].head_pos,
+            entity.head_pos + vel,
             game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
             angles
         );
         let dist_from_neck = get_dist_from_crosshair(
-            game_data.entity_list.entities[closest_player].neck_pos,
+            entity.neck_pos + vel,
             game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
             angles
         );
         let dist_from_body = get_dist_from_crosshair(
-            game_data.entity_list.entities[closest_player].upper_body_pos,
+            entity.upper_body_pos + vel,
             game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
             angles
         );
         let dist_from_middle = get_dist_from_crosshair(
-            game_data.entity_list.entities[closest_player].middle_body_pos,
+            entity.middle_body_pos + vel,
             game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
             angles
         );
         let dist_from_lower = get_dist_from_crosshair(
-            game_data.entity_list.entities[closest_player].upper_body_pos,
+            entity.upper_body_pos + vel,
             game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
             angles
         );
