@@ -18,3 +18,9 @@
     - minimap
     - bloop when entity in front of crosshair?
     - change over to bluetooth serial + teensy (needs a fancy voltage level circuit)
+    - reoil recorder for more legit looking recoil
+    - weapon detection
+    - config system
+    - flashed check
+    - bsp parser
+    - weapon based config
