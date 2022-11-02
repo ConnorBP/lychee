@@ -1,3 +1,4 @@
+use log::info;
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;

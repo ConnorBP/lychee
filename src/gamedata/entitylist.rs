@@ -254,14 +254,14 @@ impl Default for EntityInfo {
 
 #[derive(Debug)]
 pub struct EntityList {
-    pub entities: [EntityInfo; 64],
+    pub entities: [EntityInfo; 32],// can be up to 64 (in theory) but we are gonna save some time with only reading 32
     pub closest_player: Option<usize>
 }
 
 impl Default for EntityList {
     fn default() -> EntityList {
         EntityList {
-            entities: [EntityInfo::default(); 64],
+            entities: [EntityInfo::default(); 32],// can be up to 64 (in theory) but we are gonna save some time with only reading 32
             closest_player: None
         }
     }
@@ -364,10 +364,6 @@ impl EntityList {
         for (i, ent) in self.entities.iter_mut().enumerate() {
             if i == local_player_idx {continue};
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            // if ent.vec_view_offset.z == 0. {
-            //     proc.read_into(ent.address.add(*NET_VEC_VIEWOFFSET), &mut ent.vec_view_offset).data()?;
-            //     //ent.vec_view_offset.z = 64.06256;
-            // }
 
             let feetpos = (ent.vec_origin).into();
             let headpos = (ent.head_pos).into();

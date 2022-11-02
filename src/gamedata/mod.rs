@@ -98,13 +98,13 @@ impl GameData {
         // drop the batcher now that we are done with it
         std::mem::drop(bat);
 
-        info!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
+        trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
         // apply the bit mask for our target to only get entity id
         self.local_player.observing_id &= 0xFFF;
 
         
         clearscreen::clear().unwrap();
-        info!("Constructing View Matrix with pos: {:?} and ang: {:?}", self.local_player.vec_origin + self.local_player.vec_view_offset, self.local_player.view_angles);
+        trace!("Constructing View Matrix with pos: {:?} and ang: {:?}", self.local_player.vec_origin + self.local_player.vec_view_offset, self.local_player.view_angles);
 
 
         // copy viewmatrix data into the mat4
@@ -124,19 +124,19 @@ impl GameData {
 
         self.entity_list.populate_player_list(proc, client_base, &self.vm, self.local_player.ent_idx as usize)?;
         // temporary test of view matrix
-        for (i, ent) in self.entity_list.entities.iter().enumerate() {
-            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
-            //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-            if let Some(screenpos) = math::world_2_screen(
-                &worldpos,
-                &self.vm,
-                None,
-                None
-            ) {
-                info!("({}) || mask: {:b} spotted: {} x{}y{} w:{}", i, ent.spotted_by_mask, ent.spotted_by_mask & (1 << self.local_player.ent_idx), screenpos.x, screenpos.y, screenpos.z);
-            }
-        }
+        // for (i, ent) in self.entity_list.entities.iter().enumerate() {
+        //     if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+        //     let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
+        //     //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
+        //     if let Some(screenpos) = math::world_2_screen(
+        //         &worldpos,
+        //         &self.vm,
+        //         None,
+        //         None
+        //     ) {
+        //         info!("({}) || mask: {:b} spotted: {} x{}y{} w:{}", i, ent.spotted_by_mask, ent.spotted_by_mask & (1 << self.local_player.ent_idx), screenpos.x, screenpos.y, screenpos.z);
+        //     }
+        // }
 
         trace!("exiting load data");
         Ok(())

@@ -5,7 +5,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 use lazy_static::lazy_static;
-use log::error;
+use log::{error,info};
 
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
