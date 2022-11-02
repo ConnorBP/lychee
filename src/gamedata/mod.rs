@@ -103,10 +103,7 @@ impl GameData {
         self.local_player.observing_id &= 0xFFF;
 
         
-        clearscreen::clear().unwrap();
-        trace!("Constructing View Matrix with pos: {:?} and ang: {:?}", self.local_player.vec_origin + self.local_player.vec_view_offset, self.local_player.view_angles);
-
-
+        //trace!("Constructing View Matrix with pos: {:?} and ang: {:?}", self.local_player.vec_origin + self.local_player.vec_view_offset, self.local_player.view_angles);
         // copy viewmatrix data into the mat4
         //self.view_matrix =  glm::mat4(self.vm[0],self.vm[1],self.vm[2],self.vm[3],self.vm[4],self.vm[5],self.vm[6],self.vm[7],self.vm[8],self.vm[9],self.vm[10],self.vm[11],self.vm[12],self.vm[13],self.vm[14],self.vm[15]);
         

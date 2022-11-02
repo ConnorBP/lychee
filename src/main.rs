@@ -138,8 +138,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-
-        //clearscreen::clear()?;
         wait_for(game_data.load_data(&mut process, client_module.base), Duration::from_secs(1));
 
         let mut framedata = render::FrameData::default();
