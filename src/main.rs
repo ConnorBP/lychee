@@ -43,10 +43,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let tx = render::start_window_render()?;
 
     // init the connection to the serial port for mouse and keyboard output
-    println!("Fetching Serial Ports...");
+    info!("Fetching Serial Ports...");
     let ports = serialport::available_ports()?;
     for p in ports {
-        println!("{}", p.port_name);
+        info!("{}", p.port_name);
     }
     let mut port = serialport::new("COM3", 115_200)
         .timeout(Duration::from_millis(10))
@@ -71,7 +71,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let base_info = {
         let mut proc_info;
         loop {
-            println!("Waiting for process handle");
+            info!("Waiting for process handle");
             if let Ok(res) = os.process_info_by_name("csgo.exe") {
                 proc_info = res;
                 break;
@@ -106,7 +106,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
 
     let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
-    println!("{:?}", game_data);
+    info!("{:?}", game_data);
 
     loop {
         // check if process is valid
@@ -172,12 +172,12 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // let entity_list = find_signature(process.clone(), &clientModule, &client_buf, entity_list_sig, 1, 0)?;
     // let local_player_getter = find_signature(process.clone(), &clientModule, &client_buf, local_player_sig, 3, 4)?;
     // let client_state = find_signature(process.clone(), &engineModule, &engine_buf, client_state_sig, 1, 0)?;
-    // println!("DwEntityList: {:#010x} playerget: {:#010x} clientState: {:#010x}", entity_list, local_player_getter, client_state);
+    // info!("DwEntityList: {:#010x} playerget: {:#010x} clientState: {:#010x}", entity_list, local_player_getter, client_state);
     // let mut yeet: u64 = 0;
     // process.read_into(engineModule.base.add(5820380), &mut yeet).data_part()?;
-    // println!("What client state should be: {:#}, {}", yeet, yeet);
+    // info!("What client state should be: {:#}, {}", yeet, yeet);
     // if let Some(test) = regex_patscan(&client_buf) {
-    //     println!("regex test found: {:#010x}", test);
+    //     info!("regex test found: {:#010x}", test);
     // }
     
     //process.read_into(addr, out)
@@ -245,7 +245,7 @@ fn regex_patscan(module_buf: &[u8]) -> Option<usize> {
 // fn keyboard_test(os: Win32Kernel<>) {
 //     let mut keyboard = os.into_keyboard()?;
 //     loop {
-//         println!("space down: {:?}", keyboard.is_down(0x20));
+//         info!("space down: {:?}", keyboard.is_down(0x20));
 //         std::thread::sleep(std::time::Duration::from_millis(1000));
 //     }
 // }
@@ -326,13 +326,13 @@ fn extract_args(matches: &ArgMatches) {
 // some test stuff:
 
     // // Print process list, formatted
-    // println!(
+    // info!(
     //     "{:>5} {:>10} {:>10} {:<}",
     //     "PID", "SYS ARCH", "PROC ARCH", "NAME"
     // );
 
     // for p in process_list {
-    //     println!(
+    //     info!(
     //         "{:>5} {:^10} {:^10} {} ({}) ({:?})",
     //         p.pid, p.sys_arch, p.proc_arch, p.name, p.command_line, p.state
     //     );
@@ -342,7 +342,7 @@ fn extract_args(matches: &ArgMatches) {
     // print list of modules
     // let modules = process.module_list()?;
     // for m in modules {
-    //     println!(
+    //     info!(
     //         "{:#010x} {:^24} {:^8} {} ({})\n({:?})",
     //         m.base, m.address, m.size, m.arch, m.name, m.path
     //     )

@@ -36,7 +36,7 @@ pub fn aimbot(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn Serial
         *GOT_NEW_TARGET.lock().unwrap() = true;
         return;
     }
-    //println!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
+    //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
     //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
     if let Some(closest_player) = game_data.entity_list.closest_player {
 
@@ -64,7 +64,7 @@ pub fn aimbot(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn Serial
         if *new_target == true {
             *target_time = SystemTime::now();
             *old_punch = Default::default();
-            println!("GOT NEW TARGET");
+            info!("GOT NEW TARGET");
             // reset newtarget var
             *new_target = false
         }
@@ -100,7 +100,7 @@ pub fn aimbot(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn Serial
         
         let angles = game_data.local_player.view_angles;
         let recoil = game_data.local_player.aimpunch_angle*2.;
-        println!("aimpunch: {:?}\nskew: {:?}", game_data.local_player.aimpunch_angle, skew);
+        info!("aimpunch: {:?}\nskew: {:?}", game_data.local_player.aimpunch_angle, skew);
 
         // where the center of the screen is in world coords at enemy dist
         let crosshair_world = get_crosshair_world_point(
@@ -159,7 +159,7 @@ pub fn aimbot(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn Serial
                 //
                 // move the mouse
                 //
-                println!("sending move x{} y{}", direction.x, direction.y);
+                info!("sending move x{} y{}", direction.x, direction.y);
                 let x = direction.x as i32;
                 let y = direction.y as i32;
                 let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);

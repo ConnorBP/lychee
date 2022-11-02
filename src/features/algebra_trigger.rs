@@ -8,12 +8,12 @@ use crate::math;
 pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>, game_data: &GameData) {
     if !kb.is_down(0x06) {return}
     if game_data.local_player.shots_fired > 1 {return}
-    //println!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
+    //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
     //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
     if let Some(closest_player) = game_data.entity_list.closest_player {
 
         let angles = game_data.local_player.view_angles + (game_data.local_player.aimpunch_angle*2.);
-        println!("angle: {:?}",game_data.local_player.aimpunch_angle);
+        info!("angle: {:?}",game_data.local_player.aimpunch_angle);
 
         //let dist_from_head = glm::distance(&point.into(), &to.into());
         let entity = &game_data.entity_list.entities[closest_player];
@@ -43,7 +43,7 @@ pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<d
             game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
             angles
         );
-        println!("dist from body: {}", dist_from_body);
+        info!("dist from body: {}", dist_from_body);
         if dist_from_head < 5.
         || dist_from_neck < 6.
         || dist_from_body < 7.
@@ -59,7 +59,7 @@ pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<d
         // if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
         //     //info!("incross: {}", game_data.local_player.incross);
         //     if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
-        //         //println!("enemy team: {}", enemy_team);
+        //         //info!("enemy team: {}", enemy_team);
         //         if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle > -0.04 {
         //             port.write(b"m0\n").unwrap();
         //             //print!("firing {}", game_data.local_player.aimpunch_angle);

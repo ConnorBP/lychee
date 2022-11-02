@@ -44,7 +44,7 @@ pub fn create_projection_viewmatrix_euler(
     */
     let pitch = -camera_euler_angles.x * glm::pi::<f32>() / 180.;
     let yaw = camera_euler_angles.y * glm::pi::<f32>() / 180.;
-    println!("pitch: {} yaw: {}", pitch, yaw);
+    info!("pitch: {} yaw: {}", pitch, yaw);
     //let roll = camera_euler_angles.z * glm::pi() / 180.; // unused for now
 
     let camera_rotation = glm::to_quat(

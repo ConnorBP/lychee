@@ -11,7 +11,7 @@ pub fn incross_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<d
         if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
             //info!("incross: {}", game_data.local_player.incross);
             if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
-                //println!("enemy team: {}", enemy_team);
+                //info!("enemy team: {}", enemy_team);
                 if enemy_team != game_data.local_player.team_num && game_data.local_player.aimpunch_angle.x > -0.04 {
                     port.write(b"ml\n").unwrap();
                     //print!("firing {}", game_data.local_player.aimpunch_angle);

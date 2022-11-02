@@ -98,7 +98,7 @@ impl GameData {
         // drop the batcher now that we are done with it
         std::mem::drop(bat);
 
-        println!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
+        info!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
         // apply the bit mask for our target to only get entity id
         self.local_player.observing_id &= 0xFFF;
 
@@ -134,7 +134,7 @@ impl GameData {
                 None,
                 None
             ) {
-                println!("({}) || mask: {:b} spotted: {} x{}y{} w:{}", i, ent.spotted_by_mask, ent.spotted_by_mask & (1 << self.local_player.ent_idx), screenpos.x, screenpos.y, screenpos.z);
+                info!("({}) || mask: {:b} spotted: {} x{}y{} w:{}", i, ent.spotted_by_mask, ent.spotted_by_mask & (1 << self.local_player.ent_idx), screenpos.x, screenpos.y, screenpos.z);
             }
         }
 
