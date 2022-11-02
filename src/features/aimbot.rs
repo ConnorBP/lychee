@@ -67,7 +67,7 @@ impl AimBot {
             // reset the targetfound time when there is a new target
             if self.got_new_target == true {
                 self.target_aquired_time = SystemTime::now();
-                self.old_punch = Default::default();
+                //self.old_punch = Default::default();
                 info!("GOT NEW TARGET");
                 // reset newtarget var
                 self.got_new_target = false
@@ -177,7 +177,7 @@ impl AimBot {
                 }
             }
             
-        } else if let Ok(elap) = self.last_targeting_time.elapsed() {
+        } /*else if let Ok(elap) = self.last_targeting_time.elapsed() {
             // if there is currently no valid target but we were recently targeting an enemy then continue to spray control for a bit
             if elap.as_millis() < continue_spray_delay_ms {
                 //TODO rework spray system to be recorded screen pixel values
@@ -216,7 +216,7 @@ impl AimBot {
                     }
                 }
             }
-        }
+        }*/
     
     }
 }
