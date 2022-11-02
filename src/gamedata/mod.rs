@@ -1,26 +1,14 @@
 // make a global struct to store a copy of the in game info
 // fill a batcher with operations to load from the fpga
 // commit it
-
-// todo move all of the reading into here on a batcher
-
 use log::{info, warn, Level, trace};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
-use memflow_win32::prelude::v1::*;
-use patternscan::scan;
-use serialport::SerialPort;
-use std::io::Cursor;
-use ::std::{ops::Add, time::Duration};
+use ::std::ops::Add;
 
-use config::Config;
-use lazy_static::lazy_static;
-use std::sync::RwLock;
-
-use crate::offsets::*;
+use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3}};
 
 pub mod entitylist;
 use entitylist::{EntityList, EntityInfo};
-use crate::math;
 
 #[derive(Debug)]
 pub struct GameData {
@@ -149,16 +137,16 @@ pub struct LocalPlayer {
     pub lifestate: i32,
     pub health: i32,
     pub team_num: i32,
-    pub aimpunch_angle: entitylist::tmp_vec2,
+    pub aimpunch_angle: tmp_vec2,
     pub shots_fired: i32,
 
     pub ent_idx: i32,
     pub observing_id: u64,
 
-    pub vec_origin: entitylist::tmp_vec3,
-    pub vec_view_offset: entitylist::tmp_vec3,
-    pub view_angles: entitylist::tmp_vec3,
-    pub vec_velocity: entitylist::tmp_vec3,
+    pub vec_origin: tmp_vec3,
+    pub vec_view_offset: tmp_vec3,
+    pub view_angles: tmp_vec3,
+    pub vec_velocity: tmp_vec3,
 }
 
 impl LocalPlayer {

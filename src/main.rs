@@ -1,24 +1,20 @@
 extern crate nalgebra_glm as glm;
 
+mod datatypes;
+mod utils;
+mod offsets;
+mod gamedata;
+mod features;
+mod render;
+
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
 use gamedata::GameData;
 use log::{info, warn, Level};
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use patternscan::scan;
-use serialport::SerialPort;
 use std::io::Cursor;
 use ::std::{ops::Add, time::Duration};
-
-use config::Config;
-use lazy_static::lazy_static;
-use std::sync::RwLock;
-
-mod gamedata;
-mod offsets;
-mod features;
-mod math;
-mod render;
 
 /// Blocks thread until result returns success
 fn wait_for<T>(result:Result<T>, delay: Duration) -> T 

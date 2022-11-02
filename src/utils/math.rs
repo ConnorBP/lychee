@@ -3,7 +3,7 @@
 use lazy_static::lazy_static;
 use log::info;
 
-use crate::gamedata::entitylist::tmp_vec3;
+use crate::datatypes::tmp_vec3;
 
 lazy_static! {
     /*

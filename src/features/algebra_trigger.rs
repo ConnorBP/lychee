@@ -2,9 +2,7 @@ use log::info;
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
-use crate::gamedata::GameData;
-use crate::gamedata::entitylist::{tmp_vec2, tmp_vec3};
-use crate::math;
+use crate::{utils::math,gamedata::GameData, datatypes::tmp_vec3};
 
 pub fn algebra_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>, game_data: &GameData) {
     if !kb.is_down(0x06) {return}
