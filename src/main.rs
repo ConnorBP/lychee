@@ -108,6 +108,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
     info!("{:?}", game_data);
 
+
+    // store features that need to retain data
+    let mut aimbot = features::AimBot::new();
+
     loop {
         // check if process is valid
 
@@ -157,7 +161,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         tx.send(framedata)?;
 
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
-            features::aimbot(&mut keyboard, &mut port, &game_data);
+            aimbot.aimbot(&mut keyboard, &mut port, &game_data);
             features::algebra_trigger(&mut keyboard, &mut port, &game_data);
             features::incross_trigger(&mut keyboard, &mut port, &game_data);
         }

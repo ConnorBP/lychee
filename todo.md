@@ -9,6 +9,8 @@
     - possibility to build our own viewmatrix if need be?
     - figure out why viewoffset isn't working on other player entities
     - use get player index to get player from entity list instead of using the localplayer address func
+    - restructure aimbot to use struct instead of statics for persistant data
+    - make aimbot continue spray control for a bit after enemies die when there is no new enemy
 
 # feature improvements
     - aimbot
