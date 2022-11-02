@@ -107,8 +107,8 @@ impl AimBot {
             info!("aimpunch: {:?}\nskew: {:?}", game_data.local_player.aimpunch_angle, skew);
     
             // where the center of the screen is in world coords at enemy dist
-            let crosshair_world = get_crosshair_world_point(
-                game_data.entity_list.entities[closest_player].head_pos,
+            let crosshair_world = get_crosshair_world_point_at_dist(
+                10.,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
                 angles
             );
@@ -168,14 +168,54 @@ impl AimBot {
                     let y = direction.y as i32;
                     let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);
                     port.write(cmd.as_bytes()).expect("could not write to serial port");
-    
-                    let mut serial_buf: Vec<u8> = vec![0; 200];
-                    if let Ok(t) = port.read(serial_buf.as_mut_slice()) {
-                        std::io::stdout().write_all(&serial_buf[..t]).expect("failed to read serial");
-                    }
+                    
+                    // for debugging if sent serial data was valid
+                    // let mut serial_buf: Vec<u8> = vec![0; 200];
+                    // if let Ok(t) = port.read(serial_buf.as_mut_slice()) {
+                    //     std::io::stdout().write_all(&serial_buf[..t]).expect("failed to read serial");
+                    // }
                 }
             }
             
+        } else if let Ok(elap) = self.last_targeting_time.elapsed() {
+            // if there is currently no valid target but we were recently targeting an enemy then continue to spray control for a bit
+            if elap.as_millis() < continue_spray_delay_ms {
+                //TODO rework spray system to be recorded screen pixel values
+                let angles = game_data.local_player.view_angles;
+                let recoil = game_data.local_player.aimpunch_angle*2.;
+                let recoil_world = get_crosshair_world_point_at_dist(
+                    10.,
+                    game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+                    angles + recoil - self.old_punch
+                );
+                let crosshair_world = get_crosshair_world_point_at_dist(
+                    10.,
+                    game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+                    angles
+                );
+                self.old_punch = recoil;
+                if let Some(recoil_at) = math::world_2_screen(
+                    &recoil_world.into(),
+                    &game_data.vm,
+                    None,
+                    None,
+                ) {
+                    if let Some(target) = math::world_2_screen(
+                        &crosshair_world.into(),
+                        &game_data.vm,
+                        None,
+                        None
+                    ) {
+                        let diff: tmp_vec2 = tmp_vec2::from(target.xy()) -  tmp_vec2::from(recoil_at.xy());
+                        let direction = diff.norm(diff.magnitude()) * move_speed;
+                        // move the mouse
+                        let x = direction.x as i32;
+                        let y = direction.y as i32;
+                        let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);
+                        port.write(cmd.as_bytes()).expect("could not write to serial port");
+                    }
+                }
+            }
         }
     
     }
@@ -194,6 +234,16 @@ fn get_crosshair_world_point(to_pos: tmp_vec3, our_pos: tmp_vec3, eye_ang: tmp_v
     // now that we have a direction vector (unit) and a magnitude
     // we can get the point along our look direction line with origin + dist*unit
     our_pos + eye_vec*dmag
+}
+
+/// Take in a distance, the players position, and what direction they are looking
+/// Then return a world point in the direction the player is looking at the distance of the target position
+fn get_crosshair_world_point_at_dist(to_dist: f32, our_pos: tmp_vec3, eye_ang: tmp_vec3) -> tmp_vec3 {
+    // get direction vector for our view angles
+    let eye_vec = math::angle_to_vec(eye_ang.x, eye_ang.y);
+    // now that we have a direction vector (unit) and a magnitude
+    // we can get the point along our look direction line with origin + dist*unit
+    our_pos + eye_vec*to_dist
 }
 
 // method for sending mouse move via bit banging. Replaced with a more simple, slower but more reliable serial method
