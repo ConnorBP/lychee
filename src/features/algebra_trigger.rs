@@ -4,6 +4,8 @@ use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
 use crate::{utils::math,gamedata::GameData, datatypes::{tmp_vec3, game::WeaponId}};
 
+use super::zuesknife;
+
 const prefire_factor: f64 = 12.;
 
 #[derive(Default)]
@@ -28,25 +30,9 @@ impl AlgebraTrigger {
             //info!("angle: {:?}",game_data.local_player.aimpunch_angle);
             
             //let dist_from_head = glm::distance(&point.into(), &to.into());
+            if !zuesknife::zues_knife_bot(port,game_data,closest_player) {return}
+
             let entity = &game_data.entity_list.entities[closest_player];
-
-            // zuesbot
-            let entity_world_distance = 
-                    (
-                        entity.head_pos
-                        - (game_data.local_player.vec_origin + game_data.local_player.vec_view_offset)
-                    ).magnitude();
-            if game_data.local_player.weapon_id == WeaponId::Taser {
-                if entity_world_distance >= 182.5 {return}
-            }
-            if game_data.local_player.weapon_id == WeaponId::Knife {
-                if entity_world_distance >= 48. {return}
-                if entity_world_distance < 32. {
-                    port.write(b"mr\n").unwrap();
-                    return;
-                }
-            }
-
 
             let vel = entity.vec_velocity *2.;
             let dist_from_head = get_dist_from_crosshair(

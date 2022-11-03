@@ -1,6 +1,7 @@
 mod bhop;
 mod trigger;
 mod algebra_trigger;
+mod zuesknife;
 #[cfg(all(feature = "aimbot", feature = "viewmatrix"))]
 mod aimbot;
 #[cfg(feature = "aimbot")]
