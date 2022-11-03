@@ -54,6 +54,7 @@ impl GameData {
                     view_angles: Default::default(),
                     vec_velocity: Default::default(),
                     observing_id: 0,
+                    weapon_id: 0,
                     
                 },
                 entity_list: Default::default(),
@@ -87,41 +88,14 @@ impl GameData {
         std::mem::drop(bat);
 
         trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
-        // apply the bit mask for our target to only get entity id
+        
+        // apply the bit mask to convert handles to an index
         self.local_player.observing_id &= 0xFFF;
-
-        
-        //trace!("Constructing View Matrix with pos: {:?} and ang: {:?}", self.local_player.vec_origin + self.local_player.vec_view_offset, self.local_player.view_angles);
-        // copy viewmatrix data into the mat4
-        //self.view_matrix =  glm::mat4(self.vm[0],self.vm[1],self.vm[2],self.vm[3],self.vm[4],self.vm[5],self.vm[6],self.vm[7],self.vm[8],self.vm[9],self.vm[10],self.vm[11],self.vm[12],self.vm[13],self.vm[14],self.vm[15]);
-        
-        // construct the viewmatrix
-        // self.view_matrix = math::create_projection_viewmatrix_euler(
-        //     &(self.local_player.vec_origin + self.local_player.vec_view_offset).into(),
-        //     &self.local_player.view_angles.into(),
-        //     Some(4./3.),
-        //     Some(70.),
-        //     Some(1.0),
-        //     None,
-        // );
+        self.local_player.weapon_id &= 0xFFF;
+        //println!("weapon: {}", self.local_player.weapon_id);
 
         // retreive the entity list data:
-
         self.entity_list.populate_player_list(proc, client_base, &self.vm, self.local_player.ent_idx as usize)?;
-        // temporary test of view matrix
-        // for (i, ent) in self.entity_list.entities.iter().enumerate() {
-        //     if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-        //     let worldpos = (ent.vec_origin + ent.vec_view_offset).into();
-        //     //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-        //     if let Some(screenpos) = math::world_2_screen(
-        //         &worldpos,
-        //         &self.vm,
-        //         None,
-        //         None
-        //     ) {
-        //         info!("({}) || mask: {:b} spotted: {} x{}y{} w:{}", i, ent.spotted_by_mask, ent.spotted_by_mask & (1 << self.local_player.ent_idx), screenpos.x, screenpos.y, screenpos.z);
-        //     }
-        // }
 
         trace!("exiting load data");
         Ok(())
@@ -142,6 +116,7 @@ pub struct LocalPlayer {
 
     pub ent_idx: i32,
     pub observing_id: u64,
+    pub weapon_id: i32,
 
     pub vec_origin: tmp_vec3,
     pub vec_view_offset: tmp_vec3,
@@ -166,6 +141,7 @@ impl LocalPlayer {
         .read_into(self.address.add(*NET_VEC_VIEWOFFSET), &mut self.vec_view_offset)
         .read_into(self.address.add(*NET_VEC_VELOCITY), &mut self.vec_velocity)
         .read_into(self.address.add(*NET_OBSERVER_TARGET), &mut self.observing_id)
+        .read_into(self.address.add(*NET_ACTIVE_WEAPON), &mut self.weapon_id)
         .read_into(client_state.add(*DW_CLIENTSTATE_VIEWANGLES), &mut self.view_angles)
         .read_into(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER), &mut self.ent_idx);
         trace!("exiting localplayer load data");

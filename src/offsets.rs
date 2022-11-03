@@ -28,9 +28,9 @@ lazy_static! {
     pub static ref NET_SHOTS_FIRED: u32 = load_offset("netvars.m_iShotsFired");
     pub static ref NET_DW_BONEMATRIX: u32 = load_offset("netvars.m_dwBoneMatrix");
     pub static ref NET_OBSERVER_TARGET: u32 = load_offset("netvars.m_hObserverTarget");
+    pub static ref NET_ACTIVE_WEAPON: u32 = load_offset("netvars.m_hActiveWeapon");
+    pub static ref NET_ITEM_DEF_INDEX: u32 = load_offset("netvars.m_iItemDefinitionIndex");
     pub static ref NET_SPOTTED_BY_MASK: u32 = load_offset("netvars.m_bSpottedByMask");
-    // viewpunch
-    // aimpunch velocity
     pub static ref NET_VEC_ORIGIN: u32 = load_offset("netvars.m_vecOrigin");
     pub static ref NET_VEC_VIEWOFFSET: u32 = load_offset("netvars.m_vecViewOffset");
     pub static ref NET_VEC_VELOCITY: u32 = load_offset("netvars.m_vecVelocity");

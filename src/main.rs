@@ -14,7 +14,7 @@ use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use patternscan::scan;
 use std::io::Cursor;
-use ::std::{ops::Add, time::Duration};
+use ::std::{ops::Add, time::{Duration, SystemTime}};
 
 /// Blocks thread until result returns success
 fn wait_for<T>(result:Result<T>, delay: Duration) -> T 
@@ -104,13 +104,24 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
     info!("{:?}", game_data);
 
+    // processing time delta
+    let mut delta = 1.0;
+    let mut time = SystemTime::now();
 
     // store features that need to retain data
     #[cfg(feature = "aimbot")]
     let mut aimbot = features::AimBot::new();
 
+    let mut atrigger = features::AlgebraTrigger::new();
+
     loop {
         // check if process is valid
+        let delta = if let Ok(t) = time.elapsed() {
+            t.as_secs_f64()
+        } else {
+            1.0
+        };
+        time = SystemTime::now();
 
         if process.state().is_dead() {
             process = {
@@ -160,7 +171,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut port, &game_data);
-            features::algebra_trigger(&mut keyboard, &mut port, &game_data);
+            atrigger.algebra_trigger(&mut keyboard, &mut port, &game_data, delta);
             features::incross_trigger(&mut keyboard, &mut port, &game_data);
         }
     }
