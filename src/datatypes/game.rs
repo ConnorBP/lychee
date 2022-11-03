@@ -1,4 +1,4 @@
-use std::convert::From;
+use std::{convert::From, fmt};
 use serde::{Serialize,Deserialize};
 
 impl From<u32> for WeaponId {
@@ -66,6 +66,17 @@ impl From<u32> for WeaponId {
             x if x >= 500 => WeaponId::Knife,
             _ => WeaponId::None,
         }
+    }
+}
+
+// writes out the debug name as a string for normal formatting
+// also allows .to_string() to be used
+// https://stackoverflow.com/questions/32710187/how-do-i-get-an-enum-as-a-string
+impl fmt::Display for WeaponId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+        // or, alternatively:
+        // fmt::Debug::fmt(self, f)
     }
 }
 
