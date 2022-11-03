@@ -1,7 +1,7 @@
 use crow::{
     glutin::{
         event::{Event, WindowEvent},
-        event_loop::{ControlFlow, EventLoop},
+        event_loop::{ControlFlow},
         window::WindowBuilder, platform::windows::EventLoopExtWindows,
     },
     Context, DrawConfig, Texture,
@@ -60,7 +60,7 @@ pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
                         let mut surface = ctx.surface();
                         let (w,h) = ctx.window_dimensions();
                         ctx.clear_color(&mut surface, (0.4, 0.4, 0.8, 1.0));
-                        for (i,player) in framedata.locations.iter().enumerate() {
+                        for (_,player) in framedata.locations.iter().enumerate() {
                             // crow seems to render from bottom left up instead of top left down so we flip it here
                             // TODO: replace hard coded 1080 with adaptive window res
                             if let Some(head_pos) = player.head_pos {

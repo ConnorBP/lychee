@@ -12,7 +12,6 @@ pub fn incross_trigger(kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<d
     //if game_data.local_player.vec_velocity.magnitude() > 0.1 {return}
         if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
             //info!("incross: {}", game_data.local_player.incross);
-            let entity = &game_data.entity_list.entities[(game_data.local_player.incross as usize) -1];
             if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
                 if game_data.local_player.aimpunch_angle.magnitude() > 0.1 {return} // force acuracy
                 // zuesbot

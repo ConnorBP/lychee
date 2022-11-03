@@ -1,12 +1,11 @@
-use log::info;
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
-use crate::{utils::math,gamedata::GameData, datatypes::{tmp_vec3, game::WeaponId}};
+use crate::{utils::math,gamedata::GameData, datatypes::tmp_vec3};
 
 use super::zuesknife;
 
-const prefire_factor: f64 = 12.;
+const PREFIRE_FACTOR: f64 = 12.;
 
 #[derive(Default)]
 pub struct AlgebraTrigger {
@@ -68,7 +67,7 @@ impl AlgebraTrigger {
 
             // speed factor. Bring speed value from something like 0.1-0.01 to more like 1.0-0.5 ish
             // value of speed is negative when moving towards enemy and positive when moving away
-            let sf = (speed * prefire_factor) as f32;
+            let sf = (speed * PREFIRE_FACTOR) as f32;
             self.speed_avg = (self.speed_avg + sf) / 2.;
             //info!("dist from body: {}", dist_from_body);
             if dist_from_head + self.speed_avg < 5.
