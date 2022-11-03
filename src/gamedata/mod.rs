@@ -101,7 +101,7 @@ impl GameData {
         let mut weapon_id:u32 = proc.read(weapon_ptr.add(*NET_ITEM_DEF_INDEX)).data()?;
         weapon_id &= 0xFFF;
         self.local_player.weapon_id = weapon_id.into();
-        println!("weapon id: {:?}", self.local_player.weapon_id);
+        //println!("weapon id: {:?}", self.local_player.weapon_id);
         trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
 
         // retreive the entity list data:
