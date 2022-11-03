@@ -19,7 +19,7 @@ use ::std::{ops::Add, time::{Duration, SystemTime}};
 /// Blocks thread until result returns success
 fn wait_for<T>(result:Result<T>, delay: Duration) -> T 
 {
-    let mut ret;
+    let ret;
     loop {
         if let Ok(val) = result {
             ret = val;
@@ -65,7 +65,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // get process info from victim computer
 
     let base_info = {
-        let mut proc_info;
+        let proc_info;
         loop {
             info!("Waiting for process handle");
             if let Ok(res) = os.process_info_by_name("csgo.exe") {
@@ -105,7 +105,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     info!("{:?}", game_data);
 
     // processing time delta
-    let mut delta = 1.0;
     let mut time = SystemTime::now();
 
     // store features that need to retain data
@@ -114,7 +113,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     let mut atrigger = features::AlgebraTrigger::new();
 
-    loop {
+    'mainloop : loop {
         // check if process is valid
         let delta = if let Ok(t) = time.elapsed() {
             t.as_secs_f64()
@@ -125,7 +124,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
         if process.state().is_dead() {
             process = {
-                let mut ret_proc;
+                let ret_proc;
                 loop {
                     info!("process dead. Waiting for new one.");
                     std::thread::sleep(std::time::Duration::from_secs(5));
@@ -150,7 +149,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        wait_for(game_data.load_data(&mut process, client_module.base), Duration::from_secs(1));
+        if game_data.load_data(&mut process, client_module.base).is_err() {
+            continue 'mainloop;
+        }
 
         let mut framedata = render::FrameData::default();
         // send location data to renderer
@@ -166,7 +167,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                 team: ent.team_num,
             });
         }
-        tx.send(framedata)?;
+        if tx.send(framedata).is_err() {
+            info!("Failed to send to graphics window. Was likely exited. Ending process.");
+            break 'mainloop;
+        }
 
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
             #[cfg(feature = "aimbot")]
@@ -202,7 +206,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 }
 
 fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> GameData {
-    let mut gd_ret;
+    let gd_ret;
     loop {
         if let Ok(gd) = gamedata::GameData::new(proc, engine_base, client_base) {
             gd_ret = gd;
