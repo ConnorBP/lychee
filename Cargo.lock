@@ -1336,6 +1336,8 @@ dependencies = [
  "nalgebra-glm",
  "patternscan",
  "regex",
+ "serde",
+ "serde_json",
  "serialport",
  "simplelog",
 ]

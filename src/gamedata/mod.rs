@@ -3,9 +3,10 @@
 // commit it
 use log::{info, warn, Level, trace};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
+
 use ::std::ops::Add;
 
-use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3}};
+use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3, game::WeaponId}};
 
 pub mod entitylist;
 use entitylist::{EntityList, EntityInfo};
@@ -54,7 +55,8 @@ impl GameData {
                     view_angles: Default::default(),
                     vec_velocity: Default::default(),
                     observing_id: 0,
-                    weapon_id: 0,
+                    weapon_ent_id: 0,
+                    weapon_id: WeaponId::None,
                     
                 },
                 entity_list: Default::default(),
@@ -87,12 +89,20 @@ impl GameData {
         // drop the batcher now that we are done with it
         std::mem::drop(bat);
 
-        trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
-        
         // apply the bit mask to convert handles to an index
         self.local_player.observing_id &= 0xFFF;
-        self.local_player.weapon_id &= 0xFFF;
+        self.local_player.weapon_ent_id &= 0xFFF;
         //println!("weapon: {}", self.local_player.weapon_id);
+
+        //DWORD pWeapon = mem->ReadMem<DWORD>(ClientDLL + dwEntityList + (pWeaponEnt - 1) * 0x10);
+        //int id = mem->ReadMem<int>(pWeapon + m_iItemDefinitionIndex);
+        //bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (i as u32 * 0x10)), &mut ent.u32address);
+        let weapon_ptr = proc.read_addr32(client_base.add(*DW_ENTITYLIST + (self.local_player.weapon_ent_id-1) * 0x10)).data()?;
+        let mut weapon_id:u32 = proc.read(weapon_ptr.add(*NET_ITEM_DEF_INDEX)).data()?;
+        weapon_id &= 0xFFF;
+        self.local_player.weapon_id = weapon_id.into();
+        println!("weapon id: {:?}", self.local_player.weapon_id);
+        trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
 
         // retreive the entity list data:
         self.entity_list.populate_player_list(proc, client_base, &self.vm, self.local_player.ent_idx as usize)?;
@@ -116,7 +126,8 @@ pub struct LocalPlayer {
 
     pub ent_idx: i32,
     pub observing_id: u64,
-    pub weapon_id: i32,
+    pub weapon_ent_id: u32,
+    pub weapon_id: WeaponId,
 
     pub vec_origin: tmp_vec3,
     pub vec_view_offset: tmp_vec3,
@@ -141,7 +152,7 @@ impl LocalPlayer {
         .read_into(self.address.add(*NET_VEC_VIEWOFFSET), &mut self.vec_view_offset)
         .read_into(self.address.add(*NET_VEC_VELOCITY), &mut self.vec_velocity)
         .read_into(self.address.add(*NET_OBSERVER_TARGET), &mut self.observing_id)
-        .read_into(self.address.add(*NET_ACTIVE_WEAPON), &mut self.weapon_id)
+        .read_into(self.address.add(*NET_ACTIVE_WEAPON), &mut self.weapon_ent_id)
         .read_into(client_state.add(*DW_CLIENTSTATE_VIEWANGLES), &mut self.view_angles)
         .read_into(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER), &mut self.ent_idx);
         trace!("exiting localplayer load data");

@@ -22,6 +22,8 @@ clearscreen = "^1.0"
 nalgebra-glm = "^0.17"
 crow = "0.7"
 format-bytes = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [profile.release]
 debug = true
