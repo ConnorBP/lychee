@@ -14,15 +14,12 @@
 
 # feature improvements
     - aimbot
-    - better triggerbot (calculate positions)
-        - vischeck using bspotted and bspottedbymask?
-            - if bspottedmask doesn't work well i gotta port the bsp parser
+    - replace render system
     - minimap
     - bloop when entity in front of crosshair?
     - change over to bluetooth serial + teensy (needs a fancy voltage level circuit)
     - reoil recorder for more legit looking recoil
-    - weapon detection
     - config system
-    - flashed check
+    - flashed check // bspotted mask may already account for this
     - bsp parser
     - weapon based config
