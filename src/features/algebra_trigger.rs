@@ -2,7 +2,7 @@ use log::info;
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
-use crate::{utils::math,gamedata::GameData, datatypes::tmp_vec3};
+use crate::{utils::math,gamedata::GameData, datatypes::{tmp_vec3, game::WeaponId}};
 
 const prefire_factor: f64 = 25.;
 
@@ -26,9 +26,21 @@ impl AlgebraTrigger {
     
             let angles = game_data.local_player.view_angles + (game_data.local_player.aimpunch_angle*2.);
             //info!("angle: {:?}",game_data.local_player.aimpunch_angle);
-    
+            
             //let dist_from_head = glm::distance(&point.into(), &to.into());
             let entity = &game_data.entity_list.entities[closest_player];
+
+            // zuesbot
+            if game_data.local_player.weapon_id == WeaponId::Taser {
+                let entity_world_distance = 
+                    (
+                        entity.head_pos
+                        - (game_data.local_player.vec_origin + game_data.local_player.vec_view_offset)
+                    ).magnitude();
+                if entity_world_distance >= 182.5 {return}
+            }
+
+
             let vel = entity.vec_velocity *2.;
             let dist_from_head = get_dist_from_crosshair(
                 entity.head_pos + vel,

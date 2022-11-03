@@ -69,7 +69,7 @@ impl From<u32> for WeaponId {
     }
 }
 
-#[derive(Debug,Serialize, Deserialize)]
+#[derive(Debug,Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "weapontype")]
 pub enum WeaponId {
     None = 0,
