@@ -4,7 +4,7 @@ use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
 use crate::{utils::math,gamedata::GameData, datatypes::{tmp_vec3, game::WeaponId}};
 
-const prefire_factor: f64 = 25.;
+const prefire_factor: f64 = 12.;
 
 #[derive(Default)]
 pub struct AlgebraTrigger {
