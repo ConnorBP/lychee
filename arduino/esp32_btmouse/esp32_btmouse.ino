@@ -20,10 +20,6 @@ int args[4] = {0,0,0,0};
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 
-// when zero we can click again. If set to 1 it will increment until 1000 then go back to zero
-// while not zero no clicks
-int cooldown = 0;
-
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -45,24 +41,11 @@ int get_int(const char *str, int startByte)
 }
 
 void loop() {
-
-  // increment cooldown while greater than zero
-  if(cooldown > 0) {
-    cooldown++;
-  }
-  // once we reach end of cooldown, reset.
-  if(cooldown >= 1000) {
-    cooldown = 0;
-  }
-  
   if(bleMouse.isConnected() && stringComplete) {
     //Serial.println(inputString);
     if(inputString == "ml") { // ML mouse left
       // mouse 0 (left click)
-      if(cooldown == 0) {
-        bleMouse.click(MOUSE_LEFT);
-        cooldown = 1;
-      }
+      bleMouse.click(MOUSE_LEFT);
     } else if(inputString == "mr") { // MR mouse right
       // mouse 1 (right click)
       bleMouse.click(MOUSE_RIGHT);
