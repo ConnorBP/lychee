@@ -31,13 +31,20 @@ impl AlgebraTrigger {
             let entity = &game_data.entity_list.entities[closest_player];
 
             // zuesbot
-            if game_data.local_player.weapon_id == WeaponId::Taser {
-                let entity_world_distance = 
+            let entity_world_distance = 
                     (
                         entity.head_pos
                         - (game_data.local_player.vec_origin + game_data.local_player.vec_view_offset)
                     ).magnitude();
+            if game_data.local_player.weapon_id == WeaponId::Taser {
                 if entity_world_distance >= 182.5 {return}
+            }
+            if game_data.local_player.weapon_id == WeaponId::Knife {
+                if entity_world_distance >= 48. {return}
+                if entity_world_distance < 32. {
+                    port.write(b"mr\n").unwrap();
+                    return;
+                }
             }
 
 
