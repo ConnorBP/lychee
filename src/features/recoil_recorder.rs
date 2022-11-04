@@ -5,7 +5,7 @@ use std::{error::Error, time::SystemTime, io::{Write, Read}, collections::{BTree
 use log::{error, trace};
 use serde::{Serialize,Deserialize};
 
-use crate::{datatypes::{tmp_vec2, game::WeaponId}, gamedata::GameData};
+use crate::{datatypes::{tmp_vec2, game::WeaponId, tmp_vec3}, gamedata::GameData, utils::math};
 
 const FILENAME: &str = "recoil.json"; 
 
@@ -78,11 +78,12 @@ impl RecoilRecorder {
             let angle_storage =  &mut gun_data.positions[sf-1];
             if angle_storage.is_none() {
                 // if no value is stored yet for this gun at this shot index then simply set
-                *angle_storage = Some(RecoilData { angle: Some(new_angle), screen_pos: None });
+                *angle_storage = Some(RecoilData { angle: Some(new_angle), screen_pos: recoil_angle_to_screen(game_data, new_angle) });
             } else {
                 // if a value already exists then average the two together
                 let old_angle = angle_storage.unwrap().angle.unwrap();
-                *angle_storage = Some(RecoilData { angle: Some((old_angle + new_angle) / 2.), screen_pos: None });
+                let avg_angle = (old_angle + new_angle) / 2.;
+                *angle_storage = Some(RecoilData { angle: Some(avg_angle), screen_pos: recoil_angle_to_screen(game_data, avg_angle) });
             }
         } 
 
@@ -144,4 +145,23 @@ impl RecoilRecorder {
         self.recoil_per_gun = obj;
         Ok(())
     }
+}
+
+fn recoil_angle_to_screen(game_data: &GameData, recoil: tmp_vec2) -> Option<tmp_vec2> {
+    let angles = game_data.local_player.view_angles;
+    //let recoil = game_data.local_player.aimpunch_angle*2.;
+    let recoil_world = math::get_crosshair_world_point_at_dist(
+        20.,
+        game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+        angles + recoil
+    );
+    if let Some(recoil_screen) = math::world_2_screen(
+        &recoil_world.into(),
+        &game_data.vm,
+        None,
+        None,
+    ) {
+        return Some(tmp_vec2 { x: recoil_screen.x, y: recoil_screen.y })
+    }
+    None
 }

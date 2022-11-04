@@ -195,3 +195,11 @@ pub fn rad_to_vec(x:f32,y:f32) -> tmp_vec3{
 pub fn d2r(d:f32)->f32{
     d*(glm::pi::<f32>()/180.)
 }
+
+pub fn get_crosshair_world_point_at_dist(to_dist: f32, our_pos: tmp_vec3, eye_ang: tmp_vec3) -> tmp_vec3 {
+    // get direction vector for our view angles
+    let eye_vec = angle_to_vec(eye_ang.x, eye_ang.y);
+    // now that we have a direction vector (unit) and a magnitude
+    // we can get the point along our look direction line with origin + dist*unit
+    our_pos + eye_vec*to_dist
+}
