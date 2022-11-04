@@ -1,478 +1,4 @@
 {
-  "Mp9": {
-    "positions": [
-      {
-        "angle": {
-          "x": -0.4696677,
-          "y": -0.14078823
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.91204834,
-          "y": 0.045834422
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.905105,
-          "y": -0.023187347
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -2.7941918,
-          "y": 0.4120266
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -4.077849,
-          "y": 0.43619114
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.212578,
-          "y": 0.116016544
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -6.374159,
-          "y": 0.5747069
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -6.9267206,
-          "y": 1.4869447
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.0659466,
-          "y": 2.926427
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -6.845726,
-          "y": 4.0843973
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.006215,
-          "y": 4.3313494
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.0734944,
-          "y": 4.136409
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.6223154,
-          "y": 4.246563
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.070423,
-          "y": 3.017672
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.509687,
-          "y": 2.321396
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.887043,
-          "y": 1.3225129
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.262627,
-          "y": 0.57462746
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.207569,
-          "y": -0.554463
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.699011,
-          "y": -2.079764
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.773581,
-          "y": -1.9480833
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.949421,
-          "y": -1.2009413
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.018715,
-          "y": -0.03036379
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.084843,
-          "y": 0.13131735
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.00636,
-          "y": -0.73971874
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.698262,
-          "y": -1.9974825
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.820009,
-          "y": -2.4798844
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.893006,
-          "y": -3.0073135
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.0882635,
-          "y": -2.5417676
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.386965,
-          "y": -2.2408965
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.07789689,
-          "y": -0.0038183564
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null
-    ]
-  },
-  "Ak47": {
-    "positions": [
-      {
-        "angle": {
-          "x": -0.6519908,
-          "y": 0.1780243
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.4508417,
-          "y": 0.0054430715
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.0400739,
-          "y": -0.13606605
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -4.5853133,
-          "y": -0.1662882
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -6.54379,
-          "y": 0.46477833
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.248247,
-          "y": 0.92499804
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.276785,
-          "y": 1.634457
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -10.185972,
-          "y": 0.8167671
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.969112,
-          "y": -1.3981819
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -10.43384,
-          "y": -2.7286184
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -10.938135,
-          "y": -2.2290726
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -10.964375,
-          "y": -2.948803
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -10.512963,
-          "y": -4.414376
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -10.735281,
-          "y": -4.6714725
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.176998,
-          "y": -2.8180256
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.620195,
-          "y": -1.4559995
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.777477,
-          "y": -0.5749638
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.7178335,
-          "y": 0.91927123
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.219726,
-          "y": 2.7433639
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.407623,
-          "y": 1.9678173
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.524607,
-          "y": 2.1109543
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.737598,
-          "y": 1.7301717
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -12.411434,
-          "y": 1.4354606
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.620533,
-          "y": 2.178348
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -12.043526,
-          "y": 2.6150033
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -12.106874,
-          "y": 1.547482
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.95587,
-          "y": -0.2291117
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -11.860073,
-          "y": -1.6740837
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -10.580025,
-          "y": -3.6383986
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.8995881,
-          "y": -0.3244068
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null
-    ]
-  },
-  "Xm1014": {
-    "positions": [
-      {
-        "angle": {
-          "x": -2.3516164,
-          "y": 0.26992244
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -2.7828097,
-          "y": -0.18942773
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.6819654,
-          "y": -0.574193
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -4.691133,
-          "y": 0.0572045
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.712142,
-          "y": 0.7798388
-        },
-        "screen_pos": null
-      },
-      null
-    ]
-  },
   "Mp7": {
     "positions": [
       {
@@ -838,218 +364,152 @@
       null
     ]
   },
-  "Mp5sd": {
+  "Scar20": {
     "positions": [
       {
         "angle": {
-          "x": -0.13582674,
-          "y": 0.0035988546
+          "x": -0.064420424,
+          "y": -0.0013897304
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -0.18450107,
-          "y": -0.008157404
+          "x": -0.13008007,
+          "y": -0.0005485387
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -0.42178512,
-          "y": -0.13896272
+          "x": -0.14311348,
+          "y": 0.00024434944
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -0.783643,
-          "y": -0.32927805
+          "x": -0.58291686,
+          "y": -0.0011928695
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -1.429285,
-          "y": -0.7161126
+          "x": -1.0250353,
+          "y": -0.24828267
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -2.4234283,
-          "y": -0.9374505
+          "x": -1.2057006,
+          "y": -0.00012290501
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.2408786,
-          "y": -1.3098354
+          "x": -1.2681469,
+          "y": -0.061810642
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.9684002,
-          "y": -1.5881939
+          "x": -1.5175638,
+          "y": -0.00042760654
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.38048,
-          "y": -1.9878399
+          "x": -1.6013498,
+          "y": 0.21407087
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.5997043,
-          "y": -2.4727967
+          "x": -1.2852286,
+          "y": -0.0016115266
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.1033077,
-          "y": -2.3223557
+          "x": -1.1434891,
+          "y": -0.0007759391
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.3246946,
-          "y": -1.4287283
+          "x": -0.95659363,
+          "y": 0.064541906
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.3545246,
-          "y": -0.7422135
+          "x": -1.2078109,
+          "y": 0.199987
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.423299,
-          "y": 0.42973334
+          "x": -1.332573,
+          "y": 0.19483753
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.5,
-          "y": 0.734375
+          "x": -1.3326874,
+          "y": 0.3100219
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.731159,
-          "y": 0.5717869
+          "x": -1.57999,
+          "y": 0.20062739
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -6.080081,
-          "y": 0.3198902
+          "x": -1.4614193,
+          "y": 0.0007177071
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -6.2315187,
-          "y": 0.117947064
+          "x": -1.3325955,
+          "y": 0.0000108800905
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -6.355996,
-          "y": 0.0911123
+          "x": -1.1454618,
+          "y": -0.0011789512
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -6.63272,
-          "y": 0.11721559
+          "x": -1.6439196,
+          "y": 0.0009826537
         },
         "screen_pos": null
       },
-      {
-        "angle": {
-          "x": -6.488963,
-          "y": -0.52239746
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.9614253,
-          "y": -1.4548831
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.7844152,
-          "y": -1.9377815
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.6951075,
-          "y": -2.3854349
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.7295666,
-          "y": -2.509574
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.643075,
-          "y": -2.497089
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.699705,
-          "y": -2.5429332
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.789115,
-          "y": -2.691434
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.895303,
-          "y": -2.8535476
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -2.3041627,
-          "y": -1.015244
-        },
-        "screen_pos": null
-      }
+      null,
+      null,
+      null,
+      null
     ]
   },
   "Mac10": {
@@ -1269,239 +729,12 @@
       null
     ]
   },
-  "Scar20": {
+  "Ssg08": {
     "positions": [
       {
         "angle": {
-          "x": -0.064420424,
-          "y": -0.0013897304
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.13008007,
-          "y": -0.0005485387
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.14311348,
-          "y": 0.00024434944
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.58291686,
-          "y": -0.0011928695
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.0250353,
-          "y": -0.24828267
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.2057006,
-          "y": -0.00012290501
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.2681469,
-          "y": -0.061810642
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.5175638,
-          "y": -0.00042760654
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.6013498,
-          "y": 0.21407087
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.2852286,
-          "y": -0.0016115266
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.1434891,
-          "y": -0.0007759391
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.95659363,
-          "y": 0.064541906
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.2078109,
-          "y": 0.199987
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.332573,
-          "y": 0.19483753
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.3326874,
-          "y": 0.3100219
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.57999,
-          "y": 0.20062739
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.4614193,
-          "y": 0.0007177071
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.3325955,
-          "y": 0.0000108800905
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.1454618,
-          "y": -0.0011789512
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.6439196,
-          "y": 0.0009826537
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "Awp": {
-    "positions": [
-      {
-        "angle": {
-          "x": -2.4285307,
-          "y": 0.7771431
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "M4A1": {
-    "positions": [
-      {
-        "angle": {
-          "x": -0.38446283,
-          "y": 0.08348015
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.88096917,
-          "y": 0.081154905
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.7996109,
-          "y": -0.21620336
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -2.9504728,
-          "y": 0.0891238
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -4.1778193,
-          "y": -0.28887635
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -5.7211723,
-          "y": -0.55853134
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -6.610568,
-          "y": 0.30183193
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.4084272,
-          "y": 0.84266853
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.650465,
-          "y": 2.0015252
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.5053635,
-          "y": 2.087287
+          "x": -4.888062e-9,
+          "y": 5.8417793e-10
         },
         "screen_pos": null
       },
@@ -1867,487 +1100,43 @@
       null
     ]
   },
-  "Glock": {
+  "Xm1014": {
     "positions": [
       {
         "angle": {
-          "x": -1.7952037,
-          "y": 0.11774087
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "Deagle": {
-    "positions": [
-      {
-        "angle": {
-          "x": -6.407004,
-          "y": -1.6452839
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "Elite": {
-    "positions": [
-      {
-        "angle": {
-          "x": -5.8839636,
-          "y": 0.7508625
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "None": {
-    "positions": [
-      {
-        "angle": {
-          "x": -4.9371557,
-          "y": -0.8133898
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "Ump45": {
-    "positions": [
-      {
-        "angle": {
-          "x": -0.14060685,
-          "y": -0.0057445345
+          "x": -2.3516164,
+          "y": 0.26992244
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -0.68254447,
-          "y": -0.18914866
+          "x": -2.7828097,
+          "y": -0.18942773
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -1.6961776,
-          "y": -0.31321794
+          "x": -3.6819654,
+          "y": -0.574193
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -2.9370513,
-          "y": -0.56339693
+          "x": -4.691133,
+          "y": 0.0572045
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.248887,
-          "y": -1.1239247
+          "x": -7.712142,
+          "y": 0.7798388
         },
         "screen_pos": null
       },
-      {
-        "angle": {
-          "x": -5.438056,
-          "y": -1.1874105
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -6.5062323,
-          "y": -0.6210716
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.2526016,
-          "y": -0.8129231
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -7.882233,
-          "y": -0.3245981
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.26242,
-          "y": 0.5401447
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.519514,
-          "y": 1.3643498
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.8841,
-          "y": 1.3877392
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.082354,
-          "y": 1.624229
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.297591,
-          "y": 1.6143249
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.2085495,
-          "y": 2.0630052
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.208324,
-          "y": 2.4363008
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.340402,
-          "y": 1.7029932
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.41161,
-          "y": 0.7697111
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.35461,
-          "y": 0.74267757
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.210997,
-          "y": 1.3837631
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.961518,
-          "y": 2.3241293
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -8.95656,
-          "y": 2.1353183
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.017271,
-          "y": 1.0088831
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -9.09536,
-          "y": 0.7650299
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.12687787,
-          "y": 0.0056866175
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "Fiveseven": {
-    "positions": [
-      {
-        "angle": {
-          "x": -2.6296153,
-          "y": -0.0000043680784
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "Aug": {
-    "positions": [
-      {
-        "angle": {
-          "x": -0.073162004,
-          "y": 0.06608617
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.15537451,
-          "y": 0.01261203
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.19862376,
-          "y": -0.00039675686
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.71125674,
-          "y": -0.06513496
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -1.3993464,
-          "y": 0.00012964362
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -2.0735042,
-          "y": 0.12555555
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -2.617054,
-          "y": 0.43685788
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.1214533,
-          "y": 0.5619751
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.45699,
-          "y": 0.8750322
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.6389534,
-          "y": 0.37182865
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.7669954,
-          "y": 0.3124041
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.8292563,
-          "y": 0.6888719
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -4.0041275,
-          "y": 0.6866804
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.9506814,
-          "y": 0.05827888
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.644159,
-          "y": -0.7526728
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.4449444,
-          "y": -1.3749909
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.5745447,
-          "y": -1.3117764
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.6548986,
-          "y": -1.3566967
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.704444,
-          "y": -1.5250387
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.8172467,
-          "y": -0.8799453
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.8198047,
-          "y": -0.06261471
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.8819008,
-          "y": 0.06347898
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.8971813,
-          "y": -0.12605739
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.9469783,
-          "y": 0.2483108
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.760389,
-          "y": 0.9963722
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.6418123,
-          "y": 1.3201191
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.7011726,
-          "y": 0.71005714
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -3.8225334,
-          "y": 0.3142081
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -4.0166955,
-          "y": 0.31265807
-        },
-        "screen_pos": null
-      },
-      {
-        "angle": {
-          "x": -0.064544976,
-          "y": 0.0009978573
-        },
-        "screen_pos": null
-      },
-      null,
-      null,
       null
     ]
   },
@@ -2494,6 +1283,223 @@
         "screen_pos": null
       },
       null,
+      null,
+      null,
+      null
+    ]
+  },
+  "Mp9": {
+    "positions": [
+      {
+        "angle": {
+          "x": -0.4696677,
+          "y": -0.14078823
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.91204834,
+          "y": 0.045834422
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -1.905105,
+          "y": -0.023187347
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -2.7941918,
+          "y": 0.4120266
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.077849,
+          "y": 0.43619114
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.212578,
+          "y": 0.116016544
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.374159,
+          "y": 0.5747069
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.9267206,
+          "y": 1.4869447
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -7.0659466,
+          "y": 2.926427
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.845726,
+          "y": 4.0843973
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -7.006215,
+          "y": 4.3313494
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -7.0734944,
+          "y": 4.136409
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -7.6223154,
+          "y": 4.246563
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.070423,
+          "y": 3.017672
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.509687,
+          "y": 2.321396
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.887043,
+          "y": 1.3225129
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.262627,
+          "y": 0.57462746
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.207569,
+          "y": -0.554463
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.699011,
+          "y": -2.079764
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.773581,
+          "y": -1.9480833
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.949421,
+          "y": -1.2009413
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.018715,
+          "y": -0.03036379
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.084843,
+          "y": 0.13131735
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.00636,
+          "y": -0.73971874
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.698262,
+          "y": -1.9974825
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.820009,
+          "y": -2.4798844
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.893006,
+          "y": -3.0073135
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.0882635,
+          "y": -2.5417676
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.386965,
+          "y": -2.2408965
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.07789689,
+          "y": -0.0038183564
+        },
+        "screen_pos": null
+      },
       null,
       null,
       null
@@ -2686,12 +1692,261 @@
       null
     ]
   },
+  "Glock": {
+    "positions": [
+      {
+        "angle": {
+          "x": -0.84918547,
+          "y": -0.040799253
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
   "Nova": {
     "positions": [
       {
         "angle": {
           "x": -15.643948,
           "y": 1.5566356
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "Sg553": {
+    "positions": [
+      {
+        "angle": {
+          "x": -0.589312,
+          "y": -0.27014312
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -1.1094044,
+          "y": -0.81445944
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -2.2986372,
+          "y": -1.1621143
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.6847894,
+          "y": -1.4682101
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.231299,
+          "y": -1.8640329
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.1929183,
+          "y": -0.96881384
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.5102284,
+          "y": -1.5480626
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.950993,
+          "y": -1.0256414
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.180505,
+          "y": -1.3481675
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.336074,
+          "y": -1.8222952
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.486088,
+          "y": -1.8803779
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.5675373,
+          "y": -1.648095
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.7748585,
+          "y": -1.9425162
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.061591,
+          "y": -1.8198038
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.953208,
+          "y": -2.3289251
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.4488525,
+          "y": -2.8961945
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.1254387,
+          "y": -3.2633705
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.0728464,
+          "y": -3.2822244
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.0470905,
+          "y": -1.7853473
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.8196259,
+          "y": -0.3342403
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.9184961,
+          "y": 0.43877482
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.027059,
+          "y": 1.3406042
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.759676,
+          "y": 1.8254805
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.365602,
+          "y": 1.9735901
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.660834,
+          "y": 1.8612661
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.322608,
+          "y": 2.31202
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.5205913,
+          "y": 1.7602398
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.690044,
+          "y": 1.3205404
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.4578085,
+          "y": 0.20034114
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.06494221,
+          "y": -0.0038369421
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null
+    ]
+  },
+  "Mag7": {
+    "positions": [
+      {
+        "angle": {
+          "x": -15.450981,
+          "y": -1.9464624
         },
         "screen_pos": null
       },
@@ -3756,6 +3011,271 @@
       }
     ]
   },
+  "Ak47": {
+    "positions": [
+      {
+        "angle": {
+          "x": -0.6519908,
+          "y": 0.1780243
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -1.4508417,
+          "y": 0.0054430715
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.0400739,
+          "y": -0.13606605
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.5853133,
+          "y": -0.1662882
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.54379,
+          "y": 0.46477833
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -8.248247,
+          "y": 0.92499804
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.276785,
+          "y": 1.634457
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -10.185972,
+          "y": 0.8167671
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -9.969112,
+          "y": -1.3981819
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -10.43384,
+          "y": -2.7286184
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -10.938135,
+          "y": -2.2290726
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -10.964375,
+          "y": -2.948803
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -10.512963,
+          "y": -4.414376
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -10.735281,
+          "y": -4.6714725
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.176998,
+          "y": -2.8180256
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.620195,
+          "y": -1.4559995
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.777477,
+          "y": -0.5749638
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.7178335,
+          "y": 0.91927123
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.219726,
+          "y": 2.7433639
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.407623,
+          "y": 1.9678173
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.524607,
+          "y": 2.1109543
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.737598,
+          "y": 1.7301717
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -12.411434,
+          "y": 1.4354606
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.620533,
+          "y": 2.178348
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -12.043526,
+          "y": 2.6150033
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -12.106874,
+          "y": 1.547482
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.95587,
+          "y": -0.2291117
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -11.860073,
+          "y": -1.6740837
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -10.580025,
+          "y": -3.6383986
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -1.8995881,
+          "y": -0.3244068
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null
+    ]
+  },
+  "None": {
+    "positions": [
+      {
+        "angle": {
+          "x": -4.9371557,
+          "y": -0.8133898
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "Elite": {
+    "positions": [
+      {
+        "angle": {
+          "x": -5.8839636,
+          "y": 0.7508625
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "Usps": {
+    "positions": [
+      {
+        "angle": {
+          "x": -0.5254004,
+          "y": 0.0
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
   "Bizon": {
     "positions": [
       {
@@ -4619,36 +4139,218 @@
       null
     ]
   },
-  "Mag7": {
+  "Mp5sd": {
     "positions": [
       {
         "angle": {
-          "x": -15.450981,
-          "y": -1.9464624
+          "x": -0.12600452,
+          "y": 0.0005446213
         },
         "screen_pos": null
       },
-      null,
-      null,
-      null,
-      null,
-      null
-    ]
-  },
-  "Ssg08": {
-    "positions": [
       {
         "angle": {
-          "x": -0.43073398,
-          "y": -0.07841184
+          "x": -0.25241143,
+          "y": -0.0054964116
         },
         "screen_pos": null
       },
-      null,
-      null,
-      null,
-      null,
-      null
+      {
+        "angle": {
+          "x": -0.42178512,
+          "y": -0.13896272
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.783643,
+          "y": -0.32927805
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -1.429285,
+          "y": -0.7161126
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -2.4234283,
+          "y": -0.9374505
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.2408786,
+          "y": -1.3098354
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.9684002,
+          "y": -1.5881939
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.38048,
+          "y": -1.9878399
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.5997043,
+          "y": -2.4727967
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.1033077,
+          "y": -2.3223557
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.3246946,
+          "y": -1.4287283
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.3545246,
+          "y": -0.7422135
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.423299,
+          "y": 0.42973334
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.5,
+          "y": 0.734375
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.731159,
+          "y": 0.5717869
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.080081,
+          "y": 0.3198902
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.2315187,
+          "y": 0.117947064
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.355996,
+          "y": 0.0911123
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.63272,
+          "y": 0.11721559
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -6.488963,
+          "y": -0.52239746
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.9614253,
+          "y": -1.4548831
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.7844152,
+          "y": -1.9377815
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.6951075,
+          "y": -2.3854349
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.7295666,
+          "y": -2.509574
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.643075,
+          "y": -2.497089
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.699705,
+          "y": -2.5429332
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.789115,
+          "y": -2.691434
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -5.895303,
+          "y": -2.8535476
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -2.3041627,
+          "y": -1.015244
+        },
+        "screen_pos": null
+      }
     ]
   },
   "Cz75a": {
@@ -4715,12 +4417,229 @@
       }
     ]
   },
-  "Usps": {
+  "Aug": {
     "positions": [
       {
         "angle": {
-          "x": -0.5254004,
-          "y": 0.0
+          "x": -0.073162004,
+          "y": 0.06608617
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.15537451,
+          "y": 0.01261203
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.19862376,
+          "y": -0.00039675686
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.71125674,
+          "y": -0.06513496
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -1.3993464,
+          "y": 0.00012964362
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -2.0735042,
+          "y": 0.12555555
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -2.617054,
+          "y": 0.43685788
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.1214533,
+          "y": 0.5619751
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.45699,
+          "y": 0.8750322
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.6389534,
+          "y": 0.37182865
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.7669954,
+          "y": 0.3124041
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.8292563,
+          "y": 0.6888719
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.0041275,
+          "y": 0.6866804
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.9506814,
+          "y": 0.05827888
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.644159,
+          "y": -0.7526728
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.4449444,
+          "y": -1.3749909
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.5745447,
+          "y": -1.3117764
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.6548986,
+          "y": -1.3566967
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.704444,
+          "y": -1.5250387
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.8172467,
+          "y": -0.8799453
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.8198047,
+          "y": -0.06261471
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.8819008,
+          "y": 0.06347898
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.8971813,
+          "y": -0.12605739
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.9469783,
+          "y": 0.2483108
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.760389,
+          "y": 0.9963722
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.6418123,
+          "y": 1.3201191
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.7011726,
+          "y": 0.71005714
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -3.8225334,
+          "y": 0.3142081
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -4.0166955,
+          "y": 0.31265807
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -0.064544976,
+          "y": 0.0009978573
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null
+    ]
+  },
+  "Awp": {
+    "positions": [
+      {
+        "angle": {
+          "x": -2.4285307,
+          "y": 0.7771431
         },
         "screen_pos": null
       },
@@ -4731,218 +4650,299 @@
       null
     ]
   },
-  "Sg553": {
+  "Ump45": {
     "positions": [
       {
         "angle": {
-          "x": -0.589312,
-          "y": -0.27014312
+          "x": -0.14060685,
+          "y": -0.0057445345
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -1.1094044,
-          "y": -0.81445944
+          "x": -0.68254447,
+          "y": -0.18914866
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -2.2986372,
-          "y": -1.1621143
+          "x": -1.6961776,
+          "y": -0.31321794
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.6847894,
-          "y": -1.4682101
+          "x": -2.9370513,
+          "y": -0.56339693
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.231299,
-          "y": -1.8640329
+          "x": -4.248887,
+          "y": -1.1239247
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.1929183,
-          "y": -0.96881384
+          "x": -5.438056,
+          "y": -1.1874105
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.5102284,
-          "y": -1.5480626
+          "x": -6.5062323,
+          "y": -0.6210716
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.950993,
-          "y": -1.0256414
+          "x": -7.2526016,
+          "y": -0.8129231
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.180505,
-          "y": -1.3481675
+          "x": -7.882233,
+          "y": -0.3245981
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.336074,
-          "y": -1.8222952
+          "x": -8.26242,
+          "y": 0.5401447
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.486088,
-          "y": -1.8803779
+          "x": -8.519514,
+          "y": 1.3643498
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.5675373,
-          "y": -1.648095
+          "x": -8.8841,
+          "y": 1.3877392
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.7748585,
-          "y": -1.9425162
+          "x": -9.082354,
+          "y": 1.624229
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -5.061591,
-          "y": -1.8198038
+          "x": -9.297591,
+          "y": 1.6143249
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.953208,
-          "y": -2.3289251
+          "x": -9.2085495,
+          "y": 2.0630052
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.4488525,
-          "y": -2.8961945
+          "x": -9.208324,
+          "y": 2.4363008
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.1254387,
-          "y": -3.2633705
+          "x": -9.340402,
+          "y": 1.7029932
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.0728464,
-          "y": -3.2822244
+          "x": -9.41161,
+          "y": 0.7697111
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.0470905,
-          "y": -1.7853473
+          "x": -9.35461,
+          "y": 0.74267757
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.8196259,
-          "y": -0.3342403
+          "x": -9.210997,
+          "y": 1.3837631
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -3.9184961,
-          "y": 0.43877482
+          "x": -8.961518,
+          "y": 2.3241293
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -8.027059,
-          "y": 1.3406042
+          "x": -8.95656,
+          "y": 2.1353183
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -8.759676,
-          "y": 1.8254805
+          "x": -9.017271,
+          "y": 1.0088831
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -9.365602,
-          "y": 1.9735901
+          "x": -9.09536,
+          "y": 0.7650299
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -8.660834,
-          "y": 1.8612661
+          "x": -0.12687787,
+          "y": 0.0056866175
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "Fiveseven": {
+    "positions": [
+      {
+        "angle": {
+          "x": -2.6296153,
+          "y": -0.0000043680784
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "Deagle": {
+    "positions": [
+      {
+        "angle": {
+          "x": -6.407004,
+          "y": -1.6452839
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "M4A1": {
+    "positions": [
+      {
+        "angle": {
+          "x": -0.38446283,
+          "y": 0.08348015
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.322608,
-          "y": 2.31202
+          "x": -0.88096917,
+          "y": 0.081154905
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.5205913,
-          "y": 1.7602398
+          "x": -1.7996109,
+          "y": -0.21620336
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.690044,
-          "y": 1.3205404
+          "x": -2.9504728,
+          "y": 0.0891238
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -4.4578085,
-          "y": 0.20034114
+          "x": -4.1778193,
+          "y": -0.28887635
         },
         "screen_pos": null
       },
       {
         "angle": {
-          "x": -0.06494221,
-          "y": -0.0038369421
+          "x": -5.7211723,
+          "y": -0.55853134
         },
         "screen_pos": null
       },
+      {
+        "angle": {
+          "x": -6.610568,
+          "y": 0.30183193
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -7.4084272,
+          "y": 0.84266853
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -7.650465,
+          "y": 2.0015252
+        },
+        "screen_pos": null
+      },
+      {
+        "angle": {
+          "x": -7.5053635,
+          "y": 2.087287
+        },
+        "screen_pos": null
+      },
+      null,
+      null,
       null,
       null,
       null
