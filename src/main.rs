@@ -112,6 +112,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut aimbot = features::AimBot::new();
 
     let mut atrigger = features::AlgebraTrigger::new();
+    let mut recoil_data = features::RecoilRecorder::new();
 
     'mainloop : loop {
         // check if process is valid
@@ -177,6 +178,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             aimbot.aimbot(&mut keyboard, &mut port, &game_data);
             atrigger.algebra_trigger(&mut keyboard, &mut port, &game_data, delta);
             features::incross_trigger(&mut keyboard, &mut port, &game_data);
+            recoil_data.process_frame(&game_data);
         }
     }
 

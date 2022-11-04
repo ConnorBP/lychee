@@ -80,7 +80,7 @@ impl fmt::Display for WeaponId {
     }
 }
 
-#[derive(Debug,Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug,Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 #[serde(tag = "weapontype")]
 pub enum WeaponId {
     None = 0,

@@ -1,8 +1,10 @@
+use std::ops::Div;
 use ::std::{ops::{Add, Sub, Mul}};
 use memflow::prelude::Pod;
+use serde::{Serialize,Deserialize};
 
 #[repr(C)]
-#[derive(Copy, Clone,Debug, Default, Pod)]
+#[derive(Copy, Clone,Debug, Default, Pod, Serialize, Deserialize)]
 pub struct tmp_vec2 {
     pub x: f32,
     pub y: f32,
@@ -80,6 +82,16 @@ impl Mul<f32> for tmp_vec2 {
     }
 }
 
+impl Div<f32> for tmp_vec2 {
+    type Output = Self;
+    fn div(self,rhs:f32) -> Self::Output {
+        Self{
+            x: self.x/rhs,
+            y: self.y/rhs
+        }
+    }
+}
+
 impl From<glm::Vec2> for tmp_vec2 {
     fn from(other: glm::Vec2) -> Self {
         Self { x: other.x, y: other.y }
@@ -87,7 +99,7 @@ impl From<glm::Vec2> for tmp_vec2 {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone,Debug, Default, Pod)]
+#[derive(Copy, Clone,Debug, Default, Pod, Serialize, Deserialize)]
 pub struct tmp_vec3 {
     pub x: f32,
     pub y: f32,
