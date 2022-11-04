@@ -194,13 +194,13 @@ impl EntityList {
             // set closest entity
             if let Some (head) = ent.screen_head {
                 // only check for closest on visible entities
-                if ent.spotted_by_mask & (1 << local_player_idx) > 0 {
+                //if ent.spotted_by_mask & (1 << local_player_idx) > 0 {
                     let dist = glm::distance2(&head.xy(), &glm::vec2(1920./2.,1080./2.));
                     if self.closest_player.is_none() || dist < closest_dist.unwrap() {
                         closest_dist = Some(dist);
                         self.closest_player = Some(i);
                     }
-                }
+                //}
             }
             
         }

@@ -24,6 +24,7 @@ impl AlgebraTrigger {
         //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
         //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
         if let Some(closest_player) = game_data.entity_list.closest_player {
+            if game_data.entity_list.get_team_for(closest_player).unwrap_or(game_data.local_player.team_num) == game_data.local_player.team_num {return}
     
             let angles = game_data.local_player.view_angles + (game_data.local_player.aimpunch_angle*2.);
             //info!("angle: {:?}",game_data.local_player.aimpunch_angle);
@@ -68,7 +69,7 @@ impl AlgebraTrigger {
             // speed factor. Bring speed value from something like 0.1-0.01 to more like 1.0-0.5 ish
             // value of speed is negative when moving towards enemy and positive when moving away
             let sf = (speed * PREFIRE_FACTOR) as f32;
-            self.speed_avg = (self.speed_avg + sf) / 2.;
+            self.speed_avg = 0.;//(self.speed_avg + sf) / 2.;
             //info!("dist from body: {}", dist_from_body);
             if dist_from_head + self.speed_avg < 5.
             || dist_from_neck + self.speed_avg < 6.
