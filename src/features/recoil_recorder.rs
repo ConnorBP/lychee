@@ -24,9 +24,9 @@ struct GunRecoil {
 impl Default for GunRecoil {
     fn default() -> Self {
         let mut def = Self { positions: Vec::with_capacity(150) };
-        for i in 0..150 {
-            def.positions.push(None);
-        }
+        // for i in 0..150 {
+        //     def.positions.push(None);
+        // }
         def
     }
 }
@@ -71,9 +71,9 @@ impl RecoilRecorder {
             // set some kind of initial state in here before firing starts such as player starting angle
         } else if sf > 0 {
             let gun_data = &mut self.recoil_per_gun.entry(gun.to_string()).or_insert_with(||Default::default());
-            if sf > gun_data.positions.capacity() { // for some stupid fucking reason this crap does not reserve properly
+            while sf > gun_data.positions.len() { // for some stupid fucking reason this crap does not reserve properly
                 trace!("reserving capacity for gundata positions");
-                gun_data.positions.reserve(sf - gun_data.positions.capacity() + 1);
+                gun_data.positions.push(None);
             }
             let angle_storage =  &mut gun_data.positions[sf-1];
             if angle_storage.is_none() {
