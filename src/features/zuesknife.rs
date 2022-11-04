@@ -16,7 +16,7 @@ pub fn zues_knife_bot(port: &mut Box<dyn SerialPort>, game_data: &GameData, clos
         if entity_world_distance >= 182.5 {return false}
     }
     if game_data.local_player.weapon_id == WeaponId::Knife {
-        println!("dist: {}", entity_world_distance);
+        //println!("dist: {}", entity_world_distance);
         if entity_world_distance >= 70. {return false}
         if entity_world_distance < 45. {
             port.write(b"mr\n").unwrap();
