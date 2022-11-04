@@ -6,6 +6,7 @@ mod offsets;
 mod gamedata;
 mod features;
 mod render;
+mod human_interface;
 
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
 use gamedata::GameData;
@@ -15,6 +16,8 @@ use memflow_win32::prelude::v1::*;
 use patternscan::scan;
 use std::io::Cursor;
 use ::std::{ops::Add, time::{Duration, SystemTime}};
+
+use human_interface::*;
 
 /// Blocks thread until result returns success
 fn wait_for<T>(result:Result<T>, delay: Duration) -> T 
@@ -38,17 +41,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     let tx = render::start_window_render()?;
 
-    // init the connection to the serial port for mouse and keyboard output
-    info!("Fetching Serial Ports...");
-    let ports = serialport::available_ports()?;
-    for p in ports {
-        info!("{}", p.port_name);
-    }
-    let mut port = serialport::new("COM3", 115_200)
-        .timeout(Duration::from_millis(10))
-        .open()?;
-    // example usage for mouse 0 click:
-    //port.write(b"m0\n")?;
+    // a "human" we get to tell what to do
+    let mut human = HumanInterface::new()?;
 
     // create inventory + os
     let connector_args : ConnectorArgs = ":device=FPGA".parse()?;
@@ -175,9 +169,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
             #[cfg(feature = "aimbot")]
-            aimbot.aimbot(&mut keyboard, &mut port, &game_data);
-            atrigger.algebra_trigger(&mut keyboard, &mut port, &game_data, delta);
-            features::incross_trigger(&mut keyboard, &mut port, &game_data);
+            aimbot.aimbot(&mut keyboard, &mut human, &game_data);
+            atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
+            features::incross_trigger(&mut keyboard, &mut human, &game_data);
             recoil_data.process_frame(&game_data);
         }
     }

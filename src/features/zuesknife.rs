@@ -1,9 +1,9 @@
 use serialport::SerialPort;
-use crate::{gamedata::GameData, datatypes:: game::WeaponId};
+use crate::{gamedata::GameData, datatypes:: game::WeaponId, human_interface::HumanInterface};
 
 
 /// returns true if you should continue after and false if you should return from func early
-pub fn zues_knife_bot(port: &mut Box<dyn SerialPort>, game_data: &GameData, closest_player: usize) -> bool {
+pub fn zues_knife_bot(human: &mut HumanInterface, game_data: &GameData, closest_player: usize) -> bool {
     let entity = &game_data.entity_list.entities[closest_player];
 
     // zuesbot
@@ -19,7 +19,7 @@ pub fn zues_knife_bot(port: &mut Box<dyn SerialPort>, game_data: &GameData, clos
         //println!("dist: {}", entity_world_distance);
         if entity_world_distance >= 70. {return false}
         if entity_world_distance < 45. {
-            port.write(b"mr\n").unwrap();
+            human.mouse_right().expect("failed to send mouse right click, serial must have disconnected");
             return false;
         }
     }

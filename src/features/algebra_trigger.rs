@@ -1,7 +1,7 @@
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
-use crate::{utils::math,gamedata::GameData, datatypes::tmp_vec3};
+use crate::{utils::math,gamedata::GameData, datatypes::tmp_vec3, human_interface::HumanInterface};
 
 use super::zuesknife;
 
@@ -17,7 +17,7 @@ impl AlgebraTrigger {
     pub fn new() -> Self {
         Default::default()
     }
-    pub fn algebra_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>, game_data: &GameData, delta: f64) {
+    pub fn algebra_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &GameData, delta: f64) {
         if !kb.is_down(0x06) {return}
         if game_data.local_player.shots_fired > 1 {return}
         if game_data.local_player.aimpunch_angle.magnitude() > 0.1 {return} // force acuracy
@@ -30,7 +30,7 @@ impl AlgebraTrigger {
             //info!("angle: {:?}",game_data.local_player.aimpunch_angle);
             
             //let dist_from_head = glm::distance(&point.into(), &to.into());
-            if !zuesknife::zues_knife_bot(port,game_data,closest_player) {return}
+            if !zuesknife::zues_knife_bot(human,game_data,closest_player) {return}
 
             let entity = &game_data.entity_list.entities[closest_player];
 
@@ -78,7 +78,7 @@ impl AlgebraTrigger {
             || dist_from_lower + self.speed_avg < 7.
             {
                 //game_data.local_player.incross = closest_player as i32;
-                port.write(b"ml\n").unwrap();
+                human.mouse_left().expect("failed to send mouse left click, serial must have disconnected");
             }
         }
     }
