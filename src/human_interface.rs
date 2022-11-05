@@ -17,6 +17,9 @@ pub struct HumanInterface {
     // timers for making sure we don't spam the serial port
     last_leftclick: SystemTime,
     last_rightclick: SystemTime,
+
+    // for humanized movement
+    goal_pos: Option<tmp_vec2>,
 }
 
 impl HumanInterface {
@@ -37,6 +40,8 @@ impl HumanInterface {
             port,
             last_leftclick: SystemTime::now(),
             last_rightclick: SystemTime::now(),
+
+            goal_pos: None,
         })
     }
     pub fn mouse_left(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -66,6 +71,44 @@ impl HumanInterface {
         let y = direction.y as i32;
         let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);
         self.port.write(cmd.as_bytes())?;
+
+        // for debugging if sent serial data was valid
+        // let mut serial_buf: Vec<u8> = vec![0; 200];
+        // if let Ok(t) = port.read(serial_buf.as_mut_slice()) {
+        //     std::io::stdout().write_all(&serial_buf[..t]).expect("failed to read serial");
+        // }
+
+        Ok(())
+    }
+
+    /// adds to the goal mouse direction for this frame
+    pub fn add_goal(&mut self, destination: tmp_vec2) {
+        if let Some(goal) = &mut self.goal_pos {
+            *goal = *goal + destination;
+        } else {
+            self.goal_pos = Some(destination)
+        }
+    }
+
+    /// moves smoothly in the direction of the final goal pos and resets goal after
+    /// goal should be created each frame by various features such as recoil + seperate aim tracking
+    /// then this function should be called last each frame
+    pub fn process_smooth_mouse(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        // only run if a goal is set
+        if let Some(goal) = self.goal_pos {
+
+            let move_speed = 2.; // todo make this configurable
+            let distance = goal.magnitude();
+            let direction = goal.norm(distance) * move_speed;
+
+            // finally reset goal pos
+            // (so that if things don't set it next frame cause they wanna stop targeting it doesn't keep going)
+            self.goal_pos = None;
+
+            // then send the mouse move or return error
+            self.mouse_move(direction)?;
+
+        }
         Ok(())
     }
 }

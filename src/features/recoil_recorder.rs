@@ -9,10 +9,10 @@ use crate::{datatypes::{tmp_vec2, game::WeaponId, tmp_vec3}, gamedata::GameData,
 
 const FILENAME: &str = "recoil.json"; 
 
-#[derive(Serialize,Deserialize, Default, Copy,Clone)]
-struct RecoilData {
-    angle: Option<tmp_vec2>,
-    screen_pos: Option<tmp_vec2>,
+#[derive(Serialize,Deserialize, Default, Debug, Copy, Clone)]
+pub struct RecoilData {
+    pub angle: Option<tmp_vec2>,
+    pub screen_pos: Option<tmp_vec2>,
 }
 
 #[derive(Serialize,Deserialize)]
@@ -41,6 +41,8 @@ pub struct RecoilRecorder {
     // some runtime vars we should not save
     #[serde(skip_serializing)]
     last_save: SystemTime,
+    #[serde(skip_serializing)]
+    old_punch: tmp_vec2,
 }
 
 impl RecoilRecorder {
@@ -51,6 +53,7 @@ impl RecoilRecorder {
         let mut new = Self {
             recoil_per_gun: Default::default(),
             last_save: SystemTime::now(),
+            old_punch: Default::default(),
         };
         match new.load_data() {
             Err(e) => {
@@ -61,29 +64,55 @@ impl RecoilRecorder {
         new
     }
 
+    // getters
+
+    pub fn get_recoil_at(&self, shot: usize, for_weapon: WeaponId) -> Option<RecoilData> {
+        if let Some(gun_data) = self.recoil_per_gun.get(&for_weapon.to_string()) {
+            return *gun_data.positions.get(shot).unwrap_or(&None);
+        }
+        None
+    }
+
     /// take in game_data each run and use it to insert recoil data into storage
     pub fn process_frame(&mut self, game_data: &GameData) {
         if game_data.local_player.lifestate != 0 {return}
         let sf = game_data.local_player.shots_fired as usize;
         let gun = game_data.local_player.weapon_id;
-        let new_angle = game_data.local_player.aimpunch_angle *2.;
+        let new_punch = game_data.local_player.aimpunch_angle *2.;
+        let old_punch = self.old_punch;
+        self.old_punch = new_punch;
+
         if sf == 0 {
             // set some kind of initial state in here before firing starts such as player starting angle
+            self.old_punch = Default::default();
         } else if sf > 0 {
+            // get reference to the array of recoil angles for the currently heald weapon
             let gun_data = &mut self.recoil_per_gun.entry(gun.to_string()).or_insert_with(||Default::default());
+
+            // while shots fired is greater than size of recoil data array increase size of array
             while sf > gun_data.positions.len() { // for some stupid fucking reason this crap does not reserve properly
                 trace!("reserving capacity for gundata positions");
                 gun_data.positions.push(None);
             }
+
+            // get a reference to the angle data for the current shot pos
             let angle_storage =  &mut gun_data.positions[sf-1];
-            if angle_storage.is_none() {
-                // if no value is stored yet for this gun at this shot index then simply set
-                *angle_storage = Some(RecoilData { angle: Some(new_angle), screen_pos: recoil_angle_to_screen(game_data, new_angle) });
+            
+
+            let recoil_angle =  if angle_storage.is_none() {
+                new_punch - old_punch
             } else {
-                // if a value already exists then average the two together
                 let old_angle = angle_storage.unwrap().angle.unwrap();
-                let avg_angle = (old_angle + new_angle) / 2.;
-                *angle_storage = Some(RecoilData { angle: Some(avg_angle), screen_pos: recoil_angle_to_screen(game_data, avg_angle) });
+                let avg_angle = (old_angle + new_punch - old_punch) / 2.;
+                avg_angle
+            };
+
+            if let Some(recoil_screen) = recoil_angle_to_screen(game_data, recoil_angle) {
+                if let Some(crosshair_screen) = recoil_angle_to_screen(game_data, Default::default()) {
+                    let diff =  recoil_screen - crosshair_screen;
+                    println!("sf {} diff: {:?}", sf, diff);
+                    *angle_storage = Some(RecoilData { angle: Some(recoil_angle), screen_pos: Some(diff) });
+                }
             }
         } 
 
@@ -151,7 +180,7 @@ fn recoil_angle_to_screen(game_data: &GameData, recoil: tmp_vec2) -> Option<tmp_
     let angles = game_data.local_player.view_angles;
     //let recoil = game_data.local_player.aimpunch_angle*2.;
     let recoil_world = math::get_crosshair_world_point_at_dist(
-        20.,
+        200.,
         game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
         angles + recoil
     );

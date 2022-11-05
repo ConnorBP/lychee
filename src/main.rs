@@ -19,6 +19,8 @@ use ::std::{ops::Add, time::{Duration, SystemTime}};
 
 use human_interface::*;
 
+use crate::features::recoil_replay;
+
 /// Blocks thread until result returns success
 fn wait_for<T>(result:Result<T>, delay: Duration) -> T 
 {
@@ -172,7 +174,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
             features::incross_trigger(&mut keyboard, &mut human, &game_data);
+            // collect recoil data for weapons
             recoil_data.process_frame(&game_data);
+
+            recoil_replay(&game_data, &recoil_data, &mut human);
+
+            // run any mouse moves that acumulate from the above features
+            human.process_smooth_mouse();
         }
     }
 
