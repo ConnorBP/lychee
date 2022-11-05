@@ -4,26 +4,43 @@ version = "0.1.0"
 authors = ["segfault <segfault#1337>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# to future me: When features are stable, Clean Up This File Please............
 
 [dependencies]
+
+# memflow stuff
 memflow = "0.2.0-beta7"
 memflow-win32 = "0.2.0-beta7"
 memflow-pcileech = { git = "https://github.com/memflow/memflow-pcileech", branch = "main" }
+
+
+# for pattern scanning
+regex = "^1.5"
+
+# (TODO: remove)
+nalgebra-glm = "^0.17"
+patternscan = "1.2"
+
+# util macros and such
+lazy_static = "^1.4"
+clearscreen = "^1.0"
 log = "0.4"
 clap = { version = "^3.0.5", features = ["cargo"]}
 simplelog = "^0.12"
-patternscan = "1.2"
-regex = "^1.5"
-config = { version = "^0.13", features = ["toml"]}
-lazy_static = "^1.4"
+
+# arduino com
 serialport = "^4.2"
-clearscreen = "^1.0"
-nalgebra-glm = "^0.17"
-crow = "0.7"
 format-bytes = "0.3"
+
+# config save / load
+config = { version = "^0.13", features = ["toml"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+# rendering
+crow = "0.7"
+wgpu = "0.14"
+wgpu_glyph = "0.18"
 
 [profile.release]
 debug = true
