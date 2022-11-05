@@ -67,8 +67,8 @@ impl HumanInterface {
         // move the mouse
         //
         info!("sending move x{} y{}", direction.x, direction.y);
-        let x = direction.x as i32;
-        let y = direction.y as i32;
+        let x = direction.x.round() as i32;
+        let y = direction.y.round() as i32;
         let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);
         self.port.write(cmd.as_bytes())?;
 

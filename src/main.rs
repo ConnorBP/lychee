@@ -175,12 +175,12 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
             features::incross_trigger(&mut keyboard, &mut human, &game_data);
             // collect recoil data for weapons
-            recoil_data.process_frame(&game_data);
+            //recoil_data.process_frame(&game_data, false);
 
-            recoil_replay(&game_data, &recoil_data, &mut human);
+            //recoil_replay(&game_data, &recoil_data, &mut human);
 
             // run any mouse moves that acumulate from the above features
-            human.process_smooth_mouse();
+            //human.process_smooth_mouse();
         }
     }
 

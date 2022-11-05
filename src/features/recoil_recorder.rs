@@ -13,6 +13,14 @@ const FILENAME: &str = "recoil.json";
 pub struct RecoilData {
     pub angle: Option<tmp_vec2>,
     pub screen_pos: Option<tmp_vec2>,
+
+    // acumulates angle movements until next shot
+    #[serde(skip_serializing)]
+    acumulator: Option<tmp_vec2>,
+
+    // for recording real user recoil (diff = current_angle - last_angle)
+    #[serde(skip_serializing)]
+    last_angle: Option<tmp_vec2>,
 }
 
 #[derive(Serialize,Deserialize)]
@@ -31,7 +39,6 @@ impl Default for GunRecoil {
     }
 }
 
-#[derive(Serialize,Deserialize)]
 pub struct RecoilRecorder {
     /// a list of gun recoil data which has recoil angle indexed by shotcount
     /// this vec is indexed by the WeaponId enum
@@ -39,10 +46,12 @@ pub struct RecoilRecorder {
 
 
     // some runtime vars we should not save
-    #[serde(skip_serializing)]
+
     last_save: SystemTime,
-    #[serde(skip_serializing)]
     old_punch: tmp_vec2,
+
+    // for recording normal human spray
+    start_angle: tmp_vec2,
 }
 
 impl RecoilRecorder {
@@ -54,6 +63,7 @@ impl RecoilRecorder {
             recoil_per_gun: Default::default(),
             last_save: SystemTime::now(),
             old_punch: Default::default(),
+            start_angle: Default::default(),
         };
         match new.load_data() {
             Err(e) => {
@@ -74,7 +84,7 @@ impl RecoilRecorder {
     }
 
     /// take in game_data each run and use it to insert recoil data into storage
-    pub fn process_frame(&mut self, game_data: &GameData) {
+    pub fn process_frame(&mut self, game_data: &GameData, legit_record: bool) {
         if game_data.local_player.lifestate != 0 {return}
         let sf = game_data.local_player.shots_fired as usize;
         let gun = game_data.local_player.weapon_id;
@@ -82,13 +92,29 @@ impl RecoilRecorder {
         let old_punch = self.old_punch;
         self.old_punch = new_punch;
 
+        // get reference to the array of recoil angles for the currently heald weapon
+        let gun_data = &mut self.recoil_per_gun.entry(gun.to_string()).or_insert_with(||Default::default());
+
         if sf == 0 {
             // set some kind of initial state in here before firing starts such as player starting angle
             self.old_punch = Default::default();
+            if legit_record {
+                self.start_angle = game_data.local_player.view_angles.xy();
+                // reset the last angles
+                for (i, gd) in gun_data.positions.iter_mut().enumerate() {
+                    if let Some(recoildat) = gd {
+                        recoildat.last_angle = None
+                    }
+                }
+            } else {
+                for (i, gd) in gun_data.positions.iter_mut().enumerate() {
+                    if let Some(recoildat) = gd {
+                        recoildat.acumulator = None
+                    }
+                }
+            }
         } else if sf > 0 {
-            // get reference to the array of recoil angles for the currently heald weapon
-            let gun_data = &mut self.recoil_per_gun.entry(gun.to_string()).or_insert_with(||Default::default());
-
+            
             // while shots fired is greater than size of recoil data array increase size of array
             while sf > gun_data.positions.len() { // for some stupid fucking reason this crap does not reserve properly
                 trace!("reserving capacity for gundata positions");
@@ -96,22 +122,48 @@ impl RecoilRecorder {
             }
 
             // get a reference to the angle data for the current shot pos
-            let angle_storage =  &mut gun_data.positions[sf-1];
-            
+            let (last,angle_storage_vec) = gun_data.positions.split_at_mut(sf-1);
+            let angle_storage =  angle_storage_vec.first_mut().unwrap();
 
-            let recoil_angle =  if angle_storage.is_none() {
+            let start_angle = if sf == 1 {
+                self.start_angle
+            } else {
+                // get the angle from the last itteration
+                last.first().unwrap().unwrap().last_angle.unwrap()
+            };
+
+            let mut to_add = 
+            if legit_record {
+                game_data.local_player.view_angles.xy() - self.start_angle
+            } else {
                 new_punch - old_punch
+            };
+
+            if let Some(storage) = angle_storage {
+                if let Some(acum) = storage.acumulator {
+                    to_add = (to_add + acum) / 2.;
+                }
+            }
+
+            let recoil_angle =  
+            if angle_storage.is_none() {
+                to_add
             } else {
                 let old_angle = angle_storage.unwrap().angle.unwrap();
-                let avg_angle = (old_angle + new_punch - old_punch) / 2.;
+                let avg_angle = (old_angle + to_add) / 2.;
                 avg_angle
             };
+
+
 
             if let Some(recoil_screen) = recoil_angle_to_screen(game_data, recoil_angle) {
                 if let Some(crosshair_screen) = recoil_angle_to_screen(game_data, Default::default()) {
                     let diff =  recoil_screen - crosshair_screen;
-                    println!("sf {} diff: {:?}", sf, diff);
-                    *angle_storage = Some(RecoilData { angle: Some(recoil_angle), screen_pos: Some(diff) });
+                    //println!("sf {} diff: {:?}", sf, diff);
+                    // flip the direction of x
+                    //diff.x = -diff.x;
+                    *angle_storage = Some(RecoilData { angle: Some(recoil_angle), screen_pos: Some(diff), last_angle: Some(game_data.local_player.view_angles.xy()), acumulator: Some(to_add) });
+
                 }
             }
         } 
