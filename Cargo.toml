@@ -3,6 +3,7 @@ name = "lyche"
 version = "0.1.0"
 authors = ["segfault <segfault#1337>"]
 edition = "2018"
+resolver = "2"
 
 # to future me: When features are stable, Clean Up This File Please............
 
@@ -25,8 +26,10 @@ patternscan = "1.2"
 lazy_static = "^1.4"
 clearscreen = "^1.0"
 log = "0.4"
+env_logger = "0.9"
 clap = { version = "^3.0.5", features = ["cargo"]}
 simplelog = "^0.12"
+futures = {version = "0.3", features = ["executor"]}
 
 # arduino com
 serialport = "^4.2"
@@ -38,6 +41,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # rendering
+winit = "0.27"
 crow = "0.7"
 wgpu = "0.14"
 wgpu_glyph = "0.18"

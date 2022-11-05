@@ -1,11 +1,9 @@
-use crow::{
-    glutin::{
-        event::{Event, WindowEvent},
-        event_loop::{ControlFlow},
-        window::WindowBuilder, platform::windows::EventLoopExtWindows,
-    },
-    Context, DrawConfig, Texture,
-};
+use std::error::Error;
+use wgpu::CompositeAlphaMode;
+use wgpu_glyph::ab_glyph::Glyph;
+use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
+use winit::event_loop::EventLoopBuilder;
+use winit::platform::windows::EventLoopBuilderExtWindows;
 
 use std::sync::mpsc;
 use std::thread;
@@ -21,80 +19,182 @@ pub struct FrameData {
     pub locations: Vec<PlayerLoc>,
 }
 
-pub fn start_window_render() -> Result<mpsc::Sender<FrameData>, crow::Error> {
+pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box<dyn std::error::Error>> {
 
     let (tx, rx) = mpsc::channel::<FrameData>();
 
-    thread::spawn(|| {
-        let event_loop = EventLoopExtWindows::new_any_thread();
-        //let event_loop = EventLoop::new();
-        let mut ctx = Context::new(WindowBuilder::new(), &event_loop).expect("couldn't build the window context");
+    /*
+    put this in event loop:
+    // first update the frame data if it was received
+    if let Ok(frame) = rx.try_recv() {
+        framedata = frame;
+    }
+    */
 
-        let ct_texture = Texture::load(&mut ctx, "./assets/textures/ct.png").expect("couldn't find the ct player texture on the disk");
-        let t_texture = Texture::load(&mut ctx, "./assets/textures/t.png").expect("couldn't find the t player texture on the disk");
+    thread::spawn(|| {
 
         // our frame data to be rendered (a list of player screen positions)
         let mut framedata = FrameData::default();
 
-        event_loop.run(
-            move |event: Event<()>, _window_target: _, control_flow: &mut ControlFlow|
-            {
-                // first update the frame data if it was received
-                if let Ok(frame) = rx.try_recv() {
-                    framedata = frame;
-                }
+        let event_loop =
+            EventLoopBuilder::new()
+                .with_any_thread(true)
+                .with_dpi_aware(false)
+                .build();
 
-                match event {
-                    Event::WindowEvent {
-                        event: WindowEvent::CloseRequested,
-                        ..
-                    } => *control_flow = ControlFlow::Exit,
-                    Event::WindowEvent {
-                        event: WindowEvent::Resized(s),
-                        ..
-                    } => {
-                        // TODO: Send the main thread the new window size
-                    },
-                    Event::MainEventsCleared => ctx.window().request_redraw(),
-                    Event::RedrawRequested(_) => {
-                        let mut surface = ctx.surface();
-                        let (w,h) = ctx.window_dimensions();
-                        ctx.clear_color(&mut surface, (0.4, 0.4, 0.8, 1.0));
-                        for (_,player) in framedata.locations.iter().enumerate() {
-                            // crow seems to render from bottom left up instead of top left down so we flip it here
-                            // TODO: replace hard coded 1080 with adaptive window res
-                            if let Some(head_pos) = player.head_pos {
-                                let posy = 1080 - head_pos.y as i32;
-                                let posx = head_pos.x as i32;
+        let window = winit::window::WindowBuilder::new()
+            .with_resizable(false)
+            .build(&event_loop)
+            .unwrap();
+        
+        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let surface = unsafe { instance.create_surface(&window)};
 
-                                let scale = (1.+ head_pos.z * 1000.) as u32;
+        let (device, queue) = futures::executor::block_on(async {
+            let adapter = instance
+                .request_adapter(&wgpu::RequestAdapterOptions {
+                    power_preference: wgpu::PowerPreference::HighPerformance,
+                    compatible_surface: Some(&surface),
+                    force_fallback_adapter: false,
+                })
+                .await
+                .expect("Request adapter");
+            adapter
+                .request_device(&wgpu::DeviceDescriptor::default(), None)
+                .await.expect("Request device")
+        });
 
-                                if let Some(feet_pos) = player.feet_pos {
-                                    let feet_posy = 1080 - feet_pos.y as i32;
-                                    ctx.debug_line(&mut surface, (head_pos.x as i32, posy), (feet_pos.x as i32, feet_posy), (0.5,0.3,0.8,0.8))
-                                }
-                                //let scale = head_pos.y - feet_pos
-                                // 3 = ct 2 = t 1= spec maybe
-                                let tex = if player.team == 3 {
-                                    &ct_texture
-                                } else {
-                                    &t_texture
-                                };
+        // create staging belt
+        let mut staging_belt = wgpu::util::StagingBelt::new(1024);
 
-                                let tex_x = posx - ((tex.width() * scale / 2) as i32);
-                                let tex_y = posy - ((tex.height() * scale) as i32);
+        // prepare swap chain
+        let render_format = wgpu::TextureFormat::Bgra8UnormSrgb;
+        let mut size = window.inner_size();
 
-                                ctx.draw(&mut surface, &tex, (tex_x as i32, tex_y), &DrawConfig{scale:(scale,scale), ..Default::default()});
+        surface.configure(
+            &device,
+             &wgpu::SurfaceConfiguration {
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                format: render_format,
+                width: size.width,
+                height: size.height,
+                present_mode: wgpu::PresentMode::AutoNoVsync,
+                alpha_mode: CompositeAlphaMode::Auto,
+             }
+        );
 
+        // prepare the glyph_brush
+        let white_rabbit = ab_glyph::FontArc::try_from_slice(include_bytes!(
+            "../assets/fonts/whitrabt.ttf"
+        )).expect("could not load font");
 
-                            }
-                        }
-                        ctx.present(surface).unwrap();
+        let mut glyph_brush = GlyphBrushBuilder::using_font(white_rabbit)
+            .build(&device, render_format);
+        
+        // render loop
+        window.request_redraw();
+
+        event_loop.run(move |event, _, control_flow| {
+            match event {
+                winit::event::Event::WindowEvent {
+                    event: winit::event::WindowEvent::CloseRequested,
+                    ..
+                } => *control_flow = winit::event_loop::ControlFlow::Exit,
+                winit::event::Event::WindowEvent {
+                    event: winit::event::WindowEvent::Resized(new_size),
+                    ..
+                } => {
+                    size = new_size;
+                    surface.configure(
+                        &device,
+                        &wgpu::SurfaceConfiguration {
+                            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                            format: render_format,
+                            width: size.width,
+                            height: size.height,
+                            present_mode: wgpu::PresentMode::AutoNoVsync,
+                            alpha_mode: CompositeAlphaMode::Auto,
+                         },
+                    );
+                },
+                winit::event::Event::RedrawRequested {..} => {
+                    // first update the frame data if it was received
+                    if let Ok(frame) = rx.try_recv() {
+                        framedata = frame;
                     }
-                    _ => (),
+                    // Get a command encoder for the current frame
+                    let mut encoder = device.create_command_encoder(
+                        &wgpu::CommandEncoderDescriptor {
+                            label: Some("Redraw"),
+                        },
+                    );
+
+                    // get the next frame
+                    let frame = surface.get_current_texture().expect("get next frame");
+                    let view = &frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+                    // clear frame
+                    {
+                        let _ = encoder.begin_render_pass(
+                            &wgpu::RenderPassDescriptor {
+                                label: Some("Render pass"),
+                                color_attachments: &[Some(
+                                    wgpu::RenderPassColorAttachment {
+                                        view,
+                                        resolve_target: None,
+                                        ops: wgpu::Operations {
+                                            load: wgpu::LoadOp::Clear(
+                                                wgpu::Color {
+                                                    r:0.4,
+                                                    g:0.4,
+                                                    b:0.2,
+                                                    a:1.0,
+                                                },
+                                            ),
+                                            store: true,
+                                        },
+                                    },
+                                )],
+                                depth_stencil_attachment: None,
+                            },
+                        );
+                    }
+
+                    glyph_brush.queue(Section {
+                        screen_position: (30.0,90.0),
+                        bounds: (size.width as f32, size.height as f32),
+                        text: vec![Text::new("hello wgpu_glyph~!").with_color([1.0,1.0,1.0,1.0]).with_scale(40.0)],
+                        ..Section::default()
+                    });
+
+                    // draw the text
+                    glyph_brush
+                        .draw_queued(
+                            &device,
+                            &mut staging_belt,
+                            &mut encoder,
+                            view,
+                            size.width,
+                            size.height
+                        )
+                        .expect("Draw queued");
+                    // submit the work
+                    staging_belt.finish();
+                    queue.submit(Some(encoder.finish()));
+                    frame.present();
+                    // recall unused staging buffers
+                    staging_belt.recall();
+                },
+                _=> {
+                    // for any other control flows do a wait
+                    // first update the frame data if it was received
+                    if let Ok(frame) = rx.try_recv() {
+                        framedata = frame;
+                    }
+                    *control_flow = winit::event_loop::ControlFlow::Wait;
                 }
             }
-        )
+        })
     });
     Ok(tx)
 }
