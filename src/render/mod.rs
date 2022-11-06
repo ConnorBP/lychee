@@ -1,5 +1,7 @@
 // this render thread takes in data such as player positions via a message sender and then does some gpu magic
 
+mod texture;
+
 use image::GenericImageView;
 // gpu library
 use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt};
@@ -140,67 +142,10 @@ pub fn start_window_render(
         //
 
         // prepare the textures
-        let (t_rgba, t_dmimensions) = {
-            let diffuse_bytes = include_bytes!("../../assets/textures/t.png");
-            let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
-            (diffuse_image.to_rgba8(), diffuse_image.dimensions())
-        };
-        let (ct_rgba, ct_dmimensions) = {
-            let diffuse_bytes = include_bytes!("../../assets/textures/ct.png");
-            let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
-            (diffuse_image.to_rgba8(), diffuse_image.dimensions())
-        };
+        let t_diffuse_bytes = include_bytes!("../../assets/textures/t.png");
+        let ct_diffuse_bytes = include_bytes!("../../assets/textures/ct.png");
 
-        let t_texture_size = wgpu::Extent3d {
-            width: t_dmimensions.0,
-            height: t_dmimensions.1,
-            depth_or_array_layers: 1,
-        };
-
-        let t_diffuse_texture = device.create_texture(
-            &wgpu::TextureDescriptor {
-                // All textures are stored in 3D, we represent our 2d tex by setting depth to 1
-                size: t_texture_size,
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Rgba8UnormSrgb,
-                // texture binding means we want to use this in shaders
-                // copy_dst means we want to copy data to this texture
-                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-                label: Some("t_diffuse_texture"),
-
-            }
-        );
-
-        queue.write_texture(
-            wgpu::ImageCopyTexture{
-                texture: &t_diffuse_texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            &t_rgba,
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: std::num::NonZeroU32::new(4*t_dmimensions.0),
-                rows_per_image: std::num::NonZeroU32::new(t_dmimensions.1)
-            },
-            t_texture_size
-        );
-
-        // We don't need to configure the texture view much, so let's
-        // let wgpu define it.
-        let t_diffuse_texture_view = t_diffuse_texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let diffuse_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-            address_mode_u: wgpu::AddressMode::ClampToEdge,
-            address_mode_v: wgpu::AddressMode::ClampToEdge,
-            address_mode_w: wgpu::AddressMode::ClampToEdge,
-            mag_filter: wgpu::FilterMode::Nearest,// pixel art style filtering
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
-            ..Default::default()
-        });
+        let t_diffuse_texture = texture::Texture::from_bytes(&device, &queue, t_diffuse_bytes, "t.png").unwrap();
 
         // create bind group
         // this describes a set of resources and how they may be accessed by a shader.
@@ -237,11 +182,11 @@ pub fn start_window_render(
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&t_diffuse_texture_view),
+                        resource: wgpu::BindingResource::TextureView(&t_diffuse_texture.view),
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&diffuse_sampler),
+                        resource: wgpu::BindingResource::Sampler(&t_diffuse_texture.sampler),
                     },
                 ],
             }
