@@ -1,5 +1,5 @@
 use std::error::Error;
-use wgpu::CompositeAlphaMode;
+use wgpu::{CompositeAlphaMode, include_wgsl};
 use wgpu_glyph::ab_glyph::Glyph;
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 use winit::event_loop::EventLoopBuilder;
@@ -68,12 +68,54 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                 .await.expect("Request device")
         });
 
+        // load the shader
+        let shader = device.create_shader_module(include_wgsl!("../assets/shaders/shader.wgsl"));
+
         // create staging belt
         let mut staging_belt = wgpu::util::StagingBelt::new(1024);
 
         // prepare swap chain
         let render_format = wgpu::TextureFormat::Bgra8UnormSrgb;
         let mut size = window.inner_size();
+
+        let render_pipeline_layout = 
+        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[],
+            push_constant_ranges: &[],
+        });
+
+        // make render pipeline
+        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Shader Render Pipeline"),
+            layout: Some(&render_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: "vs_main",
+                buffers: &[],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: render_format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState{
+                topology: wgpu::PrimitiveTopology::TriangleList, // TODO: change this to point list later
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Back),
+                unclipped_depth: false,
+                polygon_mode: wgpu::PolygonMode::Fill,
+                conservative: false,
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false },
+            multiview: None,
+        });
 
         surface.configure(
             &device,
@@ -102,7 +144,7 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
             // this is to make sure that resources are cleaned up properly.
             // Since event loop run never returns we need it to take ownership of resources
             let _ = &instance;
-            
+
             // first update the frame data if it was received
             if let Ok(frame) = rx.try_recv() {
                 framedata = frame;
@@ -145,10 +187,11 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
 
                     // clear frame
                     {
-                        let _ = encoder.begin_render_pass(
+                        let mut render_pass = encoder.begin_render_pass(
                             &wgpu::RenderPassDescriptor {
                                 label: Some("Render pass"),
                                 color_attachments: &[Some(
+                                    // this is what @location(0) in the fragment shader targets
                                     wgpu::RenderPassColorAttachment {
                                         view,
                                         resolve_target: None,
@@ -168,6 +211,10 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                                 depth_stencil_attachment: None,
                             },
                         );
+
+                        render_pass.set_pipeline(&render_pipeline);
+                        //draw one instance of 3 vertices
+                        render_pass.draw(0..3, 0..1);
                     }
 
                     glyph_brush.queue(Section {
