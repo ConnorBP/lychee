@@ -1,11 +1,15 @@
-use std::error::Error;
-use wgpu::{CompositeAlphaMode, include_wgsl};
-use wgpu_glyph::ab_glyph::Glyph;
+// this render thread takes in data such as player positions via a message sender and then does some gpu magic
+
+// gpu library
+use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt};
+// fonts rendering library
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
+// window creation
 use winit::event_loop::EventLoopBuilder;
 use winit::platform::windows::EventLoopBuilderExtWindows;
 use winit::window::Fullscreen;
-
+// other utils
+use memflow::prelude::Pod;
 use std::sync::mpsc;
 use std::thread;
 
@@ -21,28 +25,62 @@ pub struct FrameData {
     pub locations: Vec<PlayerLoc>,
 }
 
-pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box<dyn std::error::Error>> {
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Pod)]
+struct BufferVertex {
+    position: [f32; 3],
+    color: [f32; 3],
+}
 
+impl BufferVertex {
+    fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<BufferVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32;3]>() as wgpu::BufferAddress,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+            ],
+        }
+    }
+}
+
+// temp const test vertice array
+const VERTICES: &[BufferVertex] = &[
+    BufferVertex {
+        position: [0., 0.5, 0.],
+        color: [1., 0., 0.],
+    },
+    BufferVertex {
+        position: [-0.5, -0.5, 0.],
+        color: [0., 1., 0.],
+    },
+    BufferVertex {
+        position: [0.5, -0.5, 0.],
+        color: [0., 0., 1.],
+    },
+];
+
+pub fn start_window_render(
+) -> std::result::Result<mpsc::Sender<FrameData>, Box<dyn std::error::Error>> {
     let (tx, rx) = mpsc::channel::<FrameData>();
 
-    /*
-    put this in event loop:
-    // first update the frame data if it was received
-    if let Ok(frame) = rx.try_recv() {
-        framedata = frame;
-    }
-    */
-
     thread::spawn(|| {
-
         // our frame data to be rendered (a list of player screen positions)
         let mut framedata = FrameData::default();
 
-        let event_loop =
-            EventLoopBuilder::new()
-                .with_any_thread(true)
-                .with_dpi_aware(false)
-                .build();
+        let event_loop = EventLoopBuilder::new()
+            .with_any_thread(true)
+            .with_dpi_aware(false)
+            .build();
 
         let window = winit::window::WindowBuilder::new()
             .with_title("lyche radar")
@@ -50,9 +88,9 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
             .with_fullscreen(Some(Fullscreen::Borderless(None)))
             .build(&event_loop)
             .unwrap();
-        
+
         let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let surface = unsafe { instance.create_surface(&window)};
+        let surface = unsafe { instance.create_surface(&window) };
 
         let (device, queue) = futures::executor::block_on(async {
             let adapter = instance
@@ -65,8 +103,18 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                 .expect("Request adapter");
             adapter
                 .request_device(&wgpu::DeviceDescriptor::default(), None)
-                .await.expect("Request device")
+                .await
+                .expect("Request device")
         });
+
+        // our vertex buffer to send to the gpu each frame
+        let vertex_buffer: wgpu::Buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: VERTICES.as_bytes(),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let num_verts = VERTICES.len() as u32;
 
         // load the shader
         let shader = device.create_shader_module(include_wgsl!("../assets/shaders/shader.wgsl"));
@@ -78,12 +126,12 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
         let render_format = wgpu::TextureFormat::Bgra8UnormSrgb;
         let mut size = window.inner_size();
 
-        let render_pipeline_layout = 
-        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[],
-            push_constant_ranges: &[],
-        });
+        let render_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            });
 
         // make render pipeline
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -92,7 +140,9 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[
+                    BufferVertex::desc(),
+                ],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -103,7 +153,7 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
-            primitive: wgpu::PrimitiveState{
+            primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList, // TODO: change this to point list later
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
@@ -113,30 +163,34 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                 conservative: false,
             },
             depth_stencil: None,
-            multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false },
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
             multiview: None,
         });
 
         surface.configure(
             &device,
-             &wgpu::SurfaceConfiguration {
+            &wgpu::SurfaceConfiguration {
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
                 format: render_format,
                 width: size.width,
                 height: size.height,
                 present_mode: wgpu::PresentMode::AutoNoVsync,
                 alpha_mode: CompositeAlphaMode::Auto,
-             }
+            },
         );
 
         // prepare the glyph_brush
-        let white_rabbit = ab_glyph::FontArc::try_from_slice(include_bytes!(
-            "../assets/fonts/whitrabt.ttf"
-        )).expect("could not load font");
+        let white_rabbit =
+            ab_glyph::FontArc::try_from_slice(include_bytes!("../assets/fonts/whitrabt.ttf"))
+                .expect("could not load font");
 
-        let mut glyph_brush = GlyphBrushBuilder::using_font(white_rabbit)
-            .build(&device, render_format);
-        
+        let mut glyph_brush =
+            GlyphBrushBuilder::using_font(white_rabbit).build(&device, render_format);
+
         // render loop
         window.request_redraw();
 
@@ -170,25 +224,26 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                             height: size.height,
                             present_mode: wgpu::PresentMode::AutoNoVsync,
                             alpha_mode: CompositeAlphaMode::Auto,
-                         },
-                    );
-                },
-                winit::event::Event::RedrawRequested {..} => {
-                    // Get a command encoder for the current frame
-                    let mut encoder = device.create_command_encoder(
-                        &wgpu::CommandEncoderDescriptor {
-                            label: Some("Redraw"),
                         },
                     );
+                }
+                winit::event::Event::RedrawRequested { .. } => {
+                    // Get a command encoder for the current frame
+                    let mut encoder =
+                        device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                            label: Some("Redraw"),
+                        });
 
                     // get the next frame
                     let frame = surface.get_current_texture().expect("get next frame");
-                    let view = &frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+                    let view = &frame
+                        .texture
+                        .create_view(&wgpu::TextureViewDescriptor::default());
 
                     // clear frame
                     {
-                        let mut render_pass = encoder.begin_render_pass(
-                            &wgpu::RenderPassDescriptor {
+                        let mut render_pass =
+                            encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                                 label: Some("Render pass"),
                                 color_attachments: &[Some(
                                     // this is what @location(0) in the fragment shader targets
@@ -196,31 +251,34 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                                         view,
                                         resolve_target: None,
                                         ops: wgpu::Operations {
-                                            load: wgpu::LoadOp::Clear(
-                                                wgpu::Color {
-                                                    r:0.4,
-                                                    g:0.4,
-                                                    b:0.2,
-                                                    a:1.0,
-                                                },
-                                            ),
+                                            load: wgpu::LoadOp::Clear(wgpu::Color {
+                                                r: 0.4,
+                                                g: 0.4,
+                                                b: 0.2,
+                                                a: 1.0,
+                                            }),
                                             store: true,
                                         },
                                     },
                                 )],
                                 depth_stencil_attachment: None,
-                            },
-                        );
+                            });
 
                         render_pass.set_pipeline(&render_pipeline);
+                        // set the vertex buffer
+                        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                         //draw one instance of 3 vertices
-                        render_pass.draw(0..3, 0..1);
+                        render_pass.draw(0..num_verts, 0..1);
                     }
 
                     glyph_brush.queue(Section {
-                        screen_position: (30.0,90.0),
+                        screen_position: (30.0, 90.0),
                         bounds: (size.width as f32, size.height as f32),
-                        text: vec![Text::new(format!("connected: {}", framedata.connected).as_str()).with_color([1.0,1.0,1.0,1.0]).with_scale(40.0)],
+                        text: vec![Text::new(
+                            format!("connected: {}", framedata.connected).as_str(),
+                        )
+                        .with_color([1.0, 1.0, 1.0, 1.0])
+                        .with_scale(40.0)],
                         ..Section::default()
                     });
 
@@ -232,7 +290,7 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                             &mut encoder,
                             view,
                             size.width,
-                            size.height
+                            size.height,
                         )
                         .expect("Draw queued");
                     // submit the work
@@ -241,8 +299,8 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                     frame.present();
                     // recall unused staging buffers
                     staging_belt.recall();
-                },
-                _=> {
+                }
+                _ => {
                     // for any other control flows do a wait
                     //*control_flow = winit::event_loop::ControlFlow::Wait;
                 }
