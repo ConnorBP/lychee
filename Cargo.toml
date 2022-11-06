@@ -30,6 +30,7 @@ env_logger = "0.9"
 clap = { version = "^3.0.5", features = ["cargo"]}
 simplelog = "^0.12"
 futures = {version = "0.3", features = ["executor"]}
+anyhow = "1.0"
 
 # arduino com
 serialport = "^4.2"
