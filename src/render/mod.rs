@@ -126,7 +126,7 @@ pub fn start_window_render(
         let num_indices = INDICES.len() as u32;
 
         // load the shader
-        let shader = device.create_shader_module(include_wgsl!("../assets/shaders/shader.wgsl"));
+        let shader = device.create_shader_module(include_wgsl!("../../assets/shaders/shader.wgsl"));
 
         // create staging belt
         let mut staging_belt = wgpu::util::StagingBelt::new(1024);
@@ -141,12 +141,12 @@ pub fn start_window_render(
 
         // prepare the textures
         let (t_rgba, t_dmimensions) = {
-            let diffuse_bytes = include_bytes!("../assets/textures/t.png");
+            let diffuse_bytes = include_bytes!("../../assets/textures/t.png");
             let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
             (diffuse_image.to_rgba8(), diffuse_image.dimensions())
         };
         let (ct_rgba, ct_dmimensions) = {
-            let diffuse_bytes = include_bytes!("../assets/textures/ct.png");
+            let diffuse_bytes = include_bytes!("../../assets/textures/ct.png");
             let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
             (diffuse_image.to_rgba8(), diffuse_image.dimensions())
         };
@@ -316,7 +316,7 @@ pub fn start_window_render(
 
         // prepare the glyph_brush
         let white_rabbit =
-            ab_glyph::FontArc::try_from_slice(include_bytes!("../assets/fonts/whitrabt.ttf"))
+            ab_glyph::FontArc::try_from_slice(include_bytes!("../../assets/fonts/whitrabt.ttf"))
                 .expect("could not load font");
 
         let mut glyph_brush =
