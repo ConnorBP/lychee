@@ -120,6 +120,16 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         time = SystemTime::now();
 
         if process.state().is_dead() {
+            // if process dies set connected to false
+            let framedata = render::FrameData{
+                connected: false,
+                ..Default::default()
+            };
+            if tx.send(framedata).is_err() {
+                info!("Failed to send to graphics window. Was likely exited. Ending process.");
+                break 'mainloop;
+            }
+            // now wait for the new process
             process = {
                 let ret_proc;
                 loop {
@@ -151,12 +161,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         }
 
         let mut framedata = render::FrameData::default();
+        framedata.connected = true;
         // send location data to renderer
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             if i == game_data.local_player.ent_idx as usize {continue}
             if game_data.local_player.observing_id == 0 || i == game_data.local_player.observing_id as usize -1 {continue}
-            if ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0 {continue}
+            //if ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0 {continue}
 
             framedata.locations.push(render::PlayerLoc{
                 head_pos: ent.screen_head,

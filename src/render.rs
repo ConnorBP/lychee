@@ -4,6 +4,7 @@ use wgpu_glyph::ab_glyph::Glyph;
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 use winit::event_loop::EventLoopBuilder;
 use winit::platform::windows::EventLoopBuilderExtWindows;
+use winit::window::Fullscreen;
 
 use std::sync::mpsc;
 use std::thread;
@@ -16,6 +17,7 @@ pub struct PlayerLoc {
 
 #[derive(Default)]
 pub struct FrameData {
+    pub connected: bool,
     pub locations: Vec<PlayerLoc>,
 }
 
@@ -43,7 +45,9 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                 .build();
 
         let window = winit::window::WindowBuilder::new()
+            .with_title("lyche radar")
             .with_resizable(false)
+            .with_fullscreen(Some(Fullscreen::Borderless(None)))
             .build(&event_loop)
             .unwrap();
         
@@ -95,6 +99,16 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
         window.request_redraw();
 
         event_loop.run(move |event, _, control_flow| {
+            // this is to make sure that resources are cleaned up properly.
+            // Since event loop run never returns we need it to take ownership of resources
+            let _ = &instance;
+            
+            // first update the frame data if it was received
+            if let Ok(frame) = rx.try_recv() {
+                framedata = frame;
+                // request a redraw if we got new info
+                window.request_redraw();
+            }
             match event {
                 winit::event::Event::WindowEvent {
                     event: winit::event::WindowEvent::CloseRequested,
@@ -118,10 +132,6 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                     );
                 },
                 winit::event::Event::RedrawRequested {..} => {
-                    // first update the frame data if it was received
-                    if let Ok(frame) = rx.try_recv() {
-                        framedata = frame;
-                    }
                     // Get a command encoder for the current frame
                     let mut encoder = device.create_command_encoder(
                         &wgpu::CommandEncoderDescriptor {
@@ -163,7 +173,7 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                     glyph_brush.queue(Section {
                         screen_position: (30.0,90.0),
                         bounds: (size.width as f32, size.height as f32),
-                        text: vec![Text::new("hello wgpu_glyph~!").with_color([1.0,1.0,1.0,1.0]).with_scale(40.0)],
+                        text: vec![Text::new(format!("connected: {}", framedata.connected).as_str()).with_color([1.0,1.0,1.0,1.0]).with_scale(40.0)],
                         ..Section::default()
                     });
 
@@ -187,11 +197,7 @@ pub fn start_window_render() -> std::result::Result<mpsc::Sender<FrameData>, Box
                 },
                 _=> {
                     // for any other control flows do a wait
-                    // first update the frame data if it was received
-                    if let Ok(frame) = rx.try_recv() {
-                        framedata = frame;
-                    }
-                    *control_flow = winit::event_loop::ControlFlow::Wait;
+                    //*control_flow = winit::event_loop::ControlFlow::Wait;
                 }
             }
         })

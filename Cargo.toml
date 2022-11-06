@@ -45,6 +45,7 @@ winit = "0.27"
 crow = "0.7"
 wgpu = "0.14"
 wgpu_glyph = "0.18"
+image = "0.24"
 
 [profile.release]
 debug = true
