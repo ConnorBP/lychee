@@ -4,7 +4,7 @@
 use log::{info, warn, Level, trace};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 
-use ::std::ops::Add;
+use ::std::{ops::Add, time::SystemTime};
 
 use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3, game::WeaponId}};
 
@@ -26,6 +26,8 @@ pub struct GameData {
     pub vm : [[f32;4];4],
     /// Local Player View Matrix
     pub view_matrix: glm::Mat4x4,
+
+    last_local_player_update: SystemTime,
 }
 
 impl GameData {
@@ -57,11 +59,11 @@ impl GameData {
                     observing_id: 0,
                     weapon_ent_id: 0,
                     weapon_id: WeaponId::None,
-                    
                 },
                 entity_list: Default::default(),
                 vm: Default::default(),
                 view_matrix: Default::default(),
+                last_local_player_update: SystemTime::UNIX_EPOCH,
             };
         gd.load_data(proc, client_base)?;
         Ok(gd)
@@ -71,13 +73,20 @@ impl GameData {
         trace!("entering load data");
 
         // first update local player
-        let local_player = proc.read_addr32(client_base.add(*DW_LOCALPLAYER)).data()?;
-
-        if local_player.is_null() || !local_player.is_valid() {
+        if let Ok(elap) = self.last_local_player_update.elapsed() {
+            // check for update if its been 30 seconds or if its null
+            // (it only changes between games. But it might read null if paged out)
+            // tbh when we have a ui it may be better to just click a new game button
+            // or maybe read a diff var to check if in a match or not
+            if elap.as_secs() > 30 || self.local_player.address.is_null() || !self.local_player.address.is_valid() {
+                let local_player = proc.read_addr32(client_base.add(*DW_LOCALPLAYER)).data()?;
+                self.local_player.address = local_player;
+                self.last_local_player_update = SystemTime::now();
+            }
+        }
+        if self.local_player.address.is_null() || !self.local_player.address.is_valid() {
             return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("Local Player Address is not valid."));
         }
-
-        self.local_player.address = local_player;
         
         let mut bat = proc.batcher();
         self.local_player.load_data(&mut bat, self.client_state);
