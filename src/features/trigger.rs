@@ -13,7 +13,7 @@ pub fn incross_trigger(kb: &mut Win32Keyboard<impl MemoryView>, human: &mut Huma
         if game_data.local_player.incross > 0 && game_data.local_player.incross <= 64 {
             //info!("incross: {}", game_data.local_player.incross);
             if let Some(enemy_team) = game_data.entity_list.get_team_for((game_data.local_player.incross as usize) -1) {
-                if game_data.local_player.aimpunch_angle.magnitude() > 0.1 {return} // force acuracy
+                if game_data.local_player.aimpunch_angle.magnitude() > 0.01 {return} // force acuracy
                 // zuesbot
                 if !zuesknife::zues_knife_bot(human,game_data,(game_data.local_player.incross as usize) -1) {return}
                 //info!("enemy team: {}", enemy_team);
