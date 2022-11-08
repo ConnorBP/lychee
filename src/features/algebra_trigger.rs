@@ -69,7 +69,7 @@ impl AlgebraTrigger {
             // speed factor. Bring speed value from something like 0.1-0.01 to more like 1.0-0.5 ish
             // value of speed is negative when moving towards enemy and positive when moving away
             let sf = (speed * PREFIRE_FACTOR) as f32;
-            self.speed_avg = 0.;//(self.speed_avg + sf) / 2.;
+            self.speed_avg = (self.speed_avg + sf) / 2.;
             //info!("dist from body: {}", dist_from_body);
             if dist_from_head + self.speed_avg < 5.
             || dist_from_neck + self.speed_avg < 6.
