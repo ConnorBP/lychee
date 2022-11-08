@@ -1,6 +1,8 @@
 // this render thread takes in data such as player positions via a message sender and then does some gpu magic
 
 mod texture;
+mod camera;
+use self::camera::{Camera, CameraUniform};
 
 use image::GenericImageView;
 // gpu library
@@ -109,6 +111,34 @@ pub fn start_window_render(
                 .expect("Request device")
         });
 
+        let window_size =  window.inner_size();
+
+        //
+        // init camera
+        //
+        let camera = Camera {
+            // position the camera one unit up and 2 units back
+            eye: (0.0,1.0,2.0).into(),
+            // have the camera look at the origin
+            target: (0.0,0.0,0.0).into(),
+            up: cgmath::Vector3::unit_y(),
+            aspect: window_size.width as f32 / window_size.height as f32,
+            fovy: 45.0,
+            znear: 0.1,
+            zfar: 100.,
+        };
+
+        let mut camera_uniform = CameraUniform::new();
+        camera_uniform.update_view_proj(&camera);
+
+        let camera_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Camera Buffer"),
+                contents: camera_uniform.as_bytes(),
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            }
+        );
+
         // our vertex buffer to send to the gpu each frame
         let vertex_buffer: wgpu::Buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -174,6 +204,7 @@ pub fn start_window_render(
                     },
                 ],
             });
+        
         // bind group for the t texture
         let t_diffuse_bind_group = device.create_bind_group(
             &wgpu::BindGroupDescriptor {
@@ -193,6 +224,38 @@ pub fn start_window_render(
         );
 
         //
+        // camera projection matrix bind group
+        //
+
+
+        let camera_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None
+                    },
+                    count: None,
+                }
+            ],
+            label: Some("camera_bind_group_layout"),
+        });
+
+        let camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("camera_bind_group"),
+            layout: &camera_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: camera_buffer.as_entire_binding(),
+                }
+            ],
+        });
+
+        //
         // Render Pipeline
         //
 
@@ -201,7 +264,7 @@ pub fn start_window_render(
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&texture_bind_group_layout],
+                bind_group_layouts: &[&texture_bind_group_layout,&camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -347,6 +410,8 @@ pub fn start_window_render(
                         render_pass.set_pipeline(&render_pipeline);
                         // add the texture bind group
                         render_pass.set_bind_group(0, &t_diffuse_bind_group, &[]);
+                        // add the camera bind group
+                        render_pass.set_bind_group(1, &camera_bind_group, &[]);
                         // set the vertex buffer
                         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                         // set the index buffer
