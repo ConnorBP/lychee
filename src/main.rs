@@ -96,8 +96,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     //     .read_raw(engineModule.base, engineModule.size as usize)
     //     .data_part()?;
 
-
-    let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
+    // init game data or panic if the process is closed before game data is valid
+    let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base)?;
     info!("{:?}", game_data);
 
     // processing time delta
@@ -131,8 +131,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             }
             // now wait for the new process
             process = {
-                let ret_proc;
-                loop {
+                let mut ret_proc;
+                'waitforproc : loop {
                     info!("process dead. Waiting for new one.");
                     std::thread::sleep(std::time::Duration::from_secs(5));
                     if let Ok(proc) = os.clone().into_process_by_name("csgo.exe") {
@@ -147,7 +147,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                         client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
                         engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
 
-                        game_data = init_gamedata(&mut process, engine_module.base, client_module.base);
+                        if let Ok(gd) = init_gamedata(&mut process, engine_module.base, client_module.base) {
+                            game_data = gd;
+                        } else {
+                            // if the process is closed thus invalidating gamedata and our process handle
+                            // then go back to waiting for process handle
+                            continue 'waitforproc;
+                        }
 
                         break;
                     }
@@ -220,17 +226,23 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> GameData {
+fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> Result<GameData> {
     let gd_ret;
     loop {
+        // this loop waits for a user to join a game for the first time before it exists.
+        // So if someone closes the game from the main menu it wouldn't figure out if the proc was dead
+        // this should fix that
+        if proc.state().is_dead() {
+            return Err(Error(ErrorOrigin::OsLayer, ErrorKind::NotFound).log_error("Pprocess was closed during init."));
+        }
         if let Ok(gd) = gamedata::GameData::new(proc, engine_base, client_base) {
             gd_ret = gd;
             break;
         } else {
-            invalid_pause("initialization game data");
+            invalid_pause("initialization game data");// this stops the outside loop from getting a new process if csgo closes. FIXME
         }
     }
-    gd_ret
+    Ok(gd_ret)
 }
 
 fn invalid_pause(name: &str) {
