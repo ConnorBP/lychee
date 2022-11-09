@@ -142,7 +142,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                         // now that we have a new working proc we also need to reset some stuff
 
                         // TODO: make the initialization such as getting client and engine module bases into a re usable function
-                        // and call it here. and also make those global vars maybe
+                        // TODO: DO SO BY MAKING ALL OF MAINS STATE A PART OF ONE STRUCT WITH AN INIT FUNC IN IT
 
                         client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
                         engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));

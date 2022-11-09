@@ -27,7 +27,15 @@ pub struct GameData {
     /// Local Player View Matrix
     pub view_matrix: glm::Mat4x4,
 
+    /// The currently being played map name string
+    pub current_map: Option<String>,
+
     last_local_player_update: SystemTime,
+
+    // for checking if a new map is loaded ocaisionally
+    last_map_update: SystemTime,
+    // last map before map update to check if it changes
+    old_map_name: Option<String>,
 }
 
 impl GameData {
@@ -63,7 +71,12 @@ impl GameData {
                 entity_list: Default::default(),
                 vm: Default::default(),
                 view_matrix: Default::default(),
+                current_map: None,
+
+                // private for running lazy updates
                 last_local_player_update: SystemTime::UNIX_EPOCH,
+                last_map_update: SystemTime::UNIX_EPOCH,
+                old_map_name: None,
             };
         gd.load_data(proc, client_base)?;
         Ok(gd)
@@ -86,6 +99,23 @@ impl GameData {
         }
         if self.local_player.address.is_null() || !self.local_player.address.is_valid() {
             return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("Local Player Address is not valid."));
+        }
+
+        if let Ok(elap) = self.last_map_update.elapsed() {
+            if elap.as_secs() > 30 {
+                // read map name with max len of 32 as its unlikely amy map names go over that len
+                self.current_map = proc.read_char_string_n(self.client_state.add(*DW_CLIENTSTATE_MAP), 32).data().map_or(None, |s| {
+                    if s.len() > 0 {
+                        Some(s)
+                    } else {
+                        None
+                    }
+                });
+                if self.current_map != self.old_map_name {
+                    info!("current map updated: {:?}", self.current_map);
+                    self.old_map_name = self.current_map.clone();
+                }
+            }
         }
         
         let mut bat = proc.batcher();
