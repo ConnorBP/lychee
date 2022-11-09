@@ -38,6 +38,10 @@ impl Camera {
         let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
         return OPENGL_TO_WGPU_MATRIX * proj * view;
     }
+    pub fn update_window_size(&mut self, x:f32,y:f32)
+    {
+        self.aspect = x/y;
+    }
 }
 
 #[repr(C)]

@@ -2,7 +2,12 @@
 
 mod texture;
 mod camera;
-use self::camera::{Camera, CameraUniform};
+mod instance;
+
+use self::{
+    camera::{Camera, CameraUniform},
+    instance::{Instance, InstanceRaw},
+};
 
 use image::GenericImageView;
 // gpu library
@@ -116,7 +121,7 @@ pub fn start_window_render(
         //
         // init camera
         //
-        let camera = Camera {
+        let mut camera = Camera {
             // position the camera one unit up and 2 units back
             eye: (0.0,1.0,2.0).into(),
             // have the camera look at the origin
@@ -157,6 +162,18 @@ pub fn start_window_render(
         );
         let num_indices = INDICES.len() as u32;
 
+        // instance buffer
+        let instance_data = Instance::make_test_data().iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let num_instances = instance_data.len() as u32;
+        let instance_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: instance_data.as_bytes(),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
+
+
         // load the shader
         let shader = device.create_shader_module(include_wgsl!("../../assets/shaders/shader.wgsl"));
 
@@ -170,6 +187,9 @@ pub fn start_window_render(
         //
         // Texture Init
         //
+
+        // depth texture
+        let mut depth_texture = texture::Texture::create_depth_texture(&device, &size, "depth_texture");
 
         // prepare the textures
         let t_diffuse_bytes = include_bytes!("../../assets/textures/t.png");
@@ -276,7 +296,7 @@ pub fn start_window_render(
                 module: &shader,
                 entry_point: "vs_main",
                 buffers: &[
-                    BufferVertex::desc(),
+                    BufferVertex::desc(), InstanceRaw::desc(),
                 ],
             },
             fragment: Some(wgpu::FragmentState {
@@ -297,7 +317,13 @@ pub fn start_window_render(
                 polygon_mode: wgpu::PolygonMode::Fill,
                 conservative: false,
             },
-            depth_stencil: None,
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: texture::Texture::DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -369,6 +395,9 @@ pub fn start_window_render(
                             alpha_mode: CompositeAlphaMode::Auto,
                         },
                     );
+                    camera.update_window_size(size.width as f32, size.height as f32);
+                    // re create the depth texture with the new window size
+                    depth_texture = texture::Texture::create_depth_texture(&device, &size, "depth_texture");
                 }
                 winit::event::Event::RedrawRequested { .. } => {
                     // Get a command encoder for the current frame
@@ -404,7 +433,14 @@ pub fn start_window_render(
                                         },
                                     },
                                 )],
-                                depth_stencil_attachment: None,
+                                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                                    view: &depth_texture.view,
+                                    depth_ops: Some(wgpu::Operations {
+                                        load: wgpu::LoadOp::Clear(1.0),
+                                        store: true,
+                                    }),
+                                    stencil_ops: None,
+                                }),
                             });
 
                         render_pass.set_pipeline(&render_pipeline);
@@ -414,10 +450,12 @@ pub fn start_window_render(
                         render_pass.set_bind_group(1, &camera_bind_group, &[]);
                         // set the vertex buffer
                         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+                        // set the second vertex buffer as the instance buffer
+                        render_pass.set_vertex_buffer(1, instance_buffer.slice(..));
                         // set the index buffer
                         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
                         // finally call draw but with indexed
-                        render_pass.draw_indexed(0..num_indices, 0, 0..1);
+                        render_pass.draw_indexed(0..num_indices, 0, 0..num_instances);
                         //draw one instance of 3 vertices
                         // render_pass.draw(0..num_verts, 0..1);
                     }
