@@ -211,7 +211,7 @@ pub fn round_up(num_in: u64, up_to_multiple: u64) -> u64 {
     num_in + up_to_multiple - remainder
 }
 
-pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:(f32,f32)) -> (f32,f32) {
+pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:Option<(f32,f32)>) -> (f32,f32) {
  let mut nx = x - map_x;
  let mut ny = y - map_y;
 
@@ -225,13 +225,15 @@ pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:(f32
  // invert y
  ny = ny * -1.0;
 
- // scale it to either window width or height depending on which is smaller
- if window_size.0 < window_size.1 {
-    nx = nx * window_size.0;
-    ny = ny * window_size.0;
- } else {
-    nx = nx * window_size.1;
-    ny = ny * window_size.1;
+ if let Some((winx,winy)) = window_size {
+     // scale it to either window width or height depending on which is smaller
+    if winx < winy {
+        nx = nx * winx;
+        ny = ny * winx;
+    } else {
+        nx = nx * winy;
+        ny = ny * winy;
+    }
  }
 
 (nx,ny)
