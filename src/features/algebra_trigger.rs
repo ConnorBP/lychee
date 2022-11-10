@@ -5,7 +5,7 @@ use crate::{utils::math,gamedata::GameData, datatypes::tmp_vec3, human_interface
 
 use super::zuesknife;
 
-const PREFIRE_FACTOR: f64 = 12.;
+const PREFIRE_FACTOR: f64 = 5.;
 
 #[derive(Default)]
 pub struct AlgebraTrigger {

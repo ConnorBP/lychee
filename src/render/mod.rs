@@ -4,13 +4,14 @@ mod texture;
 mod camera;
 mod instance;
 
-use crate::gamedata::minimap_info::MapInfo;
+use crate::{gamedata::minimap_info::MapInfo, datatypes::tmp_vec3, utils};
 
 use self::{
     camera::{Camera, CameraUniform},
     instance::{Instance, InstanceRaw},
 };
 
+use cgmath::Rotation3;
 use image::GenericImageView;
 // gpu library
 use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt};
@@ -22,10 +23,13 @@ use winit::platform::windows::EventLoopBuilderExtWindows;
 use winit::window::Fullscreen;
 // other utils
 use memflow::prelude::Pod;
-use std::sync::mpsc;
+use std::{sync::mpsc, time::SystemTime};
 use std::thread;
 
+const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as u64;
+
 pub struct PlayerLoc {
+    pub world_pos: tmp_vec3,
     pub head_pos: Option<glm::Vec3>,
     pub feet_pos: Option<glm::Vec3>,
     pub team: i32,
@@ -134,15 +138,15 @@ pub fn start_window_render(
         // init camera
         //
         let mut camera = Camera {
-            // position the camera one unit up and 2 units back
-            eye: (0.0,1.0,2.0).into(),
+            // position the camera 1 unit up and 50 units back
+            eye: (0.0,1.0,10.0).into(),
             // have the camera look at the origin
             target: (0.0,0.0,0.0).into(),
             up: cgmath::Vector3::unit_y(),
             aspect: window_size.width as f32 / window_size.height as f32,
-            fovy: 45.0,
+            fovy: 75.0,
             znear: 0.1,
-            zfar: 100.,
+            zfar: 2000.,
         };
 
         let mut camera_uniform = CameraUniform::new();
@@ -175,16 +179,23 @@ pub fn start_window_render(
         let num_indices = INDICES.len() as u32;
 
         // instance buffer
-        let instance_data = Instance::make_test_data().iter().map(Instance::to_raw).collect::<Vec<_>>();
-        let num_instances = instance_data.len() as u32;
-        let instance_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Instance Buffer"),
-                contents: instance_data.as_bytes(),
-                usage: wgpu::BufferUsages::VERTEX,
-            }
-        );
-
+        //let test_data = Instance::make_test_data(f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())).iter().map(Instance::to_raw).collect::<Vec<_>>();
+        //let mut instance_data = vec![];
+        let mut instance_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Instance Buffer"),
+            size: 6400,//MAX_INSTANCE_BUFFER_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        // let instance_buffer = device.create_buffer_init(
+        //     &wgpu::util::BufferInitDescriptor {
+        //         label: Some("Instance Buffer"),
+        //         contents: test_data.as_bytes(),
+        //         usage: wgpu::BufferUsages::VERTEX
+        //     }
+        // );
+        let mut staging_instance_buffer = None;
+        let mut num_instances = 0;
 
         // load the shader
         let shader = device.create_shader_module(include_wgsl!("../../assets/shaders/shader.wgsl"));
@@ -383,6 +394,31 @@ pub fn start_window_render(
             // first update the frame data if it was received
             if let Ok(frame) = rx.try_recv() {
                 framedata = frame;
+
+                // let instance_data = {
+                //     use cgmath::{Vector3,Quaternion};
+                //     let mut new_instances = Vec::with_capacity(framedata.locations.len());
+                //     for (i, data) in framedata.locations.iter().enumerate() {
+                //         new_instances.push(Instance{
+                //             position: Vector3 { x: data.world_pos .x, y: data.world_pos .y, z: data.world_pos .z },
+                //             rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_y(), cgmath::Deg(0.0)),
+                //         });
+                //     }
+                //     new_instances
+                // }.iter().map(Instance::to_raw).collect::<Vec<_>>();
+                let instance_data = Instance::make_test_data(f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())*90.).iter().map(Instance::to_raw).collect::<Vec<_>>();
+                num_instances = instance_data.len() as u32;
+
+                // now update textures and bindings and such
+
+                staging_instance_buffer = Some(device.create_buffer_init(
+                    &wgpu::util::BufferInitDescriptor {
+                        label: Some("Instance Buffer"),
+                        contents: instance_data.as_bytes(),
+                        usage: wgpu::BufferUsages::MAP_WRITE | wgpu::BufferUsages::COPY_SRC,
+                    }
+                ));
+
                 // request a redraw if we got new info
                 window.request_redraw();
             }
@@ -390,11 +426,6 @@ pub fn start_window_render(
             // if the map info has changed update the required textures acordingly
             if let Ok(new_map_data) = map_rx.try_recv() {
                 map_data = new_map_data;
-
-                // now update textures and bindings and such
-
-
-
             }
 
             match event {
@@ -428,6 +459,11 @@ pub fn start_window_render(
                         device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
                             label: Some("Redraw"),
                         });
+                    // if instance staging buffer has data then copy it into the instance buffer
+                    if let Some(stage) = &staging_instance_buffer {
+                        encoder.copy_buffer_to_buffer(stage, 0, &instance_buffer, 0, utils::math::round_up(stage.size(), wgpu::COPY_BUFFER_ALIGNMENT));
+                        staging_instance_buffer = None;
+                    }
 
                     // get the next frame
                     let frame = surface.get_current_texture().expect("get next frame");

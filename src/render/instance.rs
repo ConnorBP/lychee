@@ -12,7 +12,7 @@ impl Instance {
     pub fn to_raw(&self) -> InstanceRaw {
         InstanceRaw { model: (cgmath::Matrix4::from_translation(self.position) * cgmath::Matrix4::from(self.rotation)).into() }
     }
-    pub fn make_test_data<'a>() -> Vec<Instance> {
+    pub fn make_test_data<'a>(angle: f64) -> Vec<Instance> {
         const NUM_INSTANCES_PER_ROW: u32 = 10;
         const INSTANCE_DISPLACEMENT: cgmath::Vector3<f32> = cgmath::Vector3::new(NUM_INSTANCES_PER_ROW as f32 * 0.5, 0., NUM_INSTANCES_PER_ROW as f32 * 0.5);
         let instances = (0..NUM_INSTANCES_PER_ROW).flat_map(|z| {
@@ -24,7 +24,7 @@ impl Instance {
                     // as Quaternions can effect scale if they're not created correctly
                     cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_z(), cgmath::Deg(0.0))
                 } else {
-                    cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0))
+                    cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(angle as f32))
                 };
 
                 Instance {

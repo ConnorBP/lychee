@@ -160,10 +160,15 @@ impl GameData {
         //DWORD pWeapon = mem->ReadMem<DWORD>(ClientDLL + dwEntityList + (pWeaponEnt - 1) * 0x10);
         //int id = mem->ReadMem<int>(pWeapon + m_iItemDefinitionIndex);
         //bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (i as u32 * 0x10)), &mut ent.u32address);
-        let weapon_ptr = proc.read_addr32(client_base.add(*DW_ENTITYLIST + (self.local_player.weapon_ent_id-1) * 0x10)).data()?;
-        let mut weapon_id:u32 = proc.read(weapon_ptr.add(*NET_ITEM_DEF_INDEX)).data()?;
-        weapon_id &= 0xFFF;
-        self.local_player.weapon_id = weapon_id.into();
+        if(self.local_player.weapon_ent_id == 0) {
+            self.local_player.weapon_id = WeaponId::None;
+        } else {
+            let weapon_ptr = proc.read_addr32(client_base.add(*DW_ENTITYLIST + (self.local_player.weapon_ent_id-1) * 0x10)).data()?;
+            let mut weapon_id:u32 = proc.read(weapon_ptr.add(*NET_ITEM_DEF_INDEX)).data()?;
+            weapon_id &= 0xFFF;
+            self.local_player.weapon_id = weapon_id.into();
+        }
+        
         //println!("weapon id: {:?}", self.local_player.weapon_id);
         trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
 

@@ -177,6 +177,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             //if ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0 {continue}
 
             framedata.locations.push(render::PlayerLoc{
+                world_pos: ent.vec_origin,
                 head_pos: ent.screen_head,
                 feet_pos: ent.screen_feet,
                 team: ent.team_num,
