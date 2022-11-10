@@ -14,8 +14,9 @@ use log::{info, warn, Level};
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use patternscan::scan;
+use render::MapData;
 use std::io::Cursor;
-use ::std::{ops::Add, time::{Duration, SystemTime}};
+use ::std::{ops::Add, time::{Duration, SystemTime}, sync::mpsc};
 
 use human_interface::*;
 
@@ -41,7 +42,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let matches = parse_args();
     extract_args(&matches);
 
-    let tx = render::start_window_render()?;
+    let (tx, map_tx) = render::start_window_render()?;
 
     // a "human" we get to tell what to do
     let mut human = HumanInterface::new()?;
@@ -97,7 +98,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     //     .data_part()?;
 
     // init game data or panic if the process is closed before game data is valid
-    let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base)?;
+    let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base, map_tx.clone())?;
     info!("{:?}", game_data);
 
     // processing time delta
@@ -147,7 +148,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                         client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
                         engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
 
-                        if let Ok(gd) = init_gamedata(&mut process, engine_module.base, client_module.base) {
+                        if let Ok(gd) = init_gamedata(&mut process, engine_module.base, client_module.base, map_tx.clone()) {
                             game_data = gd;
                         } else {
                             // if the process is closed thus invalidating gamedata and our process handle
@@ -226,7 +227,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> Result<GameData> {
+fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address, map_tx: mpsc::Sender<MapData>) -> Result<GameData> {
     let gd_ret;
     loop {
         // this loop waits for a user to join a game for the first time before it exists.
@@ -235,7 +236,7 @@ fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, c
         if proc.state().is_dead() {
             return Err(Error(ErrorOrigin::OsLayer, ErrorKind::NotFound).log_error("Pprocess was closed during init."));
         }
-        if let Ok(gd) = gamedata::GameData::new(proc, engine_base, client_base) {
+        if let Ok(gd) = gamedata::GameData::new(proc, engine_base, client_base, map_tx.clone()) {
             gd_ret = gd;
             break;
         } else {

@@ -4,12 +4,16 @@
 use log::{info, warn, Level, trace};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 
-use ::std::{ops::Add, time::SystemTime};
+use ::std::{ops::Add, time::SystemTime, io::Read, sync::mpsc};
 
-use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3, game::WeaponId}};
+use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3, game::WeaponId}, render::MapData};
 
 pub mod entitylist;
 use entitylist::{EntityList, EntityInfo};
+
+use self::minimap_info::MapInfo;
+
+pub mod minimap_info;
 
 #[derive(Debug)]
 pub struct GameData {
@@ -29,9 +33,12 @@ pub struct GameData {
 
     /// The currently being played map name string
     pub current_map: Option<String>,
+    /// the info on the current maps radar graphic such as scale and world pos
+    pub current_map_info: Option<MapInfo>,
+    
+    map_tx: mpsc::Sender<MapData>,
 
     last_local_player_update: SystemTime,
-
     // for checking if a new map is loaded ocaisionally
     last_map_update: SystemTime,
     // last map before map update to check if it changes
@@ -39,12 +46,12 @@ pub struct GameData {
 }
 
 impl GameData {
-    pub fn new(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address) -> Result<Self> {
+    pub fn new(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address, map_tx: mpsc::Sender<MapData>) -> std::result::Result<Self, Box<dyn std::error::Error>> {
         let client_state = proc.read_addr32(engine_base.add(*DW_CLIENTSTATE)).data()?;
         //let get_local_idx = proc.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data()?;
 
         if !client_state.is_valid() || client_state.is_null() {
-            return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("client state address was not valid."));
+            return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("client state address was not valid."))?;
         }
 
         let mut gd =
@@ -72,8 +79,10 @@ impl GameData {
                 vm: Default::default(),
                 view_matrix: Default::default(),
                 current_map: None,
+                current_map_info: None,
 
                 // private for running lazy updates
+                map_tx,
                 last_local_player_update: SystemTime::UNIX_EPOCH,
                 last_map_update: SystemTime::UNIX_EPOCH,
                 old_map_name: None,
@@ -82,7 +91,7 @@ impl GameData {
         Ok(gd)
     }
     /// Load the data from the game in place using a batcher
-    pub fn load_data(&mut self, proc: &mut (impl Process + MemoryView),client_base: Address) -> Result<()> {
+    pub fn load_data(&mut self, proc: &mut (impl Process + MemoryView),client_base: Address) -> std::result::Result<(), Box<dyn std::error::Error>> {
         trace!("entering load data");
 
         // first update local player
@@ -98,7 +107,7 @@ impl GameData {
             }
         }
         if self.local_player.address.is_null() || !self.local_player.address.is_valid() {
-            return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("Local Player Address is not valid."));
+            return Err(Error(ErrorOrigin::Memory, ErrorKind::NotFound).log_error("Local Player Address is not valid."))?;
         }
 
         if let Ok(elap) = self.last_map_update.elapsed() {
@@ -114,6 +123,21 @@ impl GameData {
                 if self.current_map != self.old_map_name {
                     info!("current map updated: {:?}", self.current_map);
                     self.old_map_name = self.current_map.clone();
+
+                    // minimap info struct update
+                    if let Some(name) = self.current_map.clone() {
+                        //let file_path = std::path::Path::new(format!("./assets/maps/{}.txt", name).as_str());
+                        
+                        println!(
+                            "{:?}",
+                            keyvalues_parser::Vdf::parse(std::fs::read_to_string(format!("./assets/maps/{}.txt", name))?.as_str())
+                        );
+                        self.current_map_info = minimap_info::load_map_info(name).map_or(None, |map_info|Some(map_info));
+                        self.map_tx.send(MapData{
+                            map_name: self.current_map.clone(),
+                            map_details: self.current_map_info,
+                        })?;
+                    }
                 }
             }
         }

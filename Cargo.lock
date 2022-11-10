@@ -1482,6 +1482,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "keyvalues-parser"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d990301996c856ea07a84bc291e76f1273db52683663efc05c8d355976897e5"
+dependencies = [
+ "pest",
+ "pest_derive",
+ "thiserror",
+]
+
+[[package]]
 name = "khronos-egl"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1595,6 +1606,7 @@ dependencies = [
  "format-bytes",
  "futures",
  "image",
+ "keyvalues-parser",
  "lazy_static",
  "log",
  "memflow",

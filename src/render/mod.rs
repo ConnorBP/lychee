@@ -4,6 +4,8 @@ mod texture;
 mod camera;
 mod instance;
 
+use crate::gamedata::minimap_info::MapInfo;
+
 use self::{
     camera::{Camera, CameraUniform},
     instance::{Instance, InstanceRaw},
@@ -33,6 +35,13 @@ pub struct PlayerLoc {
 pub struct FrameData {
     pub connected: bool,
     pub locations: Vec<PlayerLoc>,
+}
+
+#[derive(Default)]
+/// data update message for when there is a new map
+pub struct MapData {
+    pub map_name: Option<String>,
+    pub map_details: Option<MapInfo>,
 }
 
 #[repr(C)]
@@ -79,12 +88,15 @@ const INDICES: &[u16] = &[
 ];
 
 pub fn start_window_render(
-) -> std::result::Result<mpsc::Sender<FrameData>, Box<dyn std::error::Error>> {
+) -> std::result::Result<(mpsc::Sender<FrameData>,mpsc::Sender<MapData>), Box<dyn std::error::Error>> {
     let (tx, rx) = mpsc::channel::<FrameData>();
+    let (map_tx, map_rx) = mpsc::channel::<MapData>();
 
     thread::spawn(|| {
         // our frame data to be rendered (a list of player screen positions)
         let mut framedata = FrameData::default();
+        // info about the currently played map
+        let mut map_data = MapData::default();
 
         let event_loop = EventLoopBuilder::new()
             .with_any_thread(true)
@@ -374,6 +386,17 @@ pub fn start_window_render(
                 // request a redraw if we got new info
                 window.request_redraw();
             }
+
+            // if the map info has changed update the required textures acordingly
+            if let Ok(new_map_data) = map_rx.try_recv() {
+                map_data = new_map_data;
+
+                // now update textures and bindings and such
+
+
+
+            }
+
             match event {
                 winit::event::Event::WindowEvent {
                     event: winit::event::WindowEvent::CloseRequested,
@@ -464,7 +487,7 @@ pub fn start_window_render(
                         screen_position: (30.0, 90.0),
                         bounds: (size.width as f32, size.height as f32),
                         text: vec![Text::new(
-                            format!("connected: {}", framedata.connected).as_str(),
+                            format!("connected: {} map {:?}", framedata.connected, map_data.map_name.clone().unwrap_or("none".to_string())).as_str(),
                         )
                         .with_color([1.0, 1.0, 1.0, 1.0])
                         .with_scale(40.0)],
@@ -496,5 +519,5 @@ pub fn start_window_render(
             }
         }) // end of event loop
     }); // thread
-    Ok(tx) // return the sender after we create the thread
+    Ok((tx,map_tx)) // return the sender after we create the thread
 }
