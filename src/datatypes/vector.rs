@@ -200,3 +200,15 @@ impl Into<glm::Vec3> for tmp_vec3 {
         glm::vec3(self.x,self.y,self.z)
     }
 }
+
+impl From<(f32, f32, f32)> for tmp_vec3 {
+    fn from((x,y,z): (f32, f32, f32)) -> Self {
+        tmp_vec3 { x: x, y: y, z: z }
+    }
+}
+
+impl From<(f32, f32)> for tmp_vec2 {
+    fn from((x,y): (f32, f32)) -> Self {
+        tmp_vec2 { x: x, y: y }
+    }
+}

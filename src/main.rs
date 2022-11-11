@@ -243,11 +243,15 @@ fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, c
         if proc.state().is_dead() {
             return Err(Error(ErrorOrigin::OsLayer, ErrorKind::NotFound).log_error("Pprocess was closed during init."));
         }
-        if let Ok(gd) = gamedata::GameData::new(proc, engine_base, client_base, map_tx.clone()) {
-            gd_ret = gd;
-            break;
-        } else {
-            invalid_pause("initialization game data");// this stops the outside loop from getting a new process if csgo closes. FIXME
+
+        match gamedata::GameData::new(proc, engine_base, client_base, map_tx.clone()) {
+            Ok(gd) => {
+                gd_ret = gd;
+                break;
+            },
+            Err(e) => {
+                invalid_pause(format!("initialization game data {:?}", e).as_str());
+            }
         }
     }
     Ok(gd_ret)

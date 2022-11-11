@@ -3,7 +3,7 @@
 struct CameraUniform {
     view_proj: mat4x4<f32>,
 };
-@group(3) @binding(0)
+@group(1) @binding(0)
 var<uniform> camera: CameraUniform;
 
 struct VertexInput {
@@ -53,33 +53,26 @@ fn vs_main(
 
 // Texture bindings
 @group(0) @binding(0)
-var map_diffuse: texture_2d<f32>;
+var diffuse: binding_array<texture_2d<f32>>;
 @group(0) @binding(1)
-var map_diffuse_sampler: sampler;
-@group(1) @binding(0)
-var t_diffuse: texture_2d<f32>;
-@group(1) @binding(1)
-var t_diffuse_sampler: sampler;
-@group(2) @binding(0)
-var ct_diffuse: texture_2d<f32>;
-@group(2) @binding(1)
-var ct_diffuse_sampler: sampler;
+var diffuse_sampler: binding_array<sampler>;
+
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var outval: vec4<f32>;
-    var t = textureSample(t_diffuse, t_diffuse_sampler, in.tex_coords);
-    let ct = textureSample(ct_diffuse, ct_diffuse_sampler, in.tex_coords);
-    var map = textureSample(map_diffuse, map_diffuse_sampler, in.tex_coords);
+    var map = textureSample(diffuse[0], diffuse_sampler[0], in.tex_coords);
+    var local = textureSample(diffuse[1], diffuse_sampler[1], in.tex_coords);
+    var t = textureSample(diffuse[2], diffuse_sampler[2], in.tex_coords);
+    var ct = textureSample(diffuse[3], diffuse_sampler[3], in.tex_coords);
     if in.tex_type == 0 {
         outval = map;
     } else if in.tex_type == 1 {
-        // todo add a tex for local player
-        outval = ct;
+        outval = local;
     } else if in.tex_type == 2 {
         outval = t;
     } else {
-        outval = ct; 
+        outval = ct;
     }
     return outval;
 }

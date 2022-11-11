@@ -4,7 +4,7 @@ mod texture;
 mod camera;
 mod instance;
 
-use crate::{gamedata::minimap_info::{MapInfo, self}, datatypes::tmp_vec3, utils, render::instance::InstanceType};
+use crate::{gamedata::minimap_info::{MapInfo, self}, datatypes::{tmp_vec3, tmp_vec2}, utils, render::instance::InstanceType};
 
 use self::{
     camera::{Camera, CameraUniform},
@@ -14,7 +14,7 @@ use self::{
 use cgmath::Rotation3;
 use image::GenericImageView;
 // gpu library
-use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt};
+use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout};
 // fonts rendering library
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 // window creation
@@ -23,7 +23,7 @@ use winit::platform::windows::EventLoopBuilderExtWindows;
 use winit::window::Fullscreen;
 // other utils
 use memflow::prelude::Pod;
-use std::{sync::mpsc, time::SystemTime};
+use std::{sync::mpsc, time::SystemTime, num::NonZeroU32};
 use std::thread;
 
 const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as u64;
@@ -105,6 +105,8 @@ const PLANE_INDICES: &[u16] = &[
     2,3,0
 ];
 
+const MAP_CENTER: (f32,f32) = (5.,-5.0);
+
 pub fn start_window_render(
 ) -> std::result::Result<(mpsc::Sender<FrameData>,mpsc::Sender<MapData>), Box<dyn std::error::Error>> {
     let (tx, rx) = mpsc::channel::<FrameData>();
@@ -141,7 +143,14 @@ pub fn start_window_render(
                 .await
                 .expect("Request adapter");
             adapter
-                .request_device(&wgpu::DeviceDescriptor::default(), None)
+                .request_device(
+                    &wgpu::DeviceDescriptor {
+                        label: None,
+                        features: wgpu::Features::TEXTURE_BINDING_ARRAY,
+                        limits: Default::default(),
+                    },
+                    None
+                )
                 .await
                 .expect("Request device")
         });
@@ -153,7 +162,7 @@ pub fn start_window_render(
         //
         let mut camera = Camera {
             // position the camera 1 unit up and 50 units back
-            eye: (5.,-5.0,15.0).into(),
+            eye: (MAP_CENTER.0,MAP_CENTER.1,15.0).into(),
             // have the camera look at the origin
             target: (0.0,0.0,0.0).into(),
             up: cgmath::Vector3::unit_y(),
@@ -162,6 +171,8 @@ pub fn start_window_render(
             znear: 0.1,
             zfar: 2000.,
         };
+
+        let mut player_minimap_location: tmp_vec3 = tmp_vec3::default();
 
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
@@ -232,13 +243,17 @@ pub fn start_window_render(
         let no_map_bytes = include_bytes!("../../assets/maps/no_map.png");
         let t_diffuse_bytes = include_bytes!("../../assets/textures/t.png");
         let ct_diffuse_bytes = include_bytes!("../../assets/textures/ct.png");
+        let local_diffuse_bytes = include_bytes!("../../assets/textures/target.png");
         
         let mut map_diffuse_texture = texture::Texture::from_bytes(&device, &queue, no_map_bytes, "map.png").unwrap();
         let t_diffuse_texture = texture::Texture::from_bytes(&device, &queue, t_diffuse_bytes, "t.png").unwrap();
         let ct_diffuse_texture = texture::Texture::from_bytes(&device, &queue, ct_diffuse_bytes, "ct.png").unwrap();
+        let local_diffuse_texture = texture::Texture::from_bytes(&device, &queue, local_diffuse_bytes, "local.png").unwrap();
 
         // create bind group
         // this describes a set of resources and how they may be accessed by a shader.
+
+        // TODO: REPLACE THESE MANY BINDINGS WITH ONE TEXTURE ARRAY BINDING
 
         // bind group layout (shared for all textures)
         let texture_bind_group_layout =
@@ -253,70 +268,79 @@ pub fn start_window_render(
                             view_dimension:wgpu::TextureViewDimension::D2,
                             multisampled: false,
                         },
-                        count: None,
+                        count: NonZeroU32::new(4),
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
                         visibility: wgpu::ShaderStages::FRAGMENT,
                         //this should match the filterable field of the corresponding texture entry above
                         ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
+                        count: NonZeroU32::new(4),
                     },
                 ],
             });
 
         // bind group for the t texture
-        let mut map_texture_bind_group = device.create_bind_group(
-            &wgpu::BindGroupDescriptor {
-                label: Some("map_diffuse_bind_group"),
-                layout: &texture_bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&map_diffuse_texture.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&map_diffuse_texture.sampler),
-                    },
-                ],
-            }
+        let mut texture_bind_group = update_texture_bind_group(
+            &device,
+            &texture_bind_group_layout,
+            &map_diffuse_texture,
+            &local_diffuse_texture,
+            &t_diffuse_texture,
+            &ct_diffuse_texture
         );
         
         // bind group for the t texture
-        let t_diffuse_bind_group = device.create_bind_group(
-            &wgpu::BindGroupDescriptor {
-                label: Some("t_diffuse_bind_group"),
-                layout: &texture_bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&t_diffuse_texture.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&t_diffuse_texture.sampler),
-                    },
-                ],
-            }
-        );
+        // let t_diffuse_bind_group = device.create_bind_group(
+        //     &wgpu::BindGroupDescriptor {
+        //         label: Some("t_diffuse_bind_group"),
+        //         layout: &texture_bind_group_layout,
+        //         entries: &[
+        //             wgpu::BindGroupEntry {
+        //                 binding: 0,
+        //                 resource: wgpu::BindingResource::TextureView(&t_diffuse_texture.view),
+        //             },
+        //             wgpu::BindGroupEntry {
+        //                 binding: 1,
+        //                 resource: wgpu::BindingResource::Sampler(&t_diffuse_texture.sampler),
+        //             },
+        //         ],
+        //     }
+        // );
 
-        let ct_diffuse_bind_group = device.create_bind_group(
-            &wgpu::BindGroupDescriptor {
-                label: Some("ct_diffuse_bind_group"),
-                layout: &texture_bind_group_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&ct_diffuse_texture.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&ct_diffuse_texture.sampler),
-                    },
-                ],
-            }
-        );
+        // let ct_diffuse_bind_group = device.create_bind_group(
+        //     &wgpu::BindGroupDescriptor {
+        //         label: Some("ct_diffuse_bind_group"),
+        //         layout: &texture_bind_group_layout,
+        //         entries: &[
+        //             wgpu::BindGroupEntry {
+        //                 binding: 0,
+        //                 resource: wgpu::BindingResource::TextureView(&ct_diffuse_texture.view),
+        //             },
+        //             wgpu::BindGroupEntry {
+        //                 binding: 1,
+        //                 resource: wgpu::BindingResource::Sampler(&ct_diffuse_texture.sampler),
+        //             },
+        //         ],
+        //     }
+        // );
+
+        // let local_diffuse_bind_group = device.create_bind_group(
+        //     &wgpu::BindGroupDescriptor {
+        //         label: Some("local_diffuse_bind_group"),
+        //         layout: &texture_bind_group_layout,
+        //         entries: &[
+        //             wgpu::BindGroupEntry {
+        //                 binding: 0,
+        //                 resource: wgpu::BindingResource::TextureView(&local_diffuse_texture.view),
+        //             },
+        //             wgpu::BindGroupEntry {
+        //                 binding: 1,
+        //                 resource: wgpu::BindingResource::Sampler(&local_diffuse_texture.sampler),
+        //             },
+        //         ],
+        //     }
+        // );
 
         //
         // camera projection matrix bind group
@@ -359,7 +383,7 @@ pub fn start_window_render(
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&texture_bind_group_layout,&texture_bind_group_layout,&texture_bind_group_layout,&camera_bind_group_layout],
+                bind_group_layouts: &[&texture_bind_group_layout,&camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -455,8 +479,10 @@ pub fn start_window_render(
 
                     // map instance
                     new_instances.push(Instance{
-                        position: (5.0,-5.0,0.0).into(),
+                        position: (MAP_CENTER.0,MAP_CENTER.1,0.0).into(),
                         rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
+                        // scaled by 5 because oops i made a plane 2x units so scale of 5 equals a plane of 10 units size
+                        // might change this later but for now the plane remains two units in size (-1 to +1)
                         scale: (5.,5.,1.).into(),
                         instance_type: InstanceType::MapTexture,
                     });
@@ -464,8 +490,9 @@ pub fn start_window_render(
                     // local player
 
                     new_instances.push(Instance{
-                        position: (camera.target.x,camera.target.y,0.3).into(),
+                        position: (player_minimap_location.x,player_minimap_location.y,0.3).into(),
                         rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
+                        // scale the player by half to make it one unit in size instead of two
                         scale: (0.5,0.5,1.).into(),
                         instance_type: InstanceType::LocalPlayer,
                     });
@@ -489,6 +516,7 @@ pub fn start_window_render(
                         new_instances.push(Instance{
                             position: pos,
                             rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(angle as f32)),
+                            // scale the enemies to be half a unit in size
                             scale: (0.25,0.25,1.).into(),
                             instance_type: data.team.into(),
                         });
@@ -525,21 +553,14 @@ pub fn start_window_render(
                         Some("map.png")
                     ).expect("loading the map texture from image bytes");
 
-                    map_texture_bind_group = device.create_bind_group(
-                        &wgpu::BindGroupDescriptor {
-                            label: Some("map_diffuse_bind_group"),
-                            layout: &texture_bind_group_layout,
-                            entries: &[
-                                wgpu::BindGroupEntry {
-                                    binding: 0,
-                                    resource: wgpu::BindingResource::TextureView(&map_diffuse_texture.view),
-                                },
-                                wgpu::BindGroupEntry {
-                                    binding: 1,
-                                    resource: wgpu::BindingResource::Sampler(&map_diffuse_texture.sampler),
-                                },
-                            ],
-                        }
+                    // update the texture array bind group
+                    texture_bind_group = update_texture_bind_group(
+                        &device,
+                        &texture_bind_group_layout,
+                        &map_diffuse_texture,
+                        &local_diffuse_texture,
+                        &t_diffuse_texture,
+                        &ct_diffuse_texture
                     );
                 }
             }
@@ -585,7 +606,7 @@ pub fn start_window_render(
                     // update camera uniform
                     //
                     let wpos = framedata.local_position.world_pos;
-                    camera.target =
+                    player_minimap_location =
                     if let Some(map_detail) = map_data.map_details {
                         let pos = utils::math::radar_scale(
                             wpos.x,
@@ -598,6 +619,13 @@ pub fn start_window_render(
                         (pos.0,pos.1,0.0).into()
                     } else {
                         (wpos.x,wpos.y,0.0).into()
+                    };
+
+                    // set camera target to half way between map center and the current player location
+                    camera.target = {
+                        let diff = player_minimap_location.xy() - tmp_vec2::from(MAP_CENTER);
+                        let halfway = player_minimap_location - (diff/2.);
+                        (halfway.x,halfway.y,0.0).into()
                     };
                     
 
@@ -650,11 +678,12 @@ pub fn start_window_render(
 
                         render_pass.set_pipeline(&render_pipeline);
                         // add the texture bind group
-                        render_pass.set_bind_group(0, &map_texture_bind_group, &[]);
-                        render_pass.set_bind_group(1, &t_diffuse_bind_group, &[]);
-                        render_pass.set_bind_group(2, &ct_diffuse_bind_group, &[]);
+                        render_pass.set_bind_group(0, &texture_bind_group, &[]);
+                        // render_pass.set_bind_group(1, &t_diffuse_bind_group, &[]);
+                        // render_pass.set_bind_group(2, &ct_diffuse_bind_group, &[]);
+                        // render_pass.set_bind_group(3, &local_diffuse_bind_group, &[]);
                         // add the camera bind group
-                        render_pass.set_bind_group(3, &camera_bind_group, &[]);
+                        render_pass.set_bind_group(1, &camera_bind_group, &[]);
                         // set the vertex buffer
                         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                         // set the second vertex buffer as the instance buffer
@@ -704,4 +733,40 @@ pub fn start_window_render(
         }) // end of event loop
     }); // thread
     Ok((tx,map_tx)) // return the sender after we create the thread
+}
+
+fn update_texture_bind_group(
+    device: &wgpu::Device,
+    texture_bind_group_layout: &BindGroupLayout,
+    map_diffuse_texture: &texture::Texture,
+    local_diffuse_texture: &texture::Texture,
+    t_diffuse_texture: &texture::Texture,
+    ct_diffuse_texture: &texture::Texture,
+) -> wgpu::BindGroup {
+    device.create_bind_group(
+        &wgpu::BindGroupDescriptor {
+            label: Some("map_diffuse_bind_group"),
+            layout: texture_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureViewArray(&[
+                            &map_diffuse_texture.view,
+                            &local_diffuse_texture.view,
+                            &t_diffuse_texture.view,
+                            &ct_diffuse_texture.view,
+                        ]),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::SamplerArray(&[
+                            &map_diffuse_texture.sampler,
+                            &local_diffuse_texture.sampler,
+                            &t_diffuse_texture.sampler,
+                            &ct_diffuse_texture.sampler,
+                        ]),
+                },
+            ],
+        }
+    )
 }
