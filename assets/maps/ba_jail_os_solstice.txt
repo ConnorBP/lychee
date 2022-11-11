@@ -1,0 +1,21 @@
+//Overview: scale 8.00, pos_x -5185, pos_y 4827
+"ba_jail_os_solstice"
+{
+ "material" "overviews/ba_jail_os_solstice"
+ "pos_x"  "-5185"
+ "pos_y"  "4827"
+ "scale"  "8"
+
+"verticalsections"
+{
+	"default" // use the primary radar image
+	{
+		"AltitudeMax" "20000"
+		"AltitudeMin" "10000"
+	}
+	"lower" // use the primary radar image
+	{
+		"AltitudeMax" "9999"
+		"AltitudeMin" "-1500"
+	}
+}

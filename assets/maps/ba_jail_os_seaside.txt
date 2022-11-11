@@ -1,0 +1,25 @@
+"ba_jail_os_seaside"
+{
+ "material" "overviews/ba_jail_os_seaside"
+ "pos_x" "-3546.000000"
+ "pos_y" "4512.000000"
+ "scale" "8.690000"
+
+"verticalsections"
+{
+	"default" // use the primary radar image
+	{
+		"AltitudeMax" "1900"
+		"AltitudeMin" "1400"
+	}
+	"lower" // lower radar file
+	{
+		"AltitudeMax" "197.031250"
+		"AltitudeMin" "-1000.968750"
+	}
+	"higher" // higher radar file
+	{
+		"AltitudeMax" "1400"
+		"AltitudeMin" "197.031250"
+	}
+}

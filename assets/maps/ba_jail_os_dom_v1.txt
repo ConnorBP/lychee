@@ -1,0 +1,20 @@
+"ba_jail_os_dom_v1"
+{
+ "material" "overviews/ba_jail_os_dom_v1"
+ "pos_x"  "-1232"
+ "pos_y"  "3856"
+ "scale"  "8"
+
+"verticalsections"
+{
+	"default" // use the primary radar image
+	{
+		"AltitudeMax" "20000"
+		"AltitudeMin" "10000"
+	}
+	"lower" // use the primary radar image
+	{
+		"AltitudeMax" "9999"
+		"AltitudeMin" "-1500"
+	}
+}

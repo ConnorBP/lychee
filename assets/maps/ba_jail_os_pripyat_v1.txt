@@ -1,0 +1,25 @@
+"Pripyat"
+{
+ "material" "overviews/ba_jail_ds_pripyat_v1"
+ "pos_x"  "-4345"
+ "pos_y"  "1869"
+ "scale"  "7.00"
+
+"verticalsections"
+{
+	"default" // use the primary radar image
+	{
+		"AltitudeMax" "100001"
+		"AltitudeMin" "100000"
+	}
+	"lower" // lower radar file
+	{
+		"AltitudeMax" "-33.774151"
+		"AltitudeMin" "-50000.968750"
+	}
+	"higher" // higher radar file
+	{
+		"AltitudeMax" "100000"
+		"AltitudeMin" "-33.774151"
+	}
+}

@@ -1,0 +1,25 @@
+"ba_jail_os_maximum"
+{
+ "material" "overviews/ba_jail_os_maximum"
+ "pos_x"  "-4847"
+ "pos_y"  "10837"
+ "scale"  "9.30"
+
+"verticalsections"
+{
+	"default" // use the primary radar image
+	{
+		"AltitudeMax" "200001"
+		"AltitudeMin" "200000"
+	}
+	"lower" // lower radar file
+	{
+		"AltitudeMax" "9463.162109"
+		"AltitudeMin" "-100000"
+	}
+	"higher" // higher radar file
+	{
+		"AltitudeMax" "200000"
+		"AltitudeMin" "9463.162109"
+	}
+}

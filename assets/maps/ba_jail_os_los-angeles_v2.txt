@@ -1,0 +1,7 @@
+"ba_jail_os_los-angeles_v2"
+{
+ "material" "overviews/ba_jail_os_los-angeles_v2"
+ "pos_x"  "1817"
+ "pos_y"  "-1924"
+ "scale"  "6"
+}
