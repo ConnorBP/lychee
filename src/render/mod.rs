@@ -158,7 +158,7 @@ pub fn start_window_render(
             target: (0.0,0.0,0.0).into(),
             up: cgmath::Vector3::unit_y(),
             aspect: window_size.width as f32 / window_size.height as f32,
-            fovy: 20.0,
+            fovy: 30.0,
             znear: 0.1,
             zfar: 2000.,
         };
