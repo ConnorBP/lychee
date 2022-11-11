@@ -4,7 +4,7 @@ mod texture;
 mod camera;
 mod instance;
 
-use crate::{gamedata::minimap_info::MapInfo, datatypes::tmp_vec3, utils};
+use crate::{gamedata::minimap_info::MapInfo, datatypes::tmp_vec3, utils, render::instance::InstanceType};
 
 use self::{
     camera::{Camera, CameraUniform},
@@ -28,6 +28,7 @@ use std::thread;
 
 const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as u64;
 
+#[derive(Default)]
 pub struct PlayerLoc {
     pub world_pos: tmp_vec3,
     pub head_pos: Option<glm::Vec3>,
@@ -38,6 +39,7 @@ pub struct PlayerLoc {
 #[derive(Default)]
 pub struct FrameData {
     pub connected: bool,
+    pub local_position: PlayerLoc,
     pub locations: Vec<PlayerLoc>,
 }
 
@@ -91,6 +93,18 @@ const INDICES: &[u16] = &[
     2, 3, 4,
 ];
 
+const PLANE_VERTICES: &[BufferVertex] = &[
+    BufferVertex { position: [-1., -1., 0.0], tex_coords: [0., 1.], }, // A
+    BufferVertex { position: [1., -1., 0.0], tex_coords: [1., 1.], }, // B
+    BufferVertex { position: [1., 1., 0.0], tex_coords: [1., 0.], }, // C
+    BufferVertex { position: [-1., 1., 0.0], tex_coords: [0., 0.], }, // D
+];
+
+const PLANE_INDICES: &[u16] = &[
+    0,1,2,
+    2,3,0
+];
+
 pub fn start_window_render(
 ) -> std::result::Result<(mpsc::Sender<FrameData>,mpsc::Sender<MapData>), Box<dyn std::error::Error>> {
     let (tx, rx) = mpsc::channel::<FrameData>();
@@ -139,7 +153,7 @@ pub fn start_window_render(
         //
         let mut camera = Camera {
             // position the camera 1 unit up and 50 units back
-            eye: (0.0,1.0,10.0).into(),
+            eye: (5.0,5.0,10.0).into(),
             // have the camera look at the origin
             target: (0.0,0.0,0.0).into(),
             up: cgmath::Vector3::unit_y(),
@@ -152,7 +166,7 @@ pub fn start_window_render(
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
 
-        let camera_buffer = device.create_buffer_init(
+        let mut camera_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Camera Buffer"),
                 contents: camera_uniform.as_bytes(),
@@ -164,26 +178,26 @@ pub fn start_window_render(
         let vertex_buffer: wgpu::Buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
-                contents: VERTICES.as_bytes(),
+                contents: PLANE_VERTICES.as_bytes(),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-        let num_verts = VERTICES.len() as u32;
+        let num_verts = PLANE_VERTICES.len() as u32;
         // create index vector
         let index_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
-                contents: INDICES.as_bytes(),
+                contents: PLANE_INDICES.as_bytes(),
                 usage: wgpu::BufferUsages::INDEX,
             }
         );
-        let num_indices = INDICES.len() as u32;
+        let num_indices = PLANE_INDICES.len() as u32;
 
         // instance buffer
         //let test_data = Instance::make_test_data(f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())).iter().map(Instance::to_raw).collect::<Vec<_>>();
         //let mut instance_data = vec![];
-        let mut instance_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        let instance_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Instance Buffer"),
-            size: 6400,//MAX_INSTANCE_BUFFER_SIZE,
+            size: MAX_INSTANCE_BUFFER_SIZE,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -215,10 +229,13 @@ pub fn start_window_render(
         let mut depth_texture = texture::Texture::create_depth_texture(&device, &size, "depth_texture");
 
         // prepare the textures
+        let no_map_bytes = include_bytes!("../../assets/maps/no_map.png");
         let t_diffuse_bytes = include_bytes!("../../assets/textures/t.png");
         let ct_diffuse_bytes = include_bytes!("../../assets/textures/ct.png");
-
+        
+        let mut map_diffuse_texture = texture::Texture::from_bytes(&device, &queue, no_map_bytes, "map.png").unwrap();
         let t_diffuse_texture = texture::Texture::from_bytes(&device, &queue, t_diffuse_bytes, "t.png").unwrap();
+        let ct_diffuse_texture = texture::Texture::from_bytes(&device, &queue, ct_diffuse_bytes, "ct.png").unwrap();
 
         // create bind group
         // this describes a set of resources and how they may be accessed by a shader.
@@ -247,6 +264,24 @@ pub fn start_window_render(
                     },
                 ],
             });
+
+        // bind group for the t texture
+        let mut map_texture_bind_group = device.create_bind_group(
+            &wgpu::BindGroupDescriptor {
+                label: Some("map_diffuse_bind_group"),
+                layout: &texture_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&map_diffuse_texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&map_diffuse_texture.sampler),
+                    },
+                ],
+            }
+        );
         
         // bind group for the t texture
         let t_diffuse_bind_group = device.create_bind_group(
@@ -261,6 +296,23 @@ pub fn start_window_render(
                     wgpu::BindGroupEntry {
                         binding: 1,
                         resource: wgpu::BindingResource::Sampler(&t_diffuse_texture.sampler),
+                    },
+                ],
+            }
+        );
+
+        let ct_diffuse_bind_group = device.create_bind_group(
+            &wgpu::BindGroupDescriptor {
+                label: Some("ct_diffuse_bind_group"),
+                layout: &texture_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&ct_diffuse_texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&ct_diffuse_texture.sampler),
                     },
                 ],
             }
@@ -307,7 +359,7 @@ pub fn start_window_render(
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&texture_bind_group_layout,&camera_bind_group_layout],
+                bind_group_layouts: &[&texture_bind_group_layout,&texture_bind_group_layout,&texture_bind_group_layout,&camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -327,7 +379,7 @@ pub fn start_window_render(
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: render_format,
-                    blend: Some(wgpu::BlendState::REPLACE),
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -389,24 +441,61 @@ pub fn start_window_render(
         event_loop.run(move |event, _, control_flow| {
             // this is to make sure that resources are cleaned up properly.
             // Since event loop run never returns we need it to take ownership of resources
-            let _ = (&instance,&shader,&render_pipeline_layout);
+            let _ = (&instance,&shader,&render_pipeline_layout, &vertex_buffer, &camera_buffer, &index_buffer, &instance_buffer);
+
+            let angle = 25.;//f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())*30.;
 
             // first update the frame data if it was received
             if let Ok(frame) = rx.try_recv() {
                 framedata = frame;
 
-                // let instance_data = {
-                //     use cgmath::{Vector3,Quaternion};
-                //     let mut new_instances = Vec::with_capacity(framedata.locations.len());
-                //     for (i, data) in framedata.locations.iter().enumerate() {
-                //         new_instances.push(Instance{
-                //             position: Vector3 { x: data.world_pos .x, y: data.world_pos .y, z: data.world_pos .z },
-                //             rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_y(), cgmath::Deg(0.0)),
-                //         });
-                //     }
-                //     new_instances
-                // }.iter().map(Instance::to_raw).collect::<Vec<_>>();
-                let instance_data = Instance::make_test_data(f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())*90.).iter().map(Instance::to_raw).collect::<Vec<_>>();
+                let instance_data = {
+                    use cgmath::{Vector3,Quaternion};
+                    let mut new_instances = Vec::with_capacity(framedata.locations.len());
+
+                    // map instance
+                    new_instances.push(Instance{
+                        position: (5.,5.,-0.1).into(),
+                        rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
+                        scale: (10.,10.,1.).into(),
+                        instance_type: InstanceType::MapTexture,
+                    });
+
+                    // local player
+
+                    new_instances.push(Instance{
+                        position: (camera.target.x,camera.target.y,0.3).into(),
+                        rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
+                        scale: (1.,1.,1.).into(),
+                        instance_type: InstanceType::LocalPlayer,
+                    });
+
+                    for (i, data) in framedata.locations.iter().enumerate() {
+                        let pos = 
+                        if let Some(map_detail) = map_data.map_details {
+                            let pos = utils::math::radar_scale(
+                                data.world_pos.x,
+                                data.world_pos.y,
+                                map_detail.scale,
+                                map_detail.pos_x,
+                                map_detail.pos_y,
+                                Some((10.,10.))
+                            );
+                            Vector3 { x: pos.0, y: pos.1, z: 0.5 }
+                        } else {
+                            Vector3 { x: data.world_pos.x, y: data.world_pos.y, z: 0.5 }
+                        };
+                        
+                        new_instances.push(Instance{
+                            position: pos,
+                            rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(angle as f32)),
+                            scale: (0.5,0.5,1.).into(),
+                            instance_type: data.team.into(),
+                        });
+                    }
+                    new_instances
+                }.iter().map(Instance::to_raw).collect::<Vec<_>>();
+                //let instance_data = Instance::make_test_data(f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())*90.).iter().map(Instance::to_raw).collect::<Vec<_>>();
                 num_instances = instance_data.len() as u32;
 
                 // now update textures and bindings and such
@@ -465,6 +554,36 @@ pub fn start_window_render(
                         staging_instance_buffer = None;
                     }
 
+                    //
+                    // update camera uniform
+                    //
+                    let wpos = framedata.local_position.world_pos;
+                    camera.target =
+                    if let Some(map_detail) = map_data.map_details {
+                        let pos = utils::math::radar_scale(
+                            wpos.x,
+                            wpos.y,
+                            map_detail.scale,
+                            map_detail.pos_x,
+                            map_detail.pos_y,
+                            Some((10.,10.))
+                        );
+                        (pos.0,pos.1,0.0).into()
+                    } else {
+                        (wpos.x,wpos.y,0.0).into()
+                    };
+                    
+
+                    camera_uniform.update_view_proj(&camera);
+                    let camera_staging_buffer = device.create_buffer_init(
+                        &wgpu::util::BufferInitDescriptor {
+                            label: Some("Camera Buffer"),
+                            contents: camera_uniform.as_bytes(),
+                            usage: wgpu::BufferUsages::COPY_SRC,
+                        }
+                    );
+                    encoder.copy_buffer_to_buffer(&camera_staging_buffer, 0, &camera_buffer, 0, camera_staging_buffer.size());
+
                     // get the next frame
                     let frame = surface.get_current_texture().expect("get next frame");
                     let view = &frame
@@ -504,9 +623,11 @@ pub fn start_window_render(
 
                         render_pass.set_pipeline(&render_pipeline);
                         // add the texture bind group
-                        render_pass.set_bind_group(0, &t_diffuse_bind_group, &[]);
+                        render_pass.set_bind_group(0, &map_texture_bind_group, &[]);
+                        render_pass.set_bind_group(1, &t_diffuse_bind_group, &[]);
+                        render_pass.set_bind_group(2, &ct_diffuse_bind_group, &[]);
                         // add the camera bind group
-                        render_pass.set_bind_group(1, &camera_bind_group, &[]);
+                        render_pass.set_bind_group(3, &camera_bind_group, &[]);
                         // set the vertex buffer
                         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                         // set the second vertex buffer as the instance buffer
@@ -523,7 +644,7 @@ pub fn start_window_render(
                         screen_position: (30.0, 90.0),
                         bounds: (size.width as f32, size.height as f32),
                         text: vec![Text::new(
-                            format!("connected: {} map {:?}", framedata.connected, map_data.map_name.clone().unwrap_or("none".to_string())).as_str(),
+                            format!("connected: {} map {:?} target: {} {} angle: {}", framedata.connected, map_data.map_name.clone().unwrap_or("none".to_string()), camera.target.x,camera.target.y,angle).as_str(),
                         )
                         .with_color([1.0, 1.0, 1.0, 1.0])
                         .with_scale(40.0)],

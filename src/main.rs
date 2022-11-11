@@ -169,6 +169,12 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
         let mut framedata = render::FrameData::default();
         framedata.connected = true;
+        framedata.local_position = render::PlayerLoc{
+            world_pos: game_data.local_player.vec_origin,
+            head_pos: None,
+            feet_pos: None,
+            team: game_data.local_player.team_num,
+        };
         // send location data to renderer
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
