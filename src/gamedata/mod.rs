@@ -126,12 +126,6 @@ impl GameData {
 
                     // minimap info struct update
                     if let Some(name) = self.current_map.clone() {
-                        //let file_path = std::path::Path::new(format!("./assets/maps/{}.txt", name).as_str());
-                        
-                        println!(
-                            "{:?}",
-                            keyvalues_parser::Vdf::parse(std::fs::read_to_string(format!("./assets/maps/{}.txt", name))?.as_str())
-                        );
                         self.current_map_info = minimap_info::load_map_info(name).map_or(None, |map_info|Some(map_info));
                         self.map_tx.send(MapData{
                             map_name: self.current_map.clone(),

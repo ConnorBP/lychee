@@ -499,7 +499,12 @@ pub fn start_window_render(
 
                     for (i, data) in framedata.locations.iter().enumerate() {
                         let pos = 
-                        if let Some(map_detail) = map_data.map_details {
+                        {
+                            let map_detail = map_data.map_details.unwrap_or(MapInfo {
+                                pos_x: -2796.0,
+                                pos_y: 3328.0,
+                                scale: 5.0,
+                            });
                             let pos = utils::math::radar_scale(
                                 data.world_pos.x,
                                 data.world_pos.y,
@@ -509,8 +514,6 @@ pub fn start_window_render(
                                 Some((10.,10.))
                             );
                             Vector3 { x: pos.0, y: pos.1, z: 0.5 }
-                        } else {
-                            Vector3 { x: data.world_pos.x, y: data.world_pos.y, z: 0.5 }
                         };
                         
                         new_instances.push(Instance{
@@ -607,19 +610,22 @@ pub fn start_window_render(
                     //
                     let wpos = framedata.local_position.world_pos;
                     player_minimap_location =
-                    if let Some(map_detail) = map_data.map_details {
-                        let pos = utils::math::radar_scale(
-                            wpos.x,
-                            wpos.y,
-                            map_detail.scale,
-                            map_detail.pos_x,
-                            map_detail.pos_y,
-                            Some((10.,10.))
-                        );
-                        (pos.0,pos.1,0.0).into()
-                    } else {
-                        (wpos.x,wpos.y,0.0).into()
-                    };
+                        {
+                            let map_detail = map_data.map_details.unwrap_or(MapInfo {
+                                pos_x: -2796.0,
+                                pos_y: 3328.0,
+                                scale: 5.0,
+                            });
+                            let pos = utils::math::radar_scale(
+                                wpos.x,
+                                wpos.y,
+                                map_detail.scale,
+                                map_detail.pos_x,
+                                map_detail.pos_y,
+                                Some((10.,10.))
+                            );
+                            tmp_vec3 { x: pos.0, y: pos.1, z: 0.5 }
+                        };
 
                     // set camera target to half way between map center and the current player location
                     camera.target = {
