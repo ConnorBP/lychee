@@ -4,7 +4,7 @@ mod texture;
 mod camera;
 mod instance;
 
-use crate::{gamedata::minimap_info::MapInfo, datatypes::tmp_vec3, utils, render::instance::InstanceType};
+use crate::{gamedata::minimap_info::{MapInfo, self}, datatypes::tmp_vec3, utils, render::instance::InstanceType};
 
 use self::{
     camera::{Camera, CameraUniform},
@@ -153,12 +153,12 @@ pub fn start_window_render(
         //
         let mut camera = Camera {
             // position the camera 1 unit up and 50 units back
-            eye: (5.0,5.0,10.0).into(),
+            eye: (5.,-5.0,15.0).into(),
             // have the camera look at the origin
             target: (0.0,0.0,0.0).into(),
             up: cgmath::Vector3::unit_y(),
             aspect: window_size.width as f32 / window_size.height as f32,
-            fovy: 75.0,
+            fovy: 20.0,
             znear: 0.1,
             zfar: 2000.,
         };
@@ -379,7 +379,7 @@ pub fn start_window_render(
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: render_format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -455,9 +455,9 @@ pub fn start_window_render(
 
                     // map instance
                     new_instances.push(Instance{
-                        position: (5.,5.,-0.1).into(),
+                        position: (5.0,-5.0,0.0).into(),
                         rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
-                        scale: (10.,10.,1.).into(),
+                        scale: (5.,5.,1.).into(),
                         instance_type: InstanceType::MapTexture,
                     });
 
@@ -466,7 +466,7 @@ pub fn start_window_render(
                     new_instances.push(Instance{
                         position: (camera.target.x,camera.target.y,0.3).into(),
                         rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
-                        scale: (1.,1.,1.).into(),
+                        scale: (0.5,0.5,1.).into(),
                         instance_type: InstanceType::LocalPlayer,
                     });
 
@@ -489,7 +489,7 @@ pub fn start_window_render(
                         new_instances.push(Instance{
                             position: pos,
                             rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(angle as f32)),
-                            scale: (0.5,0.5,1.).into(),
+                            scale: (0.25,0.25,1.).into(),
                             instance_type: data.team.into(),
                         });
                     }
@@ -515,6 +515,33 @@ pub fn start_window_render(
             // if the map info has changed update the required textures acordingly
             if let Ok(new_map_data) = map_rx.try_recv() {
                 map_data = new_map_data;
+
+                // load new map texture and update the bind group
+                if let Some(map_name) = &map_data.map_name {
+                    map_diffuse_texture = texture::Texture::from_image(
+                        &device,
+                        &queue,
+                        &minimap_info::load_map_image(map_name.clone()).unwrap_or(image::load_from_memory(no_map_bytes).unwrap()),
+                        Some("map.png")
+                    ).expect("loading the map texture from image bytes");
+
+                    map_texture_bind_group = device.create_bind_group(
+                        &wgpu::BindGroupDescriptor {
+                            label: Some("map_diffuse_bind_group"),
+                            layout: &texture_bind_group_layout,
+                            entries: &[
+                                wgpu::BindGroupEntry {
+                                    binding: 0,
+                                    resource: wgpu::BindingResource::TextureView(&map_diffuse_texture.view),
+                                },
+                                wgpu::BindGroupEntry {
+                                    binding: 1,
+                                    resource: wgpu::BindingResource::Sampler(&map_diffuse_texture.sampler),
+                                },
+                            ],
+                        }
+                    );
+                }
             }
 
             match event {

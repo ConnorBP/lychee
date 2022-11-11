@@ -223,7 +223,7 @@ pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:Opti
  ny = ny / 1024.0;
 
  // invert y
- ny = ny * -1.0;
+ //ny = ny * -1.0;
 
  if let Some((winx,winy)) = window_size {
      // scale it to either window width or height depending on which is smaller
