@@ -76,8 +76,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     } else if in.tex_type == 1 {
         // todo add a tex for local player
         outval = ct;
+    } else if in.tex_type == 2 {
+        outval = t;
     } else {
-        outval = t; 
+        outval = ct; 
     }
     return outval;
 }
