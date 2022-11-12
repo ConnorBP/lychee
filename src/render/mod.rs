@@ -531,7 +531,9 @@ pub fn start_window_render(
                                 map_detail.pos_y,
                                 Some((10.,10.))
                             );
-                            Vector3 { x: pos.0, y: pos.1, z: 0.5 }
+                            // accounts for them being slightly out of position visually when not flat / origin is center of sprite and not the feet
+                            let y_offset = 0.14;
+                            Vector3 { x: pos.0, y: pos.1 + y_offset, z: 0.5 }
                         };
                         
                         new_instances.push(Instance{
