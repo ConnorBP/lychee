@@ -74,5 +74,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     } else {
         outval = ct;
     }
+    if outval.w < 0.3 {
+        discard;
+    }
     return outval;
 }

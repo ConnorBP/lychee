@@ -11,7 +11,7 @@ use self::{
     instance::{Instance, InstanceRaw},
 };
 
-use cgmath::Rotation3;
+use cgmath::{Rotation3, MetricSpace};
 use image::GenericImageView;
 // gpu library
 use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout};
@@ -374,6 +374,14 @@ pub fn start_window_render(
             ],
         });
 
+        // depth stencil state for stencil testing
+        let stencil_state = wgpu::StencilFaceState {
+            compare: wgpu::CompareFunction::Always,
+            fail_op: wgpu::StencilOperation::Keep,
+            depth_fail_op: wgpu::StencilOperation::Keep,
+            pass_op: wgpu::StencilOperation::IncrementClamp,
+        };
+
         //
         // Render Pipeline
         //
@@ -389,7 +397,7 @@ pub fn start_window_render(
 
         // make render pipeline
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Shader Render Pipeline"),
+            label: Some("2D Render Pipeline"),
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &shader,
@@ -411,7 +419,7 @@ pub fn start_window_render(
                 topology: wgpu::PrimitiveTopology::TriangleList, // TODO: change this to point list later
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
+                cull_mode: None,//Some(wgpu::Face::Back),
                 unclipped_depth: false,
                 polygon_mode: wgpu::PolygonMode::Fill,
                 conservative: false,
@@ -420,7 +428,12 @@ pub fn start_window_render(
                 format: texture::Texture::DEPTH_FORMAT,
                 depth_write_enabled: true,
                 depth_compare: wgpu::CompareFunction::Less,
-                stencil: wgpu::StencilState::default(),
+                stencil: wgpu::StencilState::default()/*{
+                    front: stencil_state,
+                    back: stencil_state,
+                    read_mask: 0xff,
+                    write_mask: 0xff,
+                }*/,
                 bias: wgpu::DepthBiasState::default(),
             }),
             multisample: wgpu::MultisampleState {
@@ -529,6 +542,12 @@ pub fn start_window_render(
                             instance_type: data.team.into(),
                         });
                     }
+                    // z sort the data before render 
+                    // the location we wanna check distance to
+                    let sort_from: Vector3<f32> = (MAP_CENTER.0,-20.,1.0).into();
+                    new_instances.sort_by(|a,b| {
+                        a.position.distance2(sort_from).partial_cmp(&a.position.distance2(sort_from)).unwrap()
+                    });
                     new_instances
                 }.iter().map(Instance::to_raw).collect::<Vec<_>>();
                 //let instance_data = Instance::make_test_data(f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())*90.).iter().map(Instance::to_raw).collect::<Vec<_>>();
@@ -683,7 +702,10 @@ pub fn start_window_render(
                                         load: wgpu::LoadOp::Clear(1.0),
                                         store: true,
                                     }),
-                                    stencil_ops: None,
+                                    stencil_ops: None/*Some(wgpu::Operations {
+                                        load: wgpu::LoadOp::Clear(0),
+                                        store: true,
+                                    })*/,
                                 }),
                             });
 
