@@ -1,4 +1,5 @@
 use std::{convert::From, fmt};
+use memflow::prelude::Pod;
 use serde::{Serialize,Deserialize};
 
 impl From<u32> for WeaponId {

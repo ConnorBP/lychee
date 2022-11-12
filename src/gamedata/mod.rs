@@ -100,7 +100,7 @@ impl GameData {
             // (it only changes between games. But it might read null if paged out)
             // tbh when we have a ui it may be better to just click a new game button
             // or maybe read a diff var to check if in a match or not
-            if elap.as_secs() > 30 || self.local_player.address.is_null() || !self.local_player.address.is_valid() {
+            if elap.as_secs() > 15 || self.local_player.address.is_null() || !self.local_player.address.is_valid() {
                 let local_player = proc.read_addr32(client_base.add(*DW_LOCALPLAYER)).data()?;
                 self.local_player.address = local_player;
                 self.last_local_player_update = SystemTime::now();
@@ -167,7 +167,7 @@ impl GameData {
         trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
 
         // retreive the entity list data:
-        self.entity_list.populate_player_list(proc, client_base, &self.vm, self.local_player.ent_idx as usize)?;
+        self.entity_list.populate_player_list(proc, client_base, self.client_state, &self.vm, self.local_player.ent_idx as usize)?;
 
         trace!("exiting load data");
         Ok(())

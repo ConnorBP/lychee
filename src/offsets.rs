@@ -13,8 +13,10 @@ lazy_static! {
     pub static ref DW_CLIENTSTATE_GETLOCALPLAYER: u32 = load_offset("signatures.dwClientState_GetLocalPlayer");
     pub static ref DW_CLIENTSTATE_VIEWANGLES: u32 = load_offset("signatures.dwClientState_ViewAngles");
     pub static ref DW_CLIENTSTATE_MAP: u32 = load_offset("signatures.dwClientState_Map");
+    pub static ref DW_CLIENTSTATE_PLAYERINFO: u32 = load_offset("signatures.dwClientState_PlayerInfo");
     pub static ref DW_LOCALPLAYER: u32 = load_offset("signatures.dwLocalPlayer");
     pub static ref DW_ENTITYLIST: u32 = load_offset("signatures.dwEntityList");
+    pub static ref DW_RADARBASE: u32 = load_offset("signatures.dwRadarBase");
     pub static ref DW_VIEWMATRIX: u32 = load_offset("signatures.dwViewMatrix");
     pub static ref M_BDORMANT: u32 = load_offset("signatures.m_bDormant");
 

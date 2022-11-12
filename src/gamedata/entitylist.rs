@@ -5,7 +5,7 @@ use log::trace;
 
 use crate::{offsets::*, utils::math, datatypes::{tmp_vec2,tmp_vec3}};
 
-#[derive(Copy, Clone,Debug)]
+#[derive(Clone,Debug)]
 #[repr(C)]
 pub struct EntityInfo {
     u32address: u32,
@@ -13,6 +13,7 @@ pub struct EntityInfo {
     pub dormant: u8,
     //b_is_local_player: bool,
     //is_enemy: bool,
+    pub name: String,
 
     pub lifestate: i32,
     pub health: i32,
@@ -33,7 +34,6 @@ pub struct EntityInfo {
     pub lower_body_pos: tmp_vec3,
     pub pelvis_pos: tmp_vec3,
     
-
     pub spotted_by_mask: u64,
 }
 
@@ -41,6 +41,7 @@ impl Default for EntityInfo {
     fn default() -> EntityInfo {
         EntityInfo {
             dormant: 1,
+            name: "".to_string(),
             u32address: Default::default(),
             address: Default::default(),
             lifestate: Default::default(),
@@ -72,7 +73,7 @@ pub struct EntityList {
 impl Default for EntityList {
     fn default() -> EntityList {
         EntityList {
-            entities: [EntityInfo::default(); 32],// can be up to 64 (in theory) but we are gonna save some time with only reading 32
+            entities: Default::default(),// can be up to 64 (in theory) but we are gonna save some time with only reading 32
             closest_player: None
         }
     }
@@ -97,7 +98,7 @@ impl EntityList {
 
     /// Takes in a reference to the game process and the client module base address and then walks the entity list tree
     /// Data retreived from this is stored into the EntityList struct this is called on
-    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, vm: &[[f32;4];4], local_player_idx: usize) -> Result<()> {
+    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, client_state: Address, vm: &[[f32;4];4], local_player_idx: usize) -> Result<()> {
         trace!("entering pop playerlist");
         let mut bat1 = proc.batcher();
         for (i, ent) in self.entities.iter_mut().enumerate() {
@@ -164,7 +165,6 @@ impl EntityList {
             load_bone_batch(&mut bat3, 5, addr, &mut ent.middle_body_pos); // middle body bone
             load_bone_batch(&mut bat3, 4, addr, &mut ent.lower_body_pos); // belly bone
             //load_bone_batch(&mut bat3, 0, addr, &mut ent.pelvis_pos); // pelvis bone
-
         }
         bat3.commit_rw().data_part()?;
         std::mem::drop(bat3);
@@ -175,6 +175,10 @@ impl EntityList {
         for (i, ent) in self.entities.iter_mut().enumerate() {
             if i == local_player_idx {continue};
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+
+            // read entity username
+            //ent.name = proc.read_char_string_n(client_state.add(*DW_CLIENTSTATE_PLAYERINFO).add(0x10), 32).data()?;
+            //println!("{}",ent.name);
 
             let feetpos = (ent.vec_origin).into();
             let headpos = (ent.head_pos).into();
