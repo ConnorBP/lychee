@@ -470,7 +470,12 @@ pub fn start_window_render(
             let angle = 25.;//f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())*30.;
 
             // first update the frame data if it was received
-            if let Ok(frame) = rx.try_recv() {
+            // while loop through all the receive data to get to the latest in case a buildup happens
+            let mut new_frame = None;
+            while let Ok(dat) = rx.try_recv() {
+                new_frame = Some(dat);
+            }
+            if let Some(frame) = new_frame {
                 framedata = frame;
 
                 let instance_data = {
@@ -663,9 +668,9 @@ pub fn start_window_render(
                                         resolve_target: None,
                                         ops: wgpu::Operations {
                                             load: wgpu::LoadOp::Clear(wgpu::Color {
-                                                r: 0.4,
-                                                g: 0.4,
-                                                b: 0.2,
+                                                r: 0.03,
+                                                g: 0.03,
+                                                b: 0.05,
                                                 a: 1.0,
                                             }),
                                             store: true,
@@ -703,13 +708,13 @@ pub fn start_window_render(
                     }
 
                     glyph_brush.queue(Section {
-                        screen_position: (30.0, 90.0),
+                        screen_position: (30.0, 30.0),
                         bounds: (size.width as f32, size.height as f32),
                         text: vec![Text::new(
-                            format!("connected: {} map {:?} target: {} {} angle: {}", framedata.connected, map_data.map_name.clone().unwrap_or("none".to_string()), camera.target.x,camera.target.y,angle).as_str(),
+                            format!("status: {} map {} cam center: {} {}", if framedata.connected {"connected"} else {"waiting"}, map_data.map_name.clone().unwrap_or("none".to_string()), camera.target.x,camera.target.y).as_str(),
                         )
                         .with_color([1.0, 1.0, 1.0, 1.0])
-                        .with_scale(40.0)],
+                        .with_scale(24.0)],
                         ..Section::default()
                     });
 
