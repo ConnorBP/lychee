@@ -18,6 +18,7 @@ lazy_static! {
     pub static ref DW_ENTITYLIST: u32 = load_offset("signatures.dwEntityList");
     pub static ref DW_RADARBASE: u32 = load_offset("signatures.dwRadarBase");
     pub static ref DW_VIEWMATRIX: u32 = load_offset("signatures.dwViewMatrix");
+    pub static ref DW_FORCEJUMP: u32 = load_offset("signatures.dwForceJump");
     pub static ref M_BDORMANT: u32 = load_offset("signatures.m_bDormant");
 
     // Netvars
@@ -37,6 +38,7 @@ lazy_static! {
     pub static ref NET_VEC_ORIGIN: u32 = load_offset("netvars.m_vecOrigin");
     pub static ref NET_VEC_VIEWOFFSET: u32 = load_offset("netvars.m_vecViewOffset");
     pub static ref NET_VEC_VELOCITY: u32 = load_offset("netvars.m_vecVelocity");
+    pub static ref NET_FLAGS: u32 = load_offset("netvars.m_fFlags");
 }
 
 // TODO: also add a source in here from a passed in config arg

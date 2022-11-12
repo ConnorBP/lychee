@@ -110,6 +110,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     let mut atrigger = features::AlgebraTrigger::new();
     let mut recoil_data = features::RecoilRecorder::new();
+    let mut bhop_sus = features::SusBhop::new();
 
     'mainloop : loop {
         // check if process is valid
@@ -195,6 +196,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         }
 
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
+            bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base);
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
