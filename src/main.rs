@@ -175,6 +175,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             head_pos: None,
             feet_pos: None,
             team: game_data.local_player.team_num,
+            name: "local".to_string(),
         };
         // send location data to renderer
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
@@ -188,6 +189,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                 head_pos: ent.screen_head,
                 feet_pos: ent.screen_feet,
                 team: ent.team_num,
+                name: ent.name.clone(),
             });
         }
         if tx.send(framedata).is_err() {
@@ -196,7 +198,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         }
 
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
-            bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base);
+            //bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base);
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);

@@ -34,6 +34,7 @@ pub struct PlayerLoc {
     pub head_pos: Option<glm::Vec3>,
     pub feet_pos: Option<glm::Vec3>,
     pub team: i32,
+    pub name: String,
 }
 
 #[derive(Default)]
@@ -48,6 +49,12 @@ pub struct FrameData {
 pub struct MapData {
     pub map_name: Option<String>,
     pub map_details: Option<MapInfo>,
+}
+
+/// Text to be rendered on the map. Made up of a string and a vector location
+struct MapText {
+    text: String,
+    loc: cgmath::Vector3<f32>,
 }
 
 #[repr(C)]
@@ -468,6 +475,9 @@ pub fn start_window_render(
         let mut glyph_brush =
             GlyphBrushBuilder::using_font(white_rabbit).build(&device, render_format);
 
+        // stores a list of name labels to be rendered and their minimap locations
+        let mut name_list: Vec<MapText> = vec![];
+
         //
         // Start the render and event loop
         // 
@@ -491,6 +501,7 @@ pub fn start_window_render(
             if let Some(frame) = new_frame {
                 framedata = frame;
 
+                let mut new_text_spots = Vec::with_capacity(framedata.locations.len());
                 let instance_data = {
                     use cgmath::{Vector3,Quaternion};
                     let mut new_instances = Vec::with_capacity(framedata.locations.len());
@@ -531,17 +542,25 @@ pub fn start_window_render(
                                 map_detail.pos_y,
                                 Some((10.,10.))
                             );
+                            
                             // accounts for them being slightly out of position visually when not flat / origin is center of sprite and not the feet
                             let y_offset = 0.14;
                             Vector3 { x: pos.0, y: pos.1 + y_offset, z: 0.5 }
                         };
                         
+                        // push a new instance to be rendered
                         new_instances.push(Instance{
                             position: pos,
                             rotation: Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(angle as f32)),
                             // scale the enemies to be half a unit in size
                             scale: (0.25,0.25,1.).into(),
                             instance_type: data.team.into(),
+                        });
+
+                        // push a new text tag to be rendered
+                        new_text_spots.push(MapText {
+                            text: data.name.clone(),
+                            loc: pos,
                         });
                     }
                     // z sort the data before render 
@@ -554,6 +573,7 @@ pub fn start_window_render(
                 }.iter().map(Instance::to_raw).collect::<Vec<_>>();
                 //let instance_data = Instance::make_test_data(f64::sin(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64())*90.).iter().map(Instance::to_raw).collect::<Vec<_>>();
                 num_instances = instance_data.len() as u32;
+                name_list = new_text_spots;
 
                 // now update textures and bindings and such
 
@@ -742,6 +762,50 @@ pub fn start_window_render(
                         ..Section::default()
                     });
 
+                    // let player_screen = camera.build_view_projection_matrix() * cgmath::Vector4::new(4.69,-4.69,0.0, 1.);
+                    // let inverse_w = 1. / player_screen.w;
+                    // let (x,y) = (
+                    //     (size.width as f32 * 0.5) + 0.5 * (player_screen.x*inverse_w) * size.width as f32 + 0.5,
+                    //     (size.height as f32 * 0.5) - 0.5 * (player_screen.y*inverse_w) * size.height as f32 + 0.5
+                    // );
+                    let projection = camera.build_view_projection_matrix();
+                    let (x,y) = project(
+                        projection,
+                        cgmath::Vector3::new(player_minimap_location.x,player_minimap_location.y+0.4,1.0),
+                        size.width as f32,
+                        size.height as f32
+                    );
+                    glyph_brush.queue(Section {
+                        screen_position: (x, y),
+                        bounds: (size.width as f32, size.height as f32),
+                        text: vec![Text::new(
+                            "you",
+                        )
+                        .with_color([1.0, 1.0, 1.0, 1.0])
+                        .with_scale(12.0)],
+                        ..Section::default()
+                    });
+
+                    for (i,data) in name_list.iter().enumerate() {
+                        let projection = camera.build_view_projection_matrix();
+                        let (x,y) = project(
+                            projection,
+                            data.loc + cgmath::Vector3::new(-0.3,0.4,0.2),
+                            size.width as f32,
+                            size.height as f32
+                        );
+                        glyph_brush.queue(Section {
+                            screen_position: (x, y),
+                            bounds: (size.width as f32, size.height as f32),
+                            text: vec![Text::new(
+                                data.text.as_str(),
+                            )
+                            .with_color([1.0, 1.0, 1.0, 1.0])
+                            .with_scale(12.0)],
+                            ..Section::default()
+                        });
+                    }
+
                     // draw the text
                     glyph_brush
                         .draw_queued(
@@ -803,5 +867,14 @@ fn update_texture_bind_group(
                 },
             ],
         }
+    )
+}
+
+fn project(projection_matrix: cgmath::Matrix4<f32>, map_pos: cgmath::Vector3<f32>, out_width: f32, out_height: f32) -> (f32,f32) {
+    let player_screen = projection_matrix * cgmath::Vector4::new(map_pos.x,map_pos.y,map_pos.z, 1.);
+    let inverse_w = 1. / player_screen.w;
+    (
+        (out_width * 0.5) + 0.5 * (player_screen.x*inverse_w) * out_width + 0.5,
+        (out_height * 0.5) - 0.5 * (player_screen.y*inverse_w) * out_height + 0.5
     )
 }

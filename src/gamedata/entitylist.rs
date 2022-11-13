@@ -1,4 +1,4 @@
-use ::std::ops::Add;
+use ::std::{ops::Add, time::SystemTime};
 
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 use log::trace;
@@ -67,14 +67,17 @@ impl Default for EntityInfo {
 #[derive(Debug)]
 pub struct EntityList {
     pub entities: [EntityInfo; 32],// can be up to 64 (in theory) but we are gonna save some time with only reading 32
-    pub closest_player: Option<usize>
+    pub closest_player: Option<usize>,
+
+    last_name_refresh: SystemTime,
 }
 
 impl Default for EntityList {
     fn default() -> EntityList {
         EntityList {
             entities: Default::default(),// can be up to 64 (in theory) but we are gonna save some time with only reading 32
-            closest_player: None
+            closest_player: None,
+            last_name_refresh: SystemTime::now(),
         }
     }
 }
@@ -177,8 +180,6 @@ impl EntityList {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
 
             // read entity username
-            //ent.name = proc.read_char_string_n(client_state.add(*DW_CLIENTSTATE_PLAYERINFO).add(0x10), 32).data()?;
-            //println!("{}",ent.name);
 
             let feetpos = (ent.vec_origin).into();
             let headpos = (ent.head_pos).into();
@@ -209,9 +210,53 @@ impl EntityList {
             
         }
 
+        if let Ok(elap) = self.last_name_refresh.elapsed() {
+            // refresh every 30 seconds
+            if elap.as_secs_f32() > 30. {
+                self.update_entity_names(proc, client_state)?;
+                self.last_name_refresh = SystemTime::now();
+            }
+        }
+
         trace!("exiting pop playerlist");
         Ok(())
     }
+
+    fn update_entity_names(&mut self, proc: &mut (impl Process + MemoryView), client_state: Address) -> Result<()> {
+        let table = proc.read_addr32(client_state.add(*DW_CLIENTSTATE_PLAYERINFO)).data()?;
+        if table.is_null() {return Ok(())}
+        let items_ptr: Address = proc.read_addr32(table.add(0x40)).data()?.add(0xC);
+        if items_ptr.is_null() {return Ok(())}
+        let items = proc.read_addr32(items_ptr).data()?;
+        if items.is_null() {return Ok(())}
+        
+        for (i, ent) in self.entities.iter_mut().enumerate() {
+            //if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            if let Ok(name) = get_entity_name(proc,items,i) {
+                ent.name = name;
+                //println!("name: {}", ent.name);
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Do not use this recursively
+fn read_single_entity_name(proc: &mut (impl Process + MemoryView), client_state: Address, ent_idx: usize) -> Result<String> {
+    let table = proc.read_addr32(client_state.add(*DW_CLIENTSTATE_PLAYERINFO)).data()?;
+    let items_ptr = proc.read_addr32(table.add(0x40)).data()?.add(0xC);
+    let items = proc.read_addr32(items_ptr).data()?;
+    let player_info_ptr = proc.read_addr32(items.add(0x28 + (ent_idx * 0x34))).data()?;
+    let bytes = proc.read_raw(player_info_ptr.add(0x10), 32).data()?;
+    Ok(std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string())
+}
+
+/// given the pointer to the player info items list read out an entity username
+fn get_entity_name(proc: &mut (impl Process + MemoryView), items: Address, ent_idx: usize) -> Result<String> {
+    let player_info_ptr = proc.read_addr32(items.add(0x28 + (ent_idx * 0x34))).data()?;
+    if player_info_ptr.is_null() {return Ok("NO NAME".to_string())}
+    let bytes = proc.read_raw(player_info_ptr.add(0x10), 32).data()?;
+    Ok(std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string())
 }
 
 fn load_bone_batch<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, bone_id: i32, bone_matrix: Address, out: &'bat mut tmp_vec3) {
