@@ -218,15 +218,16 @@ impl EntityList {
     }
 }
 
-/// Do not use this recursively
-fn read_single_entity_name(proc: &mut (impl Process + MemoryView), client_state: Address, ent_idx: usize) -> Result<String> {
-    let table = proc.read_addr32(client_state.add(*DW_CLIENTSTATE_PLAYERINFO)).data()?;
-    let items_ptr = proc.read_addr32(table.add(0x40)).data()?.add(0xC);
-    let items = proc.read_addr32(items_ptr).data()?;
-    let player_info_ptr = proc.read_addr32(items.add(0x28 + (ent_idx * 0x34))).data()?;
-    let bytes = proc.read_raw(player_info_ptr.add(0x10), 32).data()?;
-    Ok(std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string())
-}
+// Do not use this recursively
+// some example code of all the steps needed to read a player name from the playerinfo list
+// fn read_single_entity_name(proc: &mut (impl Process + MemoryView), client_state: Address, ent_idx: usize) -> Result<String> {
+//     let table = proc.read_addr32(client_state.add(*DW_CLIENTSTATE_PLAYERINFO)).data()?;
+//     let items_ptr = proc.read_addr32(table.add(0x40)).data()?.add(0xC);
+//     let items = proc.read_addr32(items_ptr).data()?;
+//     let player_info_ptr = proc.read_addr32(items.add(0x28 + (ent_idx * 0x34))).data()?;
+//     let bytes = proc.read_raw(player_info_ptr.add(0x10), 32).data()?;
+//     Ok(std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string())
+// }
 
 /// given the pointer to the player info items list read out an entity username
 fn get_entity_name(proc: &mut (impl Process + MemoryView), items: Address, ent_idx: usize) -> Result<String> {

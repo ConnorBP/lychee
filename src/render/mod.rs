@@ -12,7 +12,6 @@ use self::{
 };
 
 use cgmath::{Rotation3, MetricSpace};
-use image::GenericImageView;
 // gpu library
 use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout};
 // fonts rendering library
@@ -22,8 +21,8 @@ use winit::event_loop::EventLoopBuilder;
 use winit::platform::windows::EventLoopBuilderExtWindows;
 use winit::window::Fullscreen;
 // other utils
-use memflow::prelude::Pod;
-use std::{sync::mpsc, time::SystemTime, num::NonZeroU32};
+use memflow::prelude::{Pod, PodMethods};
+use std::{sync::mpsc, num::NonZeroU32};
 use std::thread;
 
 const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as u64;
@@ -84,32 +83,34 @@ impl BufferVertex {
 }
 
 // temp const test vertice array
-const VERTICES: &[BufferVertex] = &[
-    BufferVertex { position: [-0.0868241, 0.49240386, 0.0], tex_coords: [0.4131759, 0.00759614], }, // A
-    BufferVertex { position: [-0.49513406, 0.06958647, 0.0], tex_coords: [0.0048659444, 0.43041354], }, // B
-    BufferVertex { position: [-0.21918549, -0.44939706, 0.0], tex_coords: [0.28081453, 0.949397], }, // C
-    BufferVertex { position: [0.35966998, -0.3473291, 0.0], tex_coords: [0.85967, 0.84732914], }, // D
-    BufferVertex { position: [0.44147372, 0.2347359, 0.0], tex_coords: [0.9414737, 0.2652641], }, // E
-];
+// const PENTAGON_VERTICES: &[BufferVertex] = &[
+//     BufferVertex { position: [-0.0868241, 0.49240386, 0.0], tex_coords: [0.4131759, 0.00759614], }, // A
+//     BufferVertex { position: [-0.49513406, 0.06958647, 0.0], tex_coords: [0.0048659444, 0.43041354], }, // B
+//     BufferVertex { position: [-0.21918549, -0.44939706, 0.0], tex_coords: [0.28081453, 0.949397], }, // C
+//     BufferVertex { position: [0.35966998, -0.3473291, 0.0], tex_coords: [0.85967, 0.84732914], }, // D
+//     BufferVertex { position: [0.44147372, 0.2347359, 0.0], tex_coords: [0.9414737, 0.2652641], }, // E
+// ];
 
-const INDICES: &[u16] = &[
-    0, 1, 4,
-    1, 2, 4,
-    2, 3, 4,
-];
+// const PENTAGON_INDICES: &[u16] = &[
+//     0, 1, 4,
+//     1, 2, 4,
+//     2, 3, 4,
+// ];
 
+/// a plane mesh (2d square) along the x and y coordinates. From -1 to +1 (2 units size)
 const PLANE_VERTICES: &[BufferVertex] = &[
     BufferVertex { position: [-1., -1., 0.0], tex_coords: [0., 1.], }, // A
     BufferVertex { position: [1., -1., 0.0], tex_coords: [1., 1.], }, // B
     BufferVertex { position: [1., 1., 0.0], tex_coords: [1., 0.], }, // C
     BufferVertex { position: [-1., 1., 0.0], tex_coords: [0., 0.], }, // D
 ];
-
+/// the indices for our plane mesh
 const PLANE_INDICES: &[u16] = &[
     0,1,2,
     2,3,0
 ];
 
+/// the center origin for us to place our map mesh at. This is equal to half our map scale value (10)
 const MAP_CENTER: (f32,f32) = (5.,-5.0);
 
 pub fn start_window_render(
@@ -182,7 +183,7 @@ pub fn start_window_render(
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
 
-        let mut camera_buffer = device.create_buffer_init(
+        let camera_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Camera Buffer"),
                 contents: camera_uniform.as_bytes(),
@@ -197,7 +198,7 @@ pub fn start_window_render(
                 contents: PLANE_VERTICES.as_bytes(),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-        let num_verts = PLANE_VERTICES.len() as u32;
+        //let num_verts = PLANE_VERTICES.len() as u32; // un used atm since we are using the whole buffer for this one mesh
         // create index vector
         let index_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
@@ -380,12 +381,12 @@ pub fn start_window_render(
         });
 
         // depth stencil state for stencil testing
-        let stencil_state = wgpu::StencilFaceState {
-            compare: wgpu::CompareFunction::Always,
-            fail_op: wgpu::StencilOperation::Keep,
-            depth_fail_op: wgpu::StencilOperation::Keep,
-            pass_op: wgpu::StencilOperation::IncrementClamp,
-        };
+        // let stencil_state = wgpu::StencilFaceState {
+        //     compare: wgpu::CompareFunction::Always,
+        //     fail_op: wgpu::StencilOperation::Keep,
+        //     depth_fail_op: wgpu::StencilOperation::Keep,
+        //     pass_op: wgpu::StencilOperation::IncrementClamp,
+        // };
 
         //
         // Render Pipeline
@@ -524,7 +525,7 @@ pub fn start_window_render(
                         instance_type: InstanceType::LocalPlayer,
                     });
 
-                    for (i, data) in framedata.locations.iter().enumerate() {
+                    for (_, data) in framedata.locations.iter().enumerate() {
                         let pos = 
                         {
                             let map_detail = map_data.map_details.unwrap_or(MapInfo {
@@ -565,7 +566,7 @@ pub fn start_window_render(
                     // the location we wanna check distance to
                     let sort_from: Vector3<f32> = (MAP_CENTER.0,-20.,1.0).into();
                     new_instances.sort_by(|a,b| {
-                        a.position.distance2(sort_from).partial_cmp(&a.position.distance2(sort_from)).unwrap()
+                        a.position.distance2(sort_from).partial_cmp(&b.position.distance2(sort_from)).unwrap()
                     });
                     new_instances
                 }.iter().map(Instance::to_raw).collect::<Vec<_>>();
@@ -784,7 +785,7 @@ pub fn start_window_render(
                         ..Section::default()
                     });
 
-                    for (i,data) in name_list.iter().enumerate() {
+                    for (_,data) in name_list.iter().enumerate() {
                         let projection = camera.build_view_projection_matrix();
                         let (x,y) = project(
                             projection,

@@ -8,12 +8,11 @@ mod human_interface;
 
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
 use gamedata::GameData;
-use log::{info, warn, Level};
+use log::{info, Level};
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use render::MapData;
-use std::io::Cursor;
-use ::std::{ops::Add, time::{Duration, SystemTime}, sync::mpsc};
+use ::std::{time::{Duration, SystemTime}, sync::mpsc};
 
 use human_interface::*;
 
@@ -193,7 +192,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
         if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
             #[cfg(feature = "bhop_sus")]
-            bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base);
+            bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base)?;
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
@@ -207,28 +206,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             //human.process_smooth_mouse();
         }
     }
-
-    
-    // let client_state_sig = "A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0";
-    // let entity_list_sig = "BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8";
-    // let local_player_sig = "8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF";
-    // let entity_list = find_signature(process.clone(), &clientModule, &client_buf, entity_list_sig, 1, 0)?;
-    // let local_player_getter = find_signature(process.clone(), &clientModule, &client_buf, local_player_sig, 3, 4)?;
-    // let client_state = find_signature(process.clone(), &engineModule, &engine_buf, client_state_sig, 1, 0)?;
-    // info!("DwEntityList: {:#010x} playerget: {:#010x} clientState: {:#010x}", entity_list, local_player_getter, client_state);
-    // let mut yeet: u64 = 0;
-    // process.read_into(engineModule.base.add(5820380), &mut yeet).data_part()?;
-    // info!("What client state should be: {:#}, {}", yeet, yeet);
-    // if let Some(test) = regex_patscan(&client_buf) {
-    //     info!("regex test found: {:#010x}", test);
-    // }
-    
-    //process.read_into(addr, out)
-    // let mut batcher = process.batcher();
-    // batcher.read_into(addr, out)
-
-    
-
 
     Ok(())
 }
@@ -285,51 +262,14 @@ trait SigScanner {
 //     }
 // }
 
-fn regex_patscan(module_buf: &[u8]) -> Option<usize> {
-    use ::regex::bytes::*;
-    // "A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0" clientstate
-    //"8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF"
-    //let re = Regex::new("(?-u)\\x8D\\x34\\x85(?s:.)(?s:.)(?s:.)(?s:.)\\x89\\x15(?s:.)(?s:.)(?s:.)(?s:.)\\x8B\\x41\\x08\\x8B\\x48\\x04\\x83\\xF9\\xFF").expect("malformed marker sig");
-    let re = Regex::new("(?-u)\\xA1(?s:.)(?s:.)(?s:.)(?s:.)\\x33\\xD2\\x6A\\x00\\x6A\\x00\\x33\\xC9\\x89\\xB0").expect("malformed marker sig");
-    let buff_offs = re.find_iter(module_buf).next()?.start();
-    Some(buff_offs as usize)
-}
-
-// fn keyboard_test(os: Win32Kernel<>) {
-//     let mut keyboard = os.into_keyboard()?;
-//     loop {
-//         info!("space down: {:?}", keyboard.is_down(0x20));
-//         std::thread::sleep(std::time::Duration::from_millis(1000));
-//     }
-// }
-
-// fn find_signature(
-//     mut proc: impl Process + MemoryView,
-//     module: &ModuleInfo,
-//     module_buf: &Vec<u8>,
-//     signature: &str,
-//     offset: usize,
-//     extra: usize
-// ) -> Result<usize> {
-//     let locs = scan(Cursor::new(module_buf), signature)
-//         .expect("could not find any instances of scanned sig due to an error");
-//     match locs.len() {
-//         0 => {
-//             return Err(Error(ErrorOrigin::VirtualMemory, ErrorKind::NotFound).log_error("no locations found from memory scan"));
-//         },
-//         1 => {},
-//         _=> {
-//             warn!("More than one memory location found from pattern scan. Signature may be out of date.");
-//         }
-//     }
-//     let mut location = locs[0] + offset;
-//     info!("location before reading mem: {:#010x}", location);
-//     proc.read_into(module.base.add(location), &mut location).data_part()?;
-//     info!("location after reading mem: {:#010x}", location);
-//     location = location + extra;
-//     info!("location + extra: {:#010x}", location);
-//     info!("Found client pattern: {:#X}", location);
-//     Ok(location)
+// fn regex_patscan(module_buf: &[u8]) -> Option<usize> {
+//     use ::regex::bytes::*;
+//     // "A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0" clientstate
+//     //"8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF"
+//     //let re = Regex::new("(?-u)\\x8D\\x34\\x85(?s:.)(?s:.)(?s:.)(?s:.)\\x89\\x15(?s:.)(?s:.)(?s:.)(?s:.)\\x8B\\x41\\x08\\x8B\\x48\\x04\\x83\\xF9\\xFF").expect("malformed marker sig");
+//     let re = Regex::new("(?-u)\\xA1(?s:.)(?s:.)(?s:.)(?s:.)\\x33\\xD2\\x6A\\x00\\x6A\\x00\\x33\\xC9\\x89\\xB0").expect("malformed marker sig");
+//     let buff_offs = re.find_iter(module_buf).next()?.start();
+//     Some(buff_offs as usize)
 // }
 
 fn parse_args() -> ArgMatches {
@@ -373,30 +313,3 @@ fn extract_args(matches: &ArgMatches) {
     )
     .unwrap();
 }
-
-
-
-// some test stuff:
-
-    // // Print process list, formatted
-    // info!(
-    //     "{:>5} {:>10} {:>10} {:<}",
-    //     "PID", "SYS ARCH", "PROC ARCH", "NAME"
-    // );
-
-    // for p in process_list {
-    //     info!(
-    //         "{:>5} {:^10} {:^10} {} ({}) ({:?})",
-    //         p.pid, p.sys_arch, p.proc_arch, p.name, p.command_line, p.state
-    //     );
-    // }
-    
-
-    // print list of modules
-    // let modules = process.module_list()?;
-    // for m in modules {
-    //     info!(
-    //         "{:#010x} {:^24} {:^8} {} ({})\n({:?})",
-    //         m.base, m.address, m.size, m.arch, m.name, m.path
-    //     )
-    // }

@@ -112,6 +112,7 @@ pub struct tmp_vec3 {
     pub z: f32,
 }
 
+#[allow(dead_code)]
 impl tmp_vec3 {
     fn add(self, rhs: Self) -> Self {
         Self {

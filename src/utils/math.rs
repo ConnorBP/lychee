@@ -28,6 +28,8 @@ vec2_t utilities::world_to_screen(vec3_t world_position)
 
 */
 
+/* 
+// This is the world to screen function for use with the built in game view matrix. Perfectly Functional. Uncomment for use
 pub fn world_2_screen(world_pos: &tmp_vec3, view_matrix: &[[f32;4];4], screen_width: Option<f32>, screen_height: Option<f32>) -> Option<tmp_vec3> {
     let mut _x:f32 = view_matrix[0][0] * world_pos.x + view_matrix[0][1] * world_pos.y + view_matrix[0][2] * world_pos.z + view_matrix[0][3];
     let mut _y:f32 = view_matrix[1][0] * world_pos.x + view_matrix[1][1] * world_pos.y + view_matrix[1][2] * world_pos.z + view_matrix[1][3];
@@ -48,6 +50,8 @@ pub fn world_2_screen(world_pos: &tmp_vec3, view_matrix: &[[f32;4];4], screen_wi
     }
 }
 
+*/
+
 pub fn angle_to_vec(x:f32, y:f32) -> tmp_vec3 {
     rad_to_vec(d2r(x), d2r(y))
 }
@@ -64,6 +68,8 @@ pub fn d2r(d:f32)->f32{
     (d as f64*(std::f64::consts::PI/180.)) as f32
 }
 
+/// this is used by recoil recorder and other stuff to get a world point a distance in from the screen center (at look direction)
+#[allow(dead_code)]
 pub fn get_crosshair_world_point_at_dist(to_dist: f32, our_pos: tmp_vec3, eye_ang: tmp_vec3) -> tmp_vec3 {
     // get direction vector for our view angles
     let eye_vec = angle_to_vec(eye_ang.x, eye_ang.y);

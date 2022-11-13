@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime};
 
 use log::info;
-use memflow::prelude::Pod;
+use memflow::prelude::{PodMethods};
 use serialport::SerialPort;
 use format_bytes::format_bytes;
 
@@ -10,6 +10,7 @@ use crate::datatypes::tmp_vec2;
 const MOUSE_CLICK_DELAY_MS: u32 = 100;
 
 /// Handles abstacting away the functions needed to output human interface controls such as mouse clicks moves or keyboard output
+#[allow(dead_code)]
 pub struct HumanInterface {
     /// the Serial Port Connection
     port: Box<dyn SerialPort>,
@@ -62,6 +63,7 @@ impl HumanInterface {
         }
         Ok(())
     }
+    #[allow(dead_code)]
     fn mouse_move(&mut self, direction: tmp_vec2) -> std::result::Result<(), Box<dyn std::error::Error>> {
         //
         // move the mouse
@@ -82,6 +84,7 @@ impl HumanInterface {
     }
 
     /// adds to the goal mouse direction for this frame
+    #[allow(dead_code)]
     pub fn add_goal(&mut self, destination: tmp_vec2) {
         if let Some(goal) = &mut self.goal_pos {
             *goal = *goal + destination;
@@ -93,6 +96,7 @@ impl HumanInterface {
     /// moves smoothly in the direction of the final goal pos and resets goal after
     /// goal should be created each frame by various features such as recoil + seperate aim tracking
     /// then this function should be called last each frame
+    #[allow(dead_code)]
     pub fn process_smooth_mouse(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         // only run if a goal is set
         if let Some(goal) = self.goal_pos {

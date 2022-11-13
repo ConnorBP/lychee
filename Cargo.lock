@@ -285,9 +285,9 @@ dependencies = [
 
 [[package]]
 name = "bumpalo"
-version = "3.11.0"
+version = "3.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1ad822118d20d2c234f427000d5acc36eabe1e29a348c89b63dd60b13f28e5d"
+checksum = "572f695136211188308f16ad2ca5c851a712c464060ae6974944458eb83880ba"
 
 [[package]]
 name = "bytemuck"
@@ -801,6 +801,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47a802a2cad0ff4dfc4f3110da174b7a6928c315cae523e88638cfb72941b4d5"
 
 [[package]]
+name = "dataview"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50eb3a329e19d78c3a3dfa4ec5a51ecb84fa3a20c06edad04be25356018218f9"
+
+[[package]]
 name = "digest"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -939,9 +945,9 @@ checksum = "4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7"
 
 [[package]]
 name = "fixed-slice-vec"
-version = "0.8.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fafbcddfce402d6170ee6e5037f032dd96233ce73c66f7d83a4150fb76814b44"
+checksum = "1bb23c599a9ff5b981529099902fe5de8d55ecc8c1f451542da17b8d2d65326e"
 
 [[package]]
 name = "flate2"
@@ -1595,7 +1601,7 @@ dependencies = [
 
 [[package]]
 name = "lyche"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "cgmath",
@@ -1657,16 +1663,16 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "memflow"
-version = "0.2.0-beta7"
+version = "0.2.0-beta9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2e55eeeec513cd77a4410920f40458a8e08fc5715a313041c0b22455144b9cb"
+checksum = "3ea78623ea71c6431aa4be344b7592836b258e1b172583df1287f9448458a1b1"
 dependencies = [
  "abi_stable",
  "bitflags",
  "bumpalo",
  "cglue",
  "coarsetime",
- "dataview",
+ "dataview 1.0.1",
  "dirs 4.0.0",
  "fixed-slice-vec",
  "goblin",
@@ -1711,9 +1717,26 @@ dependencies = [
 
 [[package]]
 name = "memflow-win32"
-version = "0.2.0-beta7"
+version = "0.2.0-beta9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab360d173af4a380a4350854a99f7fb615673bfba3b119d18da06475cf56e0e5"
+checksum = "c8240e7f1dc4cfbcd85062ecb9a4d539e5189a0a2462573f34de7675303b9a4f"
+dependencies = [
+ "log",
+ "memflow",
+ "memflow-win32-defs",
+ "no-std-compat",
+ "pelite",
+ "regex",
+ "serde",
+ "toml",
+ "widestring",
+]
+
+[[package]]
+name = "memflow-win32-defs"
+version = "0.2.0-beta9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90c84438f5451b99b427a7ddce9e0c6df580174a608f674d8f2644472e6b8468"
 dependencies = [
  "dirs 4.0.0",
  "indicatif",
@@ -1721,13 +1744,9 @@ dependencies = [
  "memflow",
  "no-std-compat",
  "pdb",
- "pelite",
  "progress-streams",
- "regex",
  "serde",
- "toml",
  "ureq",
- "widestring",
 ]
 
 [[package]]
@@ -2151,7 +2170,7 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c270b1a0c279bbcb4cff3d2294121731c48ee68f0435d26cf71018a853cb890"
 dependencies = [
- "dataview",
+ "dataview 0.1.2",
  "no-std-compat",
  "pelite-macros",
  "serde",
