@@ -1,5 +1,3 @@
-extern crate nalgebra_glm as glm;
-
 mod datatypes;
 mod utils;
 mod offsets;
@@ -13,14 +11,13 @@ use gamedata::GameData;
 use log::{info, warn, Level};
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
-use patternscan::scan;
 use render::MapData;
 use std::io::Cursor;
 use ::std::{ops::Add, time::{Duration, SystemTime}, sync::mpsc};
 
 use human_interface::*;
 
-use crate::features::recoil_replay;
+//use crate::features::recoil_replay;
 
 /// Blocks thread until result returns success
 fn wait_for<T>(result:Result<T>, delay: Duration) -> T 
@@ -109,7 +106,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut aimbot = features::AimBot::new();
 
     let mut atrigger = features::AlgebraTrigger::new();
-    let mut recoil_data = features::RecoilRecorder::new();
+    //let mut recoil_data = features::RecoilRecorder::new();
     #[cfg(feature = "bhop_sus")]
     let mut bhop_sus = features::SusBhop::new();
 
@@ -173,8 +170,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         framedata.connected = true;
         framedata.local_position = render::PlayerLoc{
             world_pos: game_data.local_player.vec_origin,
-            head_pos: None,
-            feet_pos: None,
             team: game_data.local_player.team_num,
             name: "local".to_string(),
         };
@@ -187,8 +182,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
             framedata.locations.push(render::PlayerLoc{
                 world_pos: ent.vec_origin,
-                head_pos: ent.screen_head,
-                feet_pos: ent.screen_feet,
                 team: ent.team_num,
                 name: ent.name.clone(),
             });
@@ -204,7 +197,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
-            features::incross_trigger(&mut keyboard, &mut human, &game_data);
+            //features::incross_trigger(&mut keyboard, &mut human, &game_data);
             // collect recoil data for weapons
             //recoil_data.process_frame(&game_data, false);
 
@@ -310,34 +303,34 @@ fn regex_patscan(module_buf: &[u8]) -> Option<usize> {
 //     }
 // }
 
-fn find_signature(
-    mut proc: impl Process + MemoryView,
-    module: &ModuleInfo,
-    module_buf: &Vec<u8>,
-    signature: &str,
-    offset: usize,
-    extra: usize
-) -> Result<usize> {
-    let locs = scan(Cursor::new(module_buf), signature)
-        .expect("could not find any instances of scanned sig due to an error");
-    match locs.len() {
-        0 => {
-            return Err(Error(ErrorOrigin::VirtualMemory, ErrorKind::NotFound).log_error("no locations found from memory scan"));
-        },
-        1 => {},
-        _=> {
-            warn!("More than one memory location found from pattern scan. Signature may be out of date.");
-        }
-    }
-    let mut location = locs[0] + offset;
-    info!("location before reading mem: {:#010x}", location);
-    proc.read_into(module.base.add(location), &mut location).data_part()?;
-    info!("location after reading mem: {:#010x}", location);
-    location = location + extra;
-    info!("location + extra: {:#010x}", location);
-    info!("Found client pattern: {:#X}", location);
-    Ok(location)
-}
+// fn find_signature(
+//     mut proc: impl Process + MemoryView,
+//     module: &ModuleInfo,
+//     module_buf: &Vec<u8>,
+//     signature: &str,
+//     offset: usize,
+//     extra: usize
+// ) -> Result<usize> {
+//     let locs = scan(Cursor::new(module_buf), signature)
+//         .expect("could not find any instances of scanned sig due to an error");
+//     match locs.len() {
+//         0 => {
+//             return Err(Error(ErrorOrigin::VirtualMemory, ErrorKind::NotFound).log_error("no locations found from memory scan"));
+//         },
+//         1 => {},
+//         _=> {
+//             warn!("More than one memory location found from pattern scan. Signature may be out of date.");
+//         }
+//     }
+//     let mut location = locs[0] + offset;
+//     info!("location before reading mem: {:#010x}", location);
+//     proc.read_into(module.base.add(location), &mut location).data_part()?;
+//     info!("location after reading mem: {:#010x}", location);
+//     location = location + extra;
+//     info!("location + extra: {:#010x}", location);
+//     info!("Found client pattern: {:#X}", location);
+//     Ok(location)
+// }
 
 fn parse_args() -> ArgMatches {
     Command::new("lyche")

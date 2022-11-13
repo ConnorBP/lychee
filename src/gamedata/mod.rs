@@ -26,10 +26,8 @@ pub struct GameData {
     /// Entity List
     pub entity_list: EntityList,
 
-    /// Temp Viewmatrix for reading into
-    pub vm : [[f32;4];4],
-    /// Local Player View Matrix
-    pub view_matrix: glm::Mat4x4,
+    // viewmatrix for using the games existing viewmatrix if desired
+    //pub vm : [[f32;4];4],
 
     /// The currently being played map name string
     pub current_map: Option<String>,
@@ -76,8 +74,7 @@ impl GameData {
                     weapon_id: WeaponId::None,
                 },
                 entity_list: Default::default(),
-                vm: Default::default(),
-                view_matrix: Default::default(),
+                //vm: Default::default(),
                 current_map: None,
                 current_map_info: None,
 
@@ -139,7 +136,7 @@ impl GameData {
         let mut bat = proc.batcher();
         self.local_player.load_data(&mut bat, self.client_state);
 
-        bat.read_into(client_base + *DW_VIEWMATRIX, &mut self.vm);
+        //bat.read_into(client_base + *DW_VIEWMATRIX, &mut self.vm);
 
         // finally, commit all the reads and writes at once:
         bat.commit_rw().data_part()?;
@@ -167,7 +164,14 @@ impl GameData {
         trace!("spec target: {} {} local: {}", self.local_player.observing_id, self.local_player.observing_id & 0xFFF, self.local_player.ent_idx);
 
         // retreive the entity list data:
-        self.entity_list.populate_player_list(proc, client_base, self.client_state, &self.vm, self.local_player.ent_idx as usize)?;
+        self.entity_list.populate_player_list(
+            proc,
+            client_base,
+            self.client_state,
+            self.local_player.ent_idx as usize,
+            self.local_player.view_angles,
+            self.local_player.vec_origin + self.local_player.vec_view_offset
+        )?;
 
         trace!("exiting load data");
         Ok(())

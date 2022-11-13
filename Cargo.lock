@@ -1595,7 +1595,7 @@ dependencies = [
 
 [[package]]
 name = "lyche"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "cgmath",
@@ -1612,8 +1612,6 @@ dependencies = [
  "memflow",
  "memflow-pcileech",
  "memflow-win32",
- "nalgebra-glm",
- "patternscan",
  "regex",
  "serde",
  "serde_json",
@@ -1649,15 +1647,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "matrixmultiply"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "add85d4dd35074e6fedc608f8c8f513a3548619a9024b751949ef0e8e45a4d84"
-dependencies = [
- "rawpointer",
 ]
 
 [[package]]
@@ -1840,33 +1829,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nalgebra"
-version = "0.31.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da388c517f7c8540918d00f7aed9864c1ead01a14a0cc21513b171857119de12"
-dependencies = [
- "approx 0.5.1",
- "matrixmultiply",
- "num-complex",
- "num-rational",
- "num-traits",
- "simba",
- "typenum",
-]
-
-[[package]]
-name = "nalgebra-glm"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8e68654c920c582d34a4180c527ce2acf9ec8c695363681ff42acde46239d43"
-dependencies = [
- "approx 0.5.1",
- "nalgebra",
- "num-traits",
- "simba",
-]
-
-[[package]]
 name = "nanorand"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1969,15 +1931,6 @@ checksum = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36"
 dependencies = [
  "memchr",
  "minimal-lexical",
-]
-
-[[package]]
-name = "num-complex"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ae39348c8bc5fbd7f40c727a9925f03517afd2ab27d46702108b6a7e5414c19"
-dependencies = [
- "num-traits",
 ]
 
 [[package]]
@@ -2174,12 +2127,6 @@ name = "pathdiff"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
-
-[[package]]
-name = "patternscan"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf9ac94ae7c3d7f743ec57e0b6b05077631c1a90c6cea9b162a69efa6d6bbde"
 
 [[package]]
 name = "pdb"
@@ -2489,12 +2436,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rawpointer"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
-
-[[package]]
 name = "rayon"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2659,15 +2600,6 @@ name = "safe_arch"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1ff3d6d9696af502cc3110dacce942840fb06ff4514cad92236ecc455f2ce05"
-dependencies = [
- "bytemuck",
-]
-
-[[package]]
-name = "safe_arch"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "794821e4ccb0d9f979512f9c1973480123f9bd62a90d74ab0f9426fcf8f4a529"
 dependencies = [
  "bytemuck",
 ]
@@ -2844,19 +2776,6 @@ name = "shlex"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
-
-[[package]]
-name = "simba"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c48e45e5961033db030b56ad67aef22e9c908c493a6e8348c0a0f6b93433cd77"
-dependencies = [
- "approx 0.5.1",
- "num-complex",
- "num-traits",
- "paste",
- "wide",
-]
 
 [[package]]
 name = "simplelog"
@@ -3073,7 +2992,7 @@ dependencies = [
  "bytemuck",
  "cfg-if 1.0.0",
  "png",
- "safe_arch 0.5.2",
+ "safe_arch",
  "tiny-skia-path",
 ]
 
@@ -3553,16 +3472,6 @@ dependencies = [
  "either",
  "libc",
  "once_cell",
-]
-
-[[package]]
-name = "wide"
-version = "0.7.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae41ecad2489a1655c8ef8489444b0b113c0a0c795944a3572a0931cf7d2525c"
-dependencies = [
- "bytemuck",
- "safe_arch 0.6.0",
 ]
 
 [[package]]

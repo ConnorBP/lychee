@@ -92,9 +92,15 @@ impl Div<f32> for tmp_vec2 {
     }
 }
 
-impl From<glm::Vec2> for tmp_vec2 {
-    fn from(other: glm::Vec2) -> Self {
+impl From<cgmath::Vector2<f32>> for tmp_vec2 {
+    fn from(other: cgmath::Vector2<f32>) -> Self {
         Self { x: other.x, y: other.y }
+    }
+}
+
+impl From<cgmath::Vector3<f32>> for tmp_vec3 {
+    fn from(other: cgmath::Vector3<f32>) -> Self {
+        Self { x: other.x, y: other.y, z: other.z }
     }
 }
 
@@ -189,15 +195,15 @@ impl Mul<f32> for tmp_vec3 {
     }
 }
 
-impl Into<glm::Vec2> for tmp_vec2 {
-    fn into(self) -> glm::Vec2 {
-        glm::vec2(self.x, self.y)
+impl Into<cgmath::Vector2<f32>> for tmp_vec2 {
+    fn into(self) -> cgmath::Vector2<f32> {
+        cgmath::vec2(self.x, self.y)
     }
 }
 
-impl Into<glm::Vec3> for tmp_vec3 {
-    fn into(self) -> glm::Vec3 {
-        glm::vec3(self.x,self.y,self.z)
+impl Into<cgmath::Vector3<f32>> for tmp_vec3 {
+    fn into(self) -> cgmath::Vector3<f32> {
+        cgmath::vec3(self.x,self.y,self.z)
     }
 }
 

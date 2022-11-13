@@ -31,8 +31,6 @@ const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as
 #[derive(Default)]
 pub struct PlayerLoc {
     pub world_pos: tmp_vec3,
-    pub head_pos: Option<glm::Vec3>,
-    pub feet_pos: Option<glm::Vec3>,
     pub team: i32,
     pub name: String,
 }

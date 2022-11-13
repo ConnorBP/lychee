@@ -23,9 +23,6 @@ pub struct EntityInfo {
     pub vec_view_offset: tmp_vec3,
     pub vec_velocity: tmp_vec3,
 
-    pub screen_feet: Option<glm::Vec3>,
-    pub screen_head: Option<glm::Vec3>,
-
     pub bone_matrix: u32,//address
     pub head_pos: tmp_vec3,
     pub neck_pos: tmp_vec3,
@@ -50,8 +47,6 @@ impl Default for EntityInfo {
             vec_origin: Default::default(),
             vec_view_offset: Default::default(),
             vec_velocity: Default::default(),
-            screen_feet: Default::default(),
-            screen_head: Default::default(),
             bone_matrix: Default::default(),
             head_pos: Default::default(),
             neck_pos: Default::default(),
@@ -101,7 +96,7 @@ impl EntityList {
 
     /// Takes in a reference to the game process and the client module base address and then walks the entity list tree
     /// Data retreived from this is stored into the EntityList struct this is called on
-    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, client_state: Address, vm: &[[f32;4];4], local_player_idx: usize) -> Result<()> {
+    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, client_state: Address, local_player_idx: usize, local_view_angles: tmp_vec3, local_eye_pos: tmp_vec3) -> Result<()> {
         trace!("entering pop playerlist");
         let mut bat1 = proc.batcher();
         for (i, ent) in self.entities.iter_mut().enumerate() {
@@ -178,35 +173,17 @@ impl EntityList {
         for (i, ent) in self.entities.iter_mut().enumerate() {
             if i == local_player_idx {continue};
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            
+            // only check for closest on visible entities
+            //if ent.spotted_by_mask & (1 << local_player_idx) > 0 {
+                // need access to local player data to calculate distance
+                let dist = math::get_dist_from_crosshair(ent.head_pos, local_eye_pos, local_view_angles.xy());
+                if self.closest_player.is_none() || dist < closest_dist.unwrap() {
+                    closest_dist = Some(dist);
+                    self.closest_player = Some(i);
+                }
+            //}
 
-            // read entity username
-
-            let feetpos = (ent.vec_origin).into();
-            let headpos = (ent.head_pos).into();
-            //if !math::is_world_point_visible_on_screen(&worldpos, &self.view_matrix) {continue}
-            ent.screen_head = math::world_2_screen(
-                &headpos,
-                vm,
-                None,
-                None
-            );
-            ent.screen_feet = math::world_2_screen(
-                &feetpos,
-                vm,
-                None,
-                None
-            );
-            // set closest entity
-            if let Some (head) = ent.screen_head {
-                // only check for closest on visible entities
-                //if ent.spotted_by_mask & (1 << local_player_idx) > 0 {
-                    let dist = glm::distance2(&head.xy(), &glm::vec2(1920./2.,1080./2.));
-                    if self.closest_player.is_none() || dist < closest_dist.unwrap() {
-                        closest_dist = Some(dist);
-                        self.closest_player = Some(i);
-                    }
-                //}
-            }
             
         }
 
