@@ -568,7 +568,7 @@ pub fn start_window_render(
                     // the location we wanna check distance to
                     let sort_from: Vector3<f32> = (MAP_CENTER.0,-20.,1.0).into();
                     new_instances.sort_by(|a,b| {
-                        a.position.distance2(sort_from).partial_cmp(&b.position.distance2(sort_from)).unwrap()
+                        a.position.distance2(sort_from).partial_cmp(&b.position.distance2(sort_from)).unwrap_or(std::cmp::Ordering::Greater)
                     });
                     new_instances
                 }.iter().map(Instance::to_raw).collect::<Vec<_>>();
