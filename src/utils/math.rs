@@ -129,3 +129,14 @@ pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:Opti
 
 (nx,ny)
 }
+
+pub fn norm_y_angle(y:f32) -> f32 {
+    let mut ny = y;
+    while(ny > 180.) {
+        ny -= 360.
+    }
+    while(ny < -180.) {
+        ny += 360.
+    }
+    ny
+}

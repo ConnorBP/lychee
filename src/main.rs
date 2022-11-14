@@ -169,6 +169,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         framedata.connected = true;
         framedata.local_position = render::PlayerLoc{
             world_pos: game_data.local_player.vec_origin,
+            rotation: game_data.local_player.view_angles.xy(),
             team: game_data.local_player.team_num,
             name: "local".to_string(),
         };
@@ -181,6 +182,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
             framedata.locations.push(render::PlayerLoc{
                 world_pos: ent.vec_origin,
+                rotation: Default::default(),
                 team: ent.team_num,
                 name: ent.name.clone(),
             });

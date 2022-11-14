@@ -30,6 +30,7 @@ const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as
 #[derive(Default)]
 pub struct PlayerLoc {
     pub world_pos: tmp_vec3,
+    pub rotation: tmp_vec2,
     pub team: i32,
     pub name: String,
 }
@@ -170,10 +171,11 @@ pub fn start_window_render(
             // position the camera 1 unit up and 50 units back
             eye: (MAP_CENTER.0,MAP_CENTER.1,15.0).into(),
             // have the camera look at the origin
-            target: (0.0,0.0,0.0).into(),
+            target: (MAP_CENTER.0,MAP_CENTER.1,0.0).into(),
+            rotation: cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
             up: cgmath::Vector3::unit_y(),
             aspect: window_size.width as f32 / window_size.height as f32,
-            fovy: 30.0,
+            fovy: 35.0,
             znear: 0.1,
             zfar: 2000.,
         };
@@ -673,11 +675,16 @@ pub fn start_window_render(
                         };
 
                     // set camera target to half way between map center and the current player location
-                    camera.target = {
-                        let diff = player_minimap_location.xy() - tmp_vec2::from(MAP_CENTER);
-                        let halfway = player_minimap_location - (diff/2.);
-                        (halfway.x,halfway.y,0.0).into()
-                    };
+                    // camera.target = {
+                    //     let diff = player_minimap_location.xy() - tmp_vec2::from(MAP_CENTER);
+                    //     let halfway = player_minimap_location - (diff/2.);
+                    //     (halfway.x,halfway.y,0.0).into()
+                    // };
+
+                    camera.rotation = cgmath::Quaternion::from_axis_angle(
+                        cgmath::Vector3::unit_z(),
+                        cgmath::Deg(utils::math::norm_y_angle((360. - framedata.local_position.rotation.y) +90.))
+                    );
                     
 
                     camera_uniform.update_view_proj(&camera);

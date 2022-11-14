@@ -11,6 +11,7 @@ We'll define it as follows:
 
 */
 
+use cgmath::Quaternion;
 use memflow::prelude::Pod;
 
 // basically a magic matrix
@@ -25,6 +26,7 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 pub struct Camera {
     pub eye: cgmath::Point3<f32>,
     pub target: cgmath::Point3<f32>,
+    pub rotation: Quaternion<f32>,
     pub up: cgmath::Vector3<f32>,
     pub aspect: f32,
     pub fovy: f32,
@@ -36,7 +38,8 @@ impl Camera {
     pub fn build_view_projection_matrix(&self) -> cgmath::Matrix4<f32> {
         let view = cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up);
         let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
-        return OPENGL_TO_WGPU_MATRIX * proj * view;
+        let rot = cgmath::Matrix4::from(self.rotation);
+        return OPENGL_TO_WGPU_MATRIX * proj * rot * view;
     }
     pub fn update_window_size(&mut self, x:f32,y:f32)
     {
