@@ -1,15 +1,15 @@
 // make a global struct to store a copy of the in game info
 // fill a batcher with operations to load from the fpga
 // commit it
-use log::{info, warn, Level, trace};
+use log::{info, trace};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 
-use ::std::{ops::Add, time::SystemTime, io::Read, sync::mpsc};
+use ::std::{ops::Add, time::SystemTime, sync::mpsc};
 
 use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3, game::WeaponId}, render::MapData};
 
 pub mod entitylist;
-use entitylist::{EntityList, EntityInfo};
+use entitylist::EntityList;
 
 use self::minimap_info::MapInfo;
 
@@ -151,7 +151,7 @@ impl GameData {
         //DWORD pWeapon = mem->ReadMem<DWORD>(ClientDLL + dwEntityList + (pWeaponEnt - 1) * 0x10);
         //int id = mem->ReadMem<int>(pWeapon + m_iItemDefinitionIndex);
         //bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (i as u32 * 0x10)), &mut ent.u32address);
-        if(self.local_player.weapon_ent_id == 0) {
+        if self.local_player.weapon_ent_id == 0 {
             self.local_player.weapon_id = WeaponId::None;
         } else {
             let weapon_ptr = proc.read_addr32(client_base.add(*DW_ENTITYLIST + (self.local_player.weapon_ent_id-1) * 0x10)).data()?;

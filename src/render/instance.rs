@@ -37,6 +37,7 @@ impl Instance {
             details: [self.instance_type as i32,0,0,0]
         }
     }
+    #[allow(dead_code)]
     pub fn make_test_data<'a>(angle: f64) -> Vec<Instance> {
         const NUM_INSTANCES_PER_ROW: u32 = 10;
         const INSTANCE_DISPLACEMENT: cgmath::Vector3<f32> = cgmath::Vector3::new(NUM_INSTANCES_PER_ROW as f32 * 0.5, 0., NUM_INSTANCES_PER_ROW as f32 * 0.5);
@@ -73,7 +74,6 @@ pub struct InstanceRaw {
 
 impl InstanceRaw {
     pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
-        use std::mem;
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<InstanceRaw>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Instance,

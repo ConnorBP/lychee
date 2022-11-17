@@ -98,7 +98,7 @@ pub fn get_dist_from_crosshair(to_pos: tmp_vec3, our_pos: tmp_vec3, eye_ang: tmp
 pub fn round_up(num_in: u64, up_to_multiple: u64) -> u64 {
     if up_to_multiple <=0 {return num_in}
     let remainder = num_in % up_to_multiple;
-    if (remainder == 0) {return num_in}
+    if remainder == 0 {return num_in}
     num_in + up_to_multiple - remainder
 }
 
@@ -132,10 +132,10 @@ pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:Opti
 
 pub fn norm_y_angle(y:f32) -> f32 {
     let mut ny = y;
-    while(ny > 180.) {
+    while ny > 180. {
         ny -= 360.
     }
-    while(ny < -180.) {
+    while ny < -180. {
         ny += 360.
     }
     ny

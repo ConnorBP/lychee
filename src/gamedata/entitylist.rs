@@ -3,7 +3,7 @@ use ::std::{ops::Add, time::SystemTime};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 use log::trace;
 
-use crate::{offsets::*, utils::math, datatypes::{tmp_vec2,tmp_vec3}};
+use crate::{offsets::*, utils::math, datatypes::tmp_vec3};
 
 #[derive(Clone,Debug)]
 #[repr(C)]

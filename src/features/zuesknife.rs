@@ -1,4 +1,3 @@
-use serialport::SerialPort;
 use crate::{gamedata::GameData, datatypes:: game::WeaponId, human_interface::HumanInterface};
 
 

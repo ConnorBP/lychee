@@ -3,12 +3,12 @@ use memflow_win32::prelude::v1::*;
 use crate::{utils::math::get_dist_from_crosshair,gamedata::GameData, human_interface::HumanInterface};
 use super::zuesknife;
 
-const PREFIRE_FACTOR: f64 = 5.;
+// const PREFIRE_FACTOR: f64 = 5.;
 
 #[derive(Default)]
 pub struct AlgebraTrigger {
-    last_dist: f32,
-    speed_avg: f32,
+    // last_dist: f32,
+    // speed_avg: f32,
 }
 
 impl AlgebraTrigger {
