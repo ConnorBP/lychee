@@ -151,18 +151,7 @@ impl EntityList {
         for (i, ent) in self.entities.iter_mut().enumerate() {
             if i == local_player_idx {continue};
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            let addr = Address::from(ent.bone_matrix);
-            if !addr.is_valid() || addr.is_null() {continue}
-            // read out bone pos 8 from the bone matrix address.
-            // bat3.read_into(addr.add(0x30*8+0x0C), &mut ent.head_pos.x)
-            //     .read_into(addr.add(0x30*8+0x1C), &mut ent.head_pos.y)
-            //     .read_into(addr.add(0x30*8+0x2C), &mut ent.head_pos.z);
-            load_bone_batch(&mut bat3, 8, addr, &mut ent.head_pos); // head bone
-            load_bone_batch(&mut bat3, 7, addr, &mut ent.neck_pos); // neck bone
-            load_bone_batch(&mut bat3, 6, addr, &mut ent.upper_body_pos); // upper chest bone
-            load_bone_batch(&mut bat3, 5, addr, &mut ent.middle_body_pos); // middle body bone
-            load_bone_batch(&mut bat3, 4, addr, &mut ent.lower_body_pos); // belly bone
-            //load_bone_batch(&mut bat3, 0, addr, &mut ent.pelvis_pos); // pelvis bone
+            update_bones(&mut bat3, ent);
         }
         bat3.commit_rw().data_part()?;
         std::mem::drop(bat3);
@@ -235,6 +224,21 @@ fn get_entity_name(proc: &mut (impl Process + MemoryView), items: Address, ent_i
     if player_info_ptr.is_null() {return Ok("NO NAME".to_string())}
     let bytes = proc.read_raw(player_info_ptr.add(0x10), 32).data()?;
     Ok(std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string())
+}
+
+fn update_bones<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, out: &'bat mut EntityInfo) {
+    let addr = Address::from(out.bone_matrix);
+    if !addr.is_valid() || addr.is_null() {return}
+    // read out bone pos 8 from the bone matrix address.
+    // bat3.read_into(addr.add(0x30*8+0x0C), &mut ent.head_pos.x)
+    //     .read_into(addr.add(0x30*8+0x1C), &mut ent.head_pos.y)
+    //     .read_into(addr.add(0x30*8+0x2C), &mut ent.head_pos.z);
+    load_bone_batch(bat, 8, addr, &mut out.head_pos); // head bone
+    load_bone_batch(bat, 7, addr, &mut out.neck_pos); // neck bone
+    load_bone_batch(bat, 6, addr, &mut out.upper_body_pos); // upper chest bone
+    load_bone_batch(bat, 5, addr, &mut out.middle_body_pos); // middle body bone
+    load_bone_batch(bat, 4, addr, &mut out.lower_body_pos); // belly bone
+    //load_bone_batch(&mut bat3, 0, addr, &mut ent.pelvis_pos); // pelvis bone
 }
 
 fn load_bone_batch<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, bone_id: i32, bone_matrix: Address, out: &'bat mut tmp_vec3) {

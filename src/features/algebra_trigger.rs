@@ -17,6 +17,7 @@ impl AlgebraTrigger {
     }
     pub fn algebra_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &GameData, delta: f64) {
         if !kb.is_down(0x06) {return}
+        println!("Delta FPS: {}", 1./delta);
         if game_data.local_player.shots_fired > 1 {return}
         if game_data.local_player.aimpunch_angle.magnitude() > 0.05 {return} // force acuracy
         //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
@@ -49,6 +50,7 @@ impl AlgebraTrigger {
             //let sf = (speed * PREFIRE_FACTOR) as f32;
             //self.speed_avg = (self.speed_avg + sf) / 2.;
             //info!("dist from body: {}", dist_from_body);
+            
 
             if dist_from_head < 5. {
                 human.mouse_left().expect("failed to send mouse left click, serial must have disconnected");

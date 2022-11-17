@@ -111,10 +111,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     'mainloop : loop {
         // check if process is valid
-        let delta = if let Ok(t) = time.elapsed() {
-            t.as_secs_f64()
-        } else {
-            1.0
+        let delta = match time.elapsed() {
+            Ok(t) => t.as_secs_f64(),
+            Err(e) => e.duration().as_secs_f64(),
         };
         time = SystemTime::now();
 
@@ -206,6 +205,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
             // run any mouse moves that acumulate from the above features
             //human.process_smooth_mouse();
+            features::shoot_speed_test(&mut keyboard, &mut human);
         }
     }
 

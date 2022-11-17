@@ -146,11 +146,7 @@ impl GameData {
         // apply the bit mask to convert handles to an index
         self.local_player.observing_id &= 0xFFF;
         self.local_player.weapon_ent_id &= 0xFFF;
-        //println!("weapon: {}", self.local_player.weapon_id);
 
-        //DWORD pWeapon = mem->ReadMem<DWORD>(ClientDLL + dwEntityList + (pWeaponEnt - 1) * 0x10);
-        //int id = mem->ReadMem<int>(pWeapon + m_iItemDefinitionIndex);
-        //bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (i as u32 * 0x10)), &mut ent.u32address);
         if self.local_player.weapon_ent_id == 0 {
             self.local_player.weapon_id = WeaponId::None;
         } else {

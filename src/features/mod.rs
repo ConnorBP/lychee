@@ -4,6 +4,7 @@ mod bhop;
 mod trigger;
 mod algebra_trigger;
 mod zuesknife;
+mod human_speedtest;
 //mod recoil_recorder;
 //mod recoil_replay;
 #[cfg(all(feature = "aimbot", feature = "viewmatrix"))]
@@ -15,5 +16,6 @@ pub use bhop::*;
 #[cfg(feature = "incross")]
 pub use trigger::*;
 pub use algebra_trigger::*;
+pub use human_speedtest::shoot_speed_test;
 //pub use recoil_recorder::*;
 //pub use recoil_replay::*;
