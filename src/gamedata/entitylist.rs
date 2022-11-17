@@ -226,7 +226,7 @@ fn get_entity_name(proc: &mut (impl Process + MemoryView), items: Address, ent_i
     Ok(std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string())
 }
 
-fn update_bones<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, out: &'bat mut EntityInfo) {
+pub fn update_bones<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, out: &'bat mut EntityInfo) {
     let addr = Address::from(out.bone_matrix);
     if !addr.is_valid() || addr.is_null() {return}
     // read out bone pos 8 from the bone matrix address.

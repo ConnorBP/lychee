@@ -1,6 +1,6 @@
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
-use crate::{utils::math::get_dist_from_crosshair,gamedata::GameData, human_interface::HumanInterface};
+use crate::{utils::math::get_dist_from_crosshair,gamedata::GameData, human_interface::HumanInterface, offsets::DW_CLIENTSTATE_VIEWANGLES};
 use super::zuesknife;
 
 // const PREFIRE_FACTOR: f64 = 5.;
@@ -14,6 +14,18 @@ pub struct AlgebraTrigger {
 impl AlgebraTrigger {
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// this updates positions of player and target to be as fresh as possible before running trigger calc
+    pub fn update_data_then_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &mut GameData, delta: f64, proc: &mut (impl Process + MemoryView)) {
+        if let Some(closest_player) = game_data.entity_list.closest_player {
+            {
+                let mut bat = proc.batcher();
+                crate::gamedata::entitylist::update_bones(&mut bat, &mut game_data.entity_list.entities[closest_player]);
+                bat.read_into(game_data.client_state + *DW_CLIENTSTATE_VIEWANGLES, &mut game_data.local_player.view_angles);
+            } // drops batcher to commit it
+            self.algebra_trigger(kb, human, game_data, delta);
+        }
     }
     pub fn algebra_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &GameData, delta: f64) {
         if !kb.is_down(0x06) {return}

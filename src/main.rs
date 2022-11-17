@@ -196,7 +196,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base)?;
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
-            atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
+            //atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
+            atrigger.update_data_then_trigger(&mut keyboard, &mut human, &mut game_data, delta, &mut process);
             //features::incross_trigger(&mut keyboard, &mut human, &game_data);
             // collect recoil data for weapons
             //recoil_data.process_frame(&game_data, false);
