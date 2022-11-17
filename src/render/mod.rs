@@ -680,6 +680,9 @@ pub fn start_window_render(
                     //     let halfway = player_minimap_location - (diff/2.);
                     //     (halfway.x,halfway.y,0.0).into()
                     // };
+                    let diff = player_minimap_location.xy() - tmp_vec2::from(MAP_CENTER);
+                    let halfway = player_minimap_location - (diff/2.);
+                    camera.eye = (halfway.x,halfway.y,15.0).into();
 
                     camera.rotation = cgmath::Quaternion::from_axis_angle(
                         cgmath::Vector3::unit_z(),
