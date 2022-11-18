@@ -29,7 +29,7 @@ impl AlgebraTrigger {
     }
     pub fn algebra_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &GameData, delta: f64) {
         if !kb.is_down(0x06) {return}
-        println!("Delta FPS: {}", 1./delta);
+        //println!("Delta FPS: {}", 1./delta);
         if game_data.local_player.shots_fired > 1 {return}
         if game_data.local_player.aimpunch_angle.magnitude() > 0.05 {return} // force acuracy
         //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
@@ -45,10 +45,9 @@ impl AlgebraTrigger {
 
             let entity = &game_data.entity_list.entities[closest_player];
 
-            //let vel = entity.vec_velocity.magnitude();
-            //let norm = entity.vec_velocity.norm(vel);
+            let vel = entity.vec_velocity * (1. + delta * 2.) as f32;
             let dist_from_head = get_dist_from_crosshair(
-                entity.head_pos,// + norm,
+                entity.head_pos + vel,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
                 angles.xy()
             );
@@ -70,7 +69,7 @@ impl AlgebraTrigger {
             }
     
             let dist_from_neck = get_dist_from_crosshair(
-                entity.neck_pos,// + vel,
+                entity.neck_pos + vel,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
                 angles.xy()
             );
@@ -81,7 +80,7 @@ impl AlgebraTrigger {
             }
 
             let dist_from_body = get_dist_from_crosshair(
-                entity.upper_body_pos,// + vel,
+                entity.upper_body_pos + vel,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
                 angles.xy()
             );
@@ -98,7 +97,7 @@ impl AlgebraTrigger {
             // );
 
             let dist_from_lower = get_dist_from_crosshair(
-                entity.lower_body_pos,// + vel,
+                entity.lower_body_pos + vel,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
                 angles.xy()
             );
