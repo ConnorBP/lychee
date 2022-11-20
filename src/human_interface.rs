@@ -8,6 +8,7 @@ use format_bytes::format_bytes;
 use crate::datatypes::tmp_vec2;
 
 const MOUSE_CLICK_DELAY_MS: u32 = 100;
+const MOUSE_UNCLICK_DELAY_MS: u32 = 70;
 
 /// Handles abstacting away the functions needed to output human interface controls such as mouse clicks moves or keyboard output
 #[allow(dead_code)]
@@ -18,6 +19,9 @@ pub struct HumanInterface {
     // timers for making sure we don't spam the serial port
     last_leftclick: SystemTime,
     last_rightclick: SystemTime,
+
+    left_clicked: bool,
+    right_clicked: bool,
 
     // for humanized movement
     goal_pos: Option<tmp_vec2>,
@@ -31,7 +35,7 @@ impl HumanInterface {
         for p in ports {
             info!("{}", p.port_name);
         }
-        let port = serialport::new("COM3", 115_200)
+        let port = serialport::new("COM9", 9_600)
             .timeout(Duration::from_millis(10))
             .open()?;
         
@@ -42,6 +46,9 @@ impl HumanInterface {
             last_leftclick: SystemTime::now(),
             last_rightclick: SystemTime::now(),
 
+            left_clicked: false,
+            right_clicked: false,
+
             goal_pos: None,
         })
     }
@@ -49,6 +56,7 @@ impl HumanInterface {
         if let Ok(elap) = self.last_leftclick.elapsed() {
             if elap.as_millis() > MOUSE_CLICK_DELAY_MS.into() {
                 self.last_leftclick = SystemTime::now();
+                self.left_clicked = true;
                 self.port.write(b"ml\n")?;
             }
         }
@@ -58,6 +66,7 @@ impl HumanInterface {
         if let Ok(elap) = self.last_rightclick.elapsed() {
             if elap.as_millis() > MOUSE_CLICK_DELAY_MS.into() {
                 self.last_rightclick = SystemTime::now();
+                self.right_clicked = true;
                 self.port.write(b"mr\n")?;
             }
         }
@@ -91,6 +100,26 @@ impl HumanInterface {
         } else {
             self.goal_pos = Some(destination)
         }
+    }
+
+    pub fn process_unclicks(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        if self.left_clicked {
+            if let Ok(elap) = self.last_leftclick.elapsed() {
+                if elap.as_millis() > MOUSE_UNCLICK_DELAY_MS.into() {
+                    self.left_clicked = false;
+                    self.port.write(b"mlu\n")?;
+                }
+            }
+        }
+        if self.right_clicked {
+            if let Ok(elap) = self.last_rightclick.elapsed() {
+                if elap.as_millis() > MOUSE_UNCLICK_DELAY_MS.into() {
+                    self.right_clicked = false;
+                    self.port.write(b"mru\n")?;
+                }
+            }
+        }
+        Ok(())
     }
 
     /// moves smoothly in the direction of the final goal pos and resets goal after

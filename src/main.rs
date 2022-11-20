@@ -142,10 +142,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                         // TODO: make the initialization such as getting client and engine module bases into a re usable function
                         // TODO: DO SO BY MAKING ALL OF MAINS STATE A PART OF ONE STRUCT WITH AN INIT FUNC IN IT
 
-                        client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
-                        engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
+                        client_module = wait_for(ret_proc.module_by_name("client.dll"),Duration::from_secs(10));
+                        info!("Got Client Module:\n {:?}", client_module);
+                        //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
+                        engine_module = wait_for(ret_proc.module_by_name("engine.dll"), Duration::from_secs(5));
+                        info!("Got Engine Module:\n {:?}", engine_module);
 
-                        if let Ok(gd) = init_gamedata(&mut process, engine_module.base, client_module.base, map_tx.clone()) {
+                        if let Ok(gd) = init_gamedata(&mut ret_proc, engine_module.base, client_module.base, map_tx.clone()) {
                             game_data = gd;
                         } else {
                             // if the process is closed thus invalidating gamedata and our process handle
@@ -207,6 +210,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             // run any mouse moves that acumulate from the above features
             //human.process_smooth_mouse();
             features::shoot_speed_test(&mut keyboard, &mut human);
+            // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
+            human.process_unclicks()?;
         }
     }
 

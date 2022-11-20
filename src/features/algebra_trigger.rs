@@ -45,7 +45,7 @@ impl AlgebraTrigger {
 
             let entity = &game_data.entity_list.entities[closest_player];
 
-            let vel = entity.vec_velocity * (1. + delta * 2.) as f32;
+            let vel = entity.vec_velocity * (1. + delta) as f32;
             let dist_from_head = get_dist_from_crosshair(
                 entity.head_pos + vel,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
