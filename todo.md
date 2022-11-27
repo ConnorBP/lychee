@@ -1,26 +1,29 @@
 ### TODO
 
 # design improvements
+
+    - modularize render code
+    - modularize main init code
     - efficiency improvements such as:
-        - only occaisonally updating local player address
         - not reading out local player both in the entity list and by itself (get by index)
         - don't have to get the array of entity base addresses every frame probably
-    - checking for valid or paged out values in the batcher
-    - possibility to build our own viewmatrix if need be?
+    - checking for valid or paged out values in the batcher (idk if this is necessary)
     - use get player index to get player from entity list instead of using the localplayer address func
-    - restructure aimbot to use struct instead of statics for persistant data
 
     - make aimbot continue spray control for a bit after enemies die when there is no new enemy
         - tried this and broke aimbot. TODO: FIX AIMBOT
 
 # feature improvements
+    - pattern scanning
+    - netvar manager
+    - convar manager
+    - other internal features / future proofing
+    - BSP parsing vischeck tracing
     - aimbot
-    - replace render system
-    - minimap
-    - bloop when entity in front of crosshair?
-    - change over to bluetooth serial + teensy (needs a fancy voltage level circuit)
     - reoil recorder for more legit looking recoil
+    - humanized smoothing (possibly on the teensy with a LUT)
+    - bloop when entity in front of crosshair?
     - config system
+        - weapon based config
+        - add stuff like is max movespeed for trigger to config per weapon
     - flashed check // bspotted mask may already account for this
-    - bsp parser
-    - weapon based config
