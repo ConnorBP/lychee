@@ -226,7 +226,7 @@ fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, c
         // So if someone closes the game from the main menu it wouldn't figure out if the proc was dead
         // this should fix that
         if proc.state().is_dead() {
-            return Err(Error(ErrorOrigin::OsLayer, ErrorKind::NotFound).log_error("Pprocess was closed during init."));
+            return Err(Error(ErrorOrigin::OsLayer, ErrorKind::NotFound).log_error("Process was closed during init."));
         }
 
         match gamedata::GameData::new(proc, engine_base, client_base, map_tx.clone()) {
