@@ -8,12 +8,14 @@ mod human_interface;
 mod bsp_parser;
 
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
+use features::AlgebraTrigger;
 use gamedata::GameData;
 use log::{info, Level};
 use memflow::prelude::v1::*;
+use memflow_pcileech::PciLeech;
 use memflow_win32::prelude::v1::*;
-use render::MapData;
-use ::std::{time::{Duration, SystemTime}, sync::mpsc};
+use render::{MapData, FrameData};
+use ::std::{time::{Duration, SystemTime}, sync::mpsc::{self, Sender}};
 
 use human_interface::*;
 
@@ -39,185 +41,220 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let matches = parse_args();
     extract_args(&matches);
 
-    let (tx, map_tx) = render::start_window_render()?;
-
-    // a "human" we get to tell what to do
-    let mut human = HumanInterface::new()?;
-
-    // create inventory + os
-    let connector_args : ConnectorArgs = ":device=FPGA".parse()?;
-    let connector = memflow_pcileech::create_connector(&connector_args)?;
-
-    let mut os = Win32Kernel::builder(connector)
-        .build_default_caches()
-        //.arch(ArchitectureIdent::X86(64, false))
-        .build()?;
-
-    // load keyboard reader
-    let mut keyboard = os.clone().into_keyboard()?;
-
-    // get process info from victim computer
-
-    let base_info = {
-        let proc_info;
-        loop {
-            info!("Waiting for process handle");
-            if let Ok(res) = os.process_info_by_name("csgo.exe") {
-                proc_info = res;
-                break;
-            }
-            std::thread::sleep(std::time::Duration::from_secs(5));
-        }
-        proc_info
-    };
-    let process_info = os.process_info_from_base_info(base_info)?;
-    //let mut process = Win32Process::with_kernel(os, process_info.clone());
-    let mut process = os.clone().into_process_by_name("csgo.exe")?;
-    info!("Got Proccess:\n {:?}", process_info);
-
-    // fetch info about modules from the process
-    let mut client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
-    info!("Got Client Module:\n {:?}", client_module);
-    //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
-    let mut engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
-    info!("Got Engine Module:\n {:?}", engine_module);
-
-    //let bat = process.batcher();
-
-    // info!("Dumping Client Module");
-    // let client_buf = process
-    //     .read_raw(clientModule.base, clientModule.size as usize)
-    //     .data_part()?;
-
-    // info!("Dumping Engine Module");
-    // let engine_buf = process
-    //     .read_raw(engineModule.base, engineModule.size as usize)
-    //     .data_part()?;
-
-    // init game data or panic if the process is closed before game data is valid
-    let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base, map_tx.clone())?;
-    info!("{:?}", game_data);
-
-    // processing time delta
-    let mut time = SystemTime::now();
-
-    // store features that need to retain data
-    #[cfg(feature = "aimbot")]
-    let mut aimbot = features::AimBot::new();
-
-    let mut atrigger = features::AlgebraTrigger::new();
-    //let mut recoil_data = features::RecoilRecorder::new();
-    #[cfg(feature = "bhop_sus")]
-    let mut bhop_sus = features::SusBhop::new();
-
-    'mainloop : loop {
-        // check if process is valid
-        let delta = match time.elapsed() {
-            Ok(t) => t.as_secs_f64(),
-            Err(e) => e.duration().as_secs_f64(),
-        };
-        time = SystemTime::now();
-
-        if process.state().is_dead() {
-            // if process dies set connected to false
-            let framedata = render::FrameData{
-                connected: false,
-                ..Default::default()
-            };
-            if tx.send(framedata).is_err() {
-                info!("Failed to send to graphics window. Was likely exited. Ending process.");
-                break 'mainloop;
-            }
-            // now wait for the new process
-            process = {
-                let mut ret_proc;
-                'waitforproc : loop {
-                    info!("process dead. Waiting for new one.");
-                    std::thread::sleep(std::time::Duration::from_secs(5));
-                    if let Ok(proc) = os.clone().into_process_by_name("csgo.exe") {
-                        ret_proc = proc;
-                        info!("process found. Waiting for modules to load.");
-
-                        // now that we have a new working proc we also need to reset some stuff
-
-                        // TODO: make the initialization such as getting client and engine module bases into a re usable function
-                        // TODO: DO SO BY MAKING ALL OF MAINS STATE A PART OF ONE STRUCT WITH AN INIT FUNC IN IT
-
-                        client_module = wait_for(ret_proc.module_by_name("client.dll"),Duration::from_secs(10));
-                        info!("Got Client Module:\n {:?}", client_module);
-                        //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
-                        engine_module = wait_for(ret_proc.module_by_name("engine.dll"), Duration::from_secs(5));
-                        info!("Got Engine Module:\n {:?}", engine_module);
-
-                        if let Ok(gd) = init_gamedata(&mut ret_proc, engine_module.base, client_module.base, map_tx.clone()) {
-                            game_data = gd;
-                        } else {
-                            // if the process is closed thus invalidating gamedata and our process handle
-                            // then go back to waiting for process handle
-                            continue 'waitforproc;
-                        }
-
-                        break;
-                    }
-                }
-                ret_proc
-            }
-        }
-
-        if game_data.load_data(&mut process, client_module.base).is_err() {
-            continue 'mainloop;
-        }
-
-        let mut framedata = render::FrameData::default();
-        framedata.connected = true;
-        framedata.local_position = render::PlayerLoc{
-            world_pos: game_data.local_player.vec_origin,
-            rotation: game_data.local_player.view_angles.xy(),
-            team: game_data.local_player.team_num,
-            name: "local".to_string(),
-        };
-        // send location data to renderer
-        for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
-            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            if i == game_data.local_player.ent_idx as usize {continue}
-            if game_data.local_player.observing_id == 0 || i == game_data.local_player.observing_id as usize -1 {continue}
-            //if ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0 {continue}
-
-            framedata.locations.push(render::PlayerLoc{
-                world_pos: ent.vec_origin,
-                rotation: Default::default(),
-                team: ent.team_num,
-                name: ent.name.clone(),
-            });
-        }
-        if tx.send(framedata).is_err() {
-            info!("Failed to send to graphics window. Was likely exited. Ending process.");
-            break 'mainloop;
-        }
-
-        if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
-            #[cfg(feature = "bhop_sus")]
-            bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base)?;
-            #[cfg(feature = "aimbot")]
-            aimbot.aimbot(&mut keyboard, &mut human, &game_data);
-            //atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
-            atrigger.update_data_then_trigger(&mut keyboard, &mut human, &mut game_data, delta, &mut process);
-            //features::incross_trigger(&mut keyboard, &mut human, &game_data);
-            // collect recoil data for weapons
-            //recoil_data.process_frame(&game_data, false);
-
-            //recoil_replay(&game_data, &recoil_data, &mut human);
-
-            // run any mouse moves that acumulate from the above features
-            //human.process_smooth_mouse();
-            features::shoot_speed_test(&mut keyboard, &mut human);
-        }
-        // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
-        human.process_unclicks()?;
-    }
+    let mut lyche = LycheProgram::init()?;
+    lyche.init_process()?;
+    lyche.run()?;
 
     Ok(())
 }
+
+pub trait MutProcess: Process + MemoryView {}
+impl<T: Process + MemoryView> MutProcess for T {}
+
+struct LycheProgram<'a> {
+    human: HumanInterface,
+    tx: Sender<FrameData>,
+    map_tx: Sender<MapData>,
+    os: Win32Kernel<CachedPhysicalMemory<'a, PciLeech, cache::TimedCacheValidator>, CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>>,
+    keyboard: Win32Keyboard<VirtualDma<CachedPhysicalMemory<'a, PciLeech, cache::TimedCacheValidator>, CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>, Win32VirtualTranslate>>,
+    //process: Option<Win32Process<CachedPhysicalMemory<'a, PciLeech, cache::TimedCacheValidator>, CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>, Win32VirtualTranslate>>,
+    process: Option<Box<dyn MutProcess + 'a>>,
+    client_module: Option<ModuleInfo>,
+    engine_module: Option<ModuleInfo>,
+    game_data: Option<GameData>,
+    
+    
+    time: SystemTime,
+
+    // features
+    atrigger: AlgebraTrigger,
+    #[cfg(feature = "bhop_sus")]
+    bhop_sus: SusBhop,
+}
+
+impl LycheProgram<'_> {
+    fn init() -> std::result::Result<Self, Box<dyn std::error::Error>> {
+
+        let (tx, map_tx) = render::start_window_render()?;
+
+        // a "human" we get to tell what to do
+        let mut human = HumanInterface::new()?;
+
+        // create inventory + os
+        let connector_args : ConnectorArgs = ":device=FPGA".parse()?;
+        let connector = memflow_pcileech::create_connector(&connector_args)?;
+
+        let mut os = Win32Kernel::builder(connector)
+            .build_default_caches()
+            //.arch(ArchitectureIdent::X86(64, false))
+            .build()?;
+
+        // load keyboard reader
+        let mut keyboard = os.clone().into_keyboard()?;
+
+        // processing time delta
+        let mut time = SystemTime::now();
+
+        // store features that need to retain data
+        #[cfg(feature = "aimbot")]
+        let mut aimbot = features::AimBot::new();
+
+        let mut atrigger = features::AlgebraTrigger::new();
+        //let mut recoil_data = features::RecoilRecorder::new();
+        #[cfg(feature = "bhop_sus")]
+        let mut bhop_sus = features::SusBhop::new();
+
+        Ok(LycheProgram {
+            human,
+            tx,
+            map_tx,
+            os,
+            keyboard,
+            process: None,
+            client_module: None,
+            engine_module: None,
+            game_data: None,
+
+
+            time,
+
+            // features
+            atrigger,
+            #[cfg(feature = "bhop_sus")]
+            bhop_sus,
+
+        })
+    }
+
+    fn init_process<'a>(&'a mut self) -> std::result::Result<(), Box<dyn std::error::Error + 'a>> {
+        // get process info from victim computer
+
+        let mut ret_proc;
+        'waitforproc : loop {
+            info!("Waiting for process handle.");
+            std::thread::sleep(std::time::Duration::from_secs(5));
+            
+            if let Ok(proc) = self.os.process_by_name("csgo.exe") {
+                ret_proc = proc;
+                info!("process found. Waiting for modules to load.");
+
+                // now that we have a new working proc we also need to reset some stuff
+ 
+                // wait for can fail if the user closes csgo while we are still waiting for this module
+                self.client_module = Some(wait_for(ret_proc.module_by_name("client.dll"),Duration::from_secs(10)));
+                info!("Got Client Module:\n {:?}", self.client_module);
+                //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
+                self.engine_module = Some(wait_for(ret_proc.module_by_name("engine.dll"), Duration::from_secs(5)));
+                info!("Got Engine Module:\n {:?}", self.engine_module);
+
+                // info!("Dumping Client Module");
+                // let client_buf = process
+                //     .read_raw(clientModule.base, clientModule.size as usize)
+                //     .data_part()?;
+
+                // info!("Dumping Engine Module");
+                // let engine_buf = process
+                //     .read_raw(engineModule.base, engineModule.size as usize)
+                //     .data_part()?;
+
+                break;
+            }
+        }
+        self.process = Some(Box::new(ret_proc));
+
+        info!("{:?}", self.game_data);
+        Ok(())
+    }
+
+    fn run(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        'mainloop : loop {
+            // check if process is valid
+            let delta = match self.time.elapsed() {
+                Ok(t) => t.as_secs_f64(),
+                Err(e) => e.duration().as_secs_f64(),
+            };
+            self.time = SystemTime::now();
+    
+            if self.process.is_none() || self.process.as_mut().unwrap().state().is_dead() {
+                // if process dies set connected to false
+                let framedata = render::FrameData{
+                    connected: false,
+                    ..Default::default()
+                };
+                if self.tx.send(framedata).is_err() {
+                    info!("Failed to send to graphics window. Was likely exited. Ending process.");
+                    break 'mainloop;
+                }
+                // now wait for the new process
+                self.init_process()?;
+            }
+            
+            if let Some(gd) = &mut self.game_data {
+                if gd.load_data(self.process.as_mut().unwrap(), self.client_module.as_ref().unwrap().base).is_err() {
+                    continue 'mainloop;
+                }
+
+                let mut framedata = render::FrameData::default();
+                framedata.connected = true;
+                framedata.local_position = render::PlayerLoc{
+                    world_pos: gd.local_player.vec_origin,
+                    rotation: gd.local_player.view_angles.xy(),
+                    team: gd.local_player.team_num,
+                    name: "local".to_string(),
+                };
+                // send location data to renderer
+                for (i, ent) in gd.entity_list.entities.iter().enumerate() {
+                    if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+                    if i == gd.local_player.ent_idx as usize {continue}
+                    if gd.local_player.observing_id == 0 || i == gd.local_player.observing_id as usize -1 {continue}
+                    //if ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0 {continue}
+        
+                    framedata.locations.push(render::PlayerLoc{
+                        world_pos: ent.vec_origin,
+                        rotation: Default::default(),
+                        team: ent.team_num,
+                        name: ent.name.clone(),
+                    });
+                }
+                if self.tx.send(framedata).is_err() {
+                    info!("Failed to send to graphics window. Was likely exited. Ending process.");
+                    break 'mainloop;
+                }
+        
+                if gd.local_player.health > 0 || gd.local_player.lifestate == 0 {
+                    #[cfg(feature = "bhop_sus")]
+                    bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base)?;
+                    #[cfg(feature = "aimbot")]
+                    aimbot.aimbot(&mut keyboard, &mut human, &game_data);
+                    //atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
+                    self.atrigger.update_data_then_trigger(&mut self.keyboard, &mut self.human, gd, delta, self.process.as_mut().unwrap());
+                    //features::incross_trigger(&mut keyboard, &mut human, &game_data);
+                    // collect recoil data for weapons
+                    //recoil_data.process_frame(&game_data, false);
+        
+                    //recoil_replay(&game_data, &recoil_data, &mut human);
+        
+                    // run any mouse moves that acumulate from the above features
+                    //human.process_smooth_mouse();
+                    //features::shoot_speed_test(&mut self.keyboard, &mut self.human);
+                }
+                // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
+                self.human.process_unclicks()?;
+
+
+            } else {
+                // init gamedata
+                if let Ok(gd) = init_gamedata(self.process.as_mut().unwrap(), self.engine_module.as_ref().unwrap().base, self.client_module.as_ref().unwrap().base, self.map_tx.clone()) {
+                    self.game_data = Some(gd);
+                } else {
+                    continue 'mainloop;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 
 fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address, map_tx: mpsc::Sender<MapData>) -> Result<GameData> {
     let gd_ret;
