@@ -163,15 +163,16 @@ impl EntityList {
             if i == local_player_idx {continue};
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             
+            const disable_vischeck: bool = true;
             // only check for closest on visible entities
-            //if ent.spotted_by_mask & (1 << local_player_idx) > 0 {
+            if disable_vischeck || (ent.spotted_by_mask & (1 << local_player_idx) > 0) {
                 // need access to local player data to calculate distance
                 let dist = math::get_dist_from_crosshair(ent.head_pos, local_eye_pos, local_view_angles.xy());
                 if self.closest_player.is_none() || dist < closest_dist.unwrap() {
                     closest_dist = Some(dist);
                     self.closest_player = Some(i);
                 }
-            //}
+            }
 
             
         }

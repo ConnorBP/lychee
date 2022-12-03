@@ -48,9 +48,9 @@ wgpu_glyph = "0.18"
 image = "0.24"
 cgmath = "0.18"
 
-
-[profile.release]
-debug = true
+# uncomment if you wanna run performance traces on the code
+# [profile.release]
+# debug = true
 
 [features]
 bhop_sus = []

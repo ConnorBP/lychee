@@ -31,7 +31,7 @@ impl AlgebraTrigger {
         if !kb.is_down(0x06) {return}
         //println!("Delta FPS: {}", 1./delta);
         if game_data.local_player.shots_fired > 1 {return}
-        if game_data.local_player.aimpunch_angle.magnitude() > 0.05 {return} // force acuracy
+        if game_data.local_player.aimpunch_angle.magnitude() > 0.065 {return} // force acuracy
         //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
         //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
         if let Some(closest_player) = game_data.entity_list.closest_player {
