@@ -1,3 +1,5 @@
+// BLE minion by segfault
+
 #include <BleMouse.h>
 // lib: https://github.com/T-vK/ESP32-BLE-Mouse
 
