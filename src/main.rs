@@ -42,8 +42,11 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     extract_args(&matches);
 
     let mut lyche = LycheProgram::init()?;
-    let mut proc = lyche.init_process()?;
-    lyche.run(&mut proc)?;
+    let mut proc;
+    lyche.init_process(&mut proc)?;
+    {
+        lyche.run(&mut proc)?;
+    }
 
     Ok(())
 }
@@ -126,7 +129,7 @@ impl LycheProgram<'static> {
         })
     }
 
-    fn init_process<'a>(&'a mut self) -> std::result::Result<Win32Process<Fwd<&mut CachedPhysicalMemory<PciLeech, cache::TimedCacheValidator>>, Fwd<&mut CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>>, Win32VirtualTranslate>, Box<dyn std::error::Error + 'a>> {
+    fn init_process(&mut self, out: &mut Win32Process<Fwd<&mut CachedPhysicalMemory<PciLeech, cache::TimedCacheValidator>>, Fwd<&mut CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>>, Win32VirtualTranslate>) -> std::result::Result<(), Box<dyn std::error::Error>> {
         // get process info from victim computer
 
         let mut ret_proc;
@@ -161,10 +164,11 @@ impl LycheProgram<'static> {
             }
         }
         //self.process = Some(Box::new(ret_proc));
-        Ok(ret_proc)
+        *out = ret_proc;
+        Ok(())
     }
 
-    fn run(&mut self, proc: &mut (impl Process + MemoryView)) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn run(&mut self, proc: &mut Win32Process<Fwd<&mut CachedPhysicalMemory<PciLeech, cache::TimedCacheValidator>>, Fwd<&mut CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>>, Win32VirtualTranslate>) -> std::result::Result<(), Box<dyn std::error::Error>> {
         'mainloop : loop {
             // check if process is valid
             let delta = match self.time.elapsed() {
@@ -184,7 +188,7 @@ impl LycheProgram<'static> {
                     break 'mainloop;
                 }
                 // now wait for the new process
-                self.init_process()?;
+                self.init_process(proc)?;
             }
             
             if let Some(gd) = &mut self.game_data {
