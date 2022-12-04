@@ -210,7 +210,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
             // run any mouse moves that acumulate from the above features
             //human.process_smooth_mouse();
-            features::shoot_speed_test(&mut keyboard, &mut human);
+            //features::shoot_speed_test(&mut keyboard, &mut human);
         }
         // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
         human.process_unclicks()?;
