@@ -1,11 +1,25 @@
 use config::Config;
 use lazy_static::lazy_static;
 use std::sync::RwLock;
-use log::info;
+use log::{info, debug};
+
+mod findpattern;
+pub use findpattern::*;
+
+use self::hconfig::HConfig;
+mod scanner;
+mod hconfig;
 
 lazy_static! {
     /// The csgo offset config values
-    static ref SETTINGS: RwLock<Config> = RwLock::new(init_offsets().unwrap());
+    static ref SETTINGS: RwLock<Config> = RwLock::new(init_offsets("csgo").unwrap());
+
+    /// The hazedumper signature config file
+    static ref SIG_CONFIG: RwLock<HConfig> = RwLock::new(load_hazed_config());
+    
+    //static ref SIGNATURES: RwLock<Config> = RwLock::new(init_offsets("config").unwrap());
+
+
 
     // Offsets
 
@@ -39,14 +53,15 @@ lazy_static! {
     pub static ref NET_VEC_VIEWOFFSET: u32 = load_offset("netvars.m_vecViewOffset");
     pub static ref NET_VEC_VELOCITY: u32 = load_offset("netvars.m_vecVelocity");
     pub static ref NET_FLAGS: u32 = load_offset("netvars.m_fFlags");
+
 }
 
 // TODO: also add a source in here from a passed in config arg
-fn init_offsets() -> std::result::Result<Config, Box<dyn std::error::Error>>{
+fn init_offsets(name: &str) -> std::result::Result<Config, Box<dyn std::error::Error>>{
     info!("initializing offsets config");
      let offsets = Config::builder()
-    .add_source(config::File::with_name("hazedumper/csgo").required(false))
-    .add_source(config::File::with_name("csgo").required(false))
+    .add_source(config::File::with_name(format!("hazedumper/{name}").as_str()).required(false))
+    .add_source(config::File::with_name(name).required(false))
     .build()?;
     Ok(offsets)
 }
@@ -55,4 +70,23 @@ fn load_offset(key: &str) -> u32 {
     let offset = SETTINGS.read().expect("error getting read lock on settings").get::<u32>(key).expect(format!("could not find offset in config file for key {}", key).as_str());
     info!("loaded offset {}: {}", key, offset);
     offset
+}
+
+// fn load_sig(key: &str) -> String {
+//     let offset = SIGNATURES.read().expect("error getting read lock on settings").get_string(key).expect(format!("could not find offset in config file for key {}", key).as_str());
+//     info!("loaded offset {}: {}", key, offset);
+//     offset
+// }
+
+fn load_hazed_config() -> HConfig {
+    let conf_path = "hazed/config.json";
+    debug!("Loading config: {}", conf_path);
+    hconfig::HConfig::load(&conf_path).expect("loading hazedumper signatures config")
+}
+
+// find dwSetClantag in engine.dll for testing
+pub fn test(data: &[u8]) {
+    let dw_set_clantag = "53 56 57 8B DA 8B F9 FF 15";
+    let index = find_pattern(data, dw_set_clantag);
+    println!("found {index:?}");
 }

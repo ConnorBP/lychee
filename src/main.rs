@@ -17,22 +17,9 @@ use ::std::{time::{Duration, SystemTime}, sync::mpsc};
 
 use human_interface::*;
 
-//use crate::features::recoil_replay;
+use utils::thread::*;
 
-/// Blocks thread until result returns success
-fn wait_for<T>(result:Result<T>, delay: Duration) -> T 
-{
-    let ret;
-    loop {
-        if let Ok(val) = result {
-            ret = val;
-            break;
-        }
-        info!("waiting for valid result");
-        std::thread::sleep(delay);
-    }
-    ret
-}
+//use crate::features::recoil_replay;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // parse args and act accordingly
@@ -91,8 +78,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     // info!("Dumping Engine Module");
     // let engine_buf = process
-    //     .read_raw(engineModule.base, engineModule.size as usize)
+    //     .read_raw(engine_module.base, engine_module.size as usize)
     //     .data_part()?;
+
+    // offsets::test(engine_buf.as_bytes());
 
     // init game data or panic if the process is closed before game data is valid
     let mut game_data = init_gamedata(&mut process, engine_module.base, client_module.base, map_tx.clone())?;
@@ -241,45 +230,6 @@ fn init_gamedata(proc: &mut (impl Process + MemoryView), engine_base: Address, c
     }
     Ok(gd_ret)
 }
-
-fn invalid_pause(name: &str) {
-    info!("{} invalid. Sleeping for a bit", name);
-    std::thread::sleep(Duration::from_secs(5));
-}
-
-trait SigScanner {
-    fn find_signature(
-        &mut self,
-        module: &ModuleInfo,
-        module_buf: &Vec<u8>,
-        signature: &str,
-        offset: usize,
-        extra: usize
-    );
-}
-
-// impl SigScanner for Win32Process<dyn Process + MemoryView> {
-//     fn find_signature(
-//         &mut self,
-//         module: &ModuleInfo,
-//         module_buf: &Vec<u8>,
-//         signature: &str,
-//         offset: usize,
-//         extra: usize
-//     ) {
-//         todo!()
-//     }
-// }
-
-// fn regex_patscan(module_buf: &[u8]) -> Option<usize> {
-//     use ::regex::bytes::*;
-//     // "A1 ? ? ? ? 33 D2 6A 00 6A 00 33 C9 89 B0" clientstate
-//     //"8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF"
-//     //let re = Regex::new("(?-u)\\x8D\\x34\\x85(?s:.)(?s:.)(?s:.)(?s:.)\\x89\\x15(?s:.)(?s:.)(?s:.)(?s:.)\\x8B\\x41\\x08\\x8B\\x48\\x04\\x83\\xF9\\xFF").expect("malformed marker sig");
-//     let re = Regex::new("(?-u)\\xA1(?s:.)(?s:.)(?s:.)(?s:.)\\x33\\xD2\\x6A\\x00\\x6A\\x00\\x33\\xC9\\x89\\xB0").expect("malformed marker sig");
-//     let buff_offs = re.find_iter(module_buf).next()?.start();
-//     Some(buff_offs as usize)
-// }
 
 fn parse_args() -> ArgMatches {
     Command::new("lyche")
