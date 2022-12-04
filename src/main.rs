@@ -42,8 +42,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     extract_args(&matches);
 
     let mut lyche = LycheProgram::init()?;
-    lyche.init_process()?;
-    lyche.run()?;
+    let mut proc = lyche.init_process()?;
+    lyche.run(&mut proc)?;
 
     Ok(())
 }
@@ -58,7 +58,7 @@ struct LycheProgram<'a> {
     os: Win32Kernel<CachedPhysicalMemory<'a, PciLeech, cache::TimedCacheValidator>, CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>>,
     keyboard: Win32Keyboard<VirtualDma<CachedPhysicalMemory<'a, PciLeech, cache::TimedCacheValidator>, CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>, Win32VirtualTranslate>>,
     //process: Option<Win32Process<CachedPhysicalMemory<'a, PciLeech, cache::TimedCacheValidator>, CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>, Win32VirtualTranslate>>,
-    process: Option<Box<dyn MutProcess + 'a>>,
+    //process: Option<Box<dyn MutProcess + 'a>>,
     client_module: Option<ModuleInfo>,
     engine_module: Option<ModuleInfo>,
     game_data: Option<GameData>,
@@ -72,7 +72,7 @@ struct LycheProgram<'a> {
     bhop_sus: SusBhop,
 }
 
-impl LycheProgram<'_> {
+impl LycheProgram<'static> {
     fn init() -> std::result::Result<Self, Box<dyn std::error::Error>> {
 
         let (tx, map_tx) = render::start_window_render()?;
@@ -110,7 +110,7 @@ impl LycheProgram<'_> {
             map_tx,
             os,
             keyboard,
-            process: None,
+            //process: None,
             client_module: None,
             engine_module: None,
             game_data: None,
@@ -126,7 +126,7 @@ impl LycheProgram<'_> {
         })
     }
 
-    fn init_process<'a>(&'a mut self) -> std::result::Result<(), Box<dyn std::error::Error + 'a>> {
+    fn init_process<'a>(&'a mut self) -> std::result::Result<Win32Process<Fwd<&mut CachedPhysicalMemory<PciLeech, cache::TimedCacheValidator>>, Fwd<&mut CachedVirtualTranslate<DirectTranslate, cache::TimedCacheValidator>>, Win32VirtualTranslate>, Box<dyn std::error::Error + 'a>> {
         // get process info from victim computer
 
         let mut ret_proc;
@@ -134,7 +134,7 @@ impl LycheProgram<'_> {
             info!("Waiting for process handle.");
             std::thread::sleep(std::time::Duration::from_secs(5));
             
-            if let Ok(proc) = self.os.process_by_name("csgo.exe") {
+            if let Ok(proc) = self.os.clone().process_by_name("csgo.exe") {
                 ret_proc = proc;
                 info!("process found. Waiting for modules to load.");
 
@@ -160,13 +160,11 @@ impl LycheProgram<'_> {
                 break;
             }
         }
-        self.process = Some(Box::new(ret_proc));
-
-        info!("{:?}", self.game_data);
-        Ok(())
+        //self.process = Some(Box::new(ret_proc));
+        Ok(ret_proc)
     }
 
-    fn run(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn run(&mut self, proc: &mut (impl Process + MemoryView)) -> std::result::Result<(), Box<dyn std::error::Error>> {
         'mainloop : loop {
             // check if process is valid
             let delta = match self.time.elapsed() {
@@ -175,7 +173,7 @@ impl LycheProgram<'_> {
             };
             self.time = SystemTime::now();
     
-            if self.process.is_none() || self.process.as_mut().unwrap().state().is_dead() {
+            if proc.state().is_dead() {
                 // if process dies set connected to false
                 let framedata = render::FrameData{
                     connected: false,
@@ -190,7 +188,7 @@ impl LycheProgram<'_> {
             }
             
             if let Some(gd) = &mut self.game_data {
-                if gd.load_data(self.process.as_mut().unwrap(), self.client_module.as_ref().unwrap().base).is_err() {
+                if gd.load_data(proc, self.client_module.as_ref().unwrap().base).is_err() {
                     continue 'mainloop;
                 }
 
@@ -227,7 +225,7 @@ impl LycheProgram<'_> {
                     #[cfg(feature = "aimbot")]
                     aimbot.aimbot(&mut keyboard, &mut human, &game_data);
                     //atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
-                    self.atrigger.update_data_then_trigger(&mut self.keyboard, &mut self.human, gd, delta, self.process.as_mut().unwrap());
+                    self.atrigger.update_data_then_trigger(&mut self.keyboard, &mut self.human, gd, delta, proc);
                     //features::incross_trigger(&mut keyboard, &mut human, &game_data);
                     // collect recoil data for weapons
                     //recoil_data.process_frame(&game_data, false);
@@ -244,7 +242,7 @@ impl LycheProgram<'_> {
 
             } else {
                 // init gamedata
-                if let Ok(gd) = init_gamedata(self.process.as_mut().unwrap(), self.engine_module.as_ref().unwrap().base, self.client_module.as_ref().unwrap().base, self.map_tx.clone()) {
+                if let Ok(gd) = init_gamedata(proc, self.engine_module.as_ref().unwrap().base, self.client_module.as_ref().unwrap().base, self.map_tx.clone()) {
                     self.game_data = Some(gd);
                 } else {
                     continue 'mainloop;
