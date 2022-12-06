@@ -77,8 +77,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         modules.insert("engine.dll".to_string(), engine_module.to_owned());
         let mut scanner = Scanner::init_with_info(modules);
         let sigs = scanner.scan_signatures(&mut process);
-
-
+        let out_path = "hazedumper/csgo";
+        //let out_path = "csgo";
+        let results = offsets::output::Results::new(sigs, None);
+        results.dump_all(&out_path).expect("Dump results");
     }
 
     //let bat = process.batcher();
