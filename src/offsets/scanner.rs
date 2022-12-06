@@ -188,6 +188,47 @@ impl Scanner {
             Err(ScanError::ModuleNotFound)
         }
     }
+
+    /// Scan the netvars from the config and return a `Option<Map<i32>>`.
+    pub fn scan_netvars(&mut self, sigs: &Map<usize>) -> Option<Map<isize>> {
+        let conf = SIG_CONFIG
+                    .read()
+                    .expect("getting lock on sig config");
+        info!("Starting netvar scanning: {} items", conf.netvars.len());
+
+        let client_info = self.module_info.get("client.dll");
+        let client_bytes = self.module_bytes.get("client.dll");
+
+        if let Some(info) = client_info {
+            if let Some(bytes) = client_bytes {
+                let first = sigs.get("dwGetAllClasses")?;
+                let netvars = crate::offsets::games::csgo::NetvarManager::new(*first, info, bytes)?;
+
+                let mut res = BTreeMap::new();
+                for netvar in &conf.netvars {
+                    match netvars.get_offset(&netvar.table, &netvar.prop) {
+                        Some(o) => {
+                            res.insert(netvar.name.clone(), o as isize + netvar.offset);
+                            info!("Found netvar: {} => {:#X}", netvar.name, o);
+                        }
+                        None => warn!("{} netvar failed!", netvar.name),
+                    };
+                }
+
+                info!(
+                    "Finished netvar scanning: {}/{} items successful",
+                    res.len(),
+                    conf.netvars.len()
+                );
+                Some(res)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
 }
 
 

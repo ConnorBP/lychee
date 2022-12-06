@@ -77,9 +77,12 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         modules.insert("engine.dll".to_string(), engine_module.to_owned());
         let mut scanner = Scanner::init_with_info(modules);
         let sigs = scanner.scan_signatures(&mut process);
+        let netvars = scanner.scan_netvars(&sigs);
+
+        // write out the results to disk
         let out_path = "hazedumper/csgo";
         //let out_path = "csgo";
-        let results = offsets::output::Results::new(sigs, None);
+        let results = offsets::output::Results::new(sigs, netvars);
         results.dump_all(&out_path).expect("Dump results");
     }
 

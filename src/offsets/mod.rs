@@ -10,6 +10,8 @@ use self::hconfig::HConfig;
 pub mod scanner;
 pub mod hconfig;
 pub mod output;
+pub mod games;
+pub mod helpers;
 
 lazy_static! {
     /// The csgo offset config values
