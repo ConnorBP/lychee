@@ -21,6 +21,8 @@
 // SOFTWARE.
 
 extern crate regex;
+use log::warn;
+
 use self::regex::bytes::Regex;
 
 /// Enables the user to generate a byte regex out of the normal signature
@@ -36,7 +38,11 @@ pub fn generate_regex(raw: &str) -> Option<Regex> {
         .collect::<Vec<_>>()
         .join("");
     res.insert_str(0, "(?-u)");
-    Regex::new(&res).ok()
+    let test = Regex::new(&res);
+    if test.is_err() {
+        warn!("failed to generate regex for pattern {}", raw);
+    }
+    test.ok()
 }
 
 /// Find pattern.

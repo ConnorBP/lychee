@@ -25,6 +25,7 @@ use offsets::scanner::Scanner;
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // parse args and act accordingly
     let matches = parse_args();
+    let scan_sigs = matches.get_one::<bool>("scan").copied().unwrap_or(false);
     extract_args(&matches);
 
     let (tx, map_tx) = render::start_window_render()?;
@@ -70,11 +71,15 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
     info!("Got Engine Module:\n {:?}", engine_module);
 
-    let mut modules = BTreeMap::new();
-    modules.insert("client.dll".to_string(), client_module.to_owned());
-    modules.insert("engine.dll".to_string(), engine_module.to_owned());
-    let mut scanner = Scanner::init_with_info(modules);
-    scanner.scan_signatures(&mut process);
+    if scan_sigs {
+        let mut modules = BTreeMap::new();
+        modules.insert("client.dll".to_string(), client_module.to_owned());
+        modules.insert("engine.dll".to_string(), engine_module.to_owned());
+        let mut scanner = Scanner::init_with_info(modules);
+        let sigs = scanner.scan_signatures(&mut process);
+
+
+    }
 
     //let bat = process.batcher();
 
@@ -243,6 +248,14 @@ fn parse_args() -> ArgMatches {
         .version(crate_version!())
         .author(crate_authors!())
         .arg(Arg::new("verbose").short('v').multiple_occurrences(true))
+        .arg(
+            Arg::new("scan")
+                .long("scan")
+                .short('s')
+                .action(clap::ArgAction::SetTrue)
+                .required(false)
+                .help("if provided then signatures from config.json will be scanned and offsets saved before running")
+        )
         // .arg(
         //     Arg::new("connector")
         //         .long("connector")

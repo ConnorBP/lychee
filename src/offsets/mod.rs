@@ -9,6 +9,7 @@ pub use findpattern::*;
 use self::hconfig::HConfig;
 pub mod scanner;
 pub mod hconfig;
+pub mod output;
 
 lazy_static! {
     /// The csgo offset config values
@@ -85,8 +86,8 @@ fn load_hazed_config() -> HConfig {
 }
 
 // find dwSetClantag in engine.dll for testing
-pub fn test(data: &[u8]) {
-    let dw_set_clantag = "53 56 57 8B DA 8B F9 FF 15";
-    let index = find_pattern(data, dw_set_clantag);
-    println!("found {index:?}");
-}
+// pub fn test(data: &[u8]) {
+//     let dw_set_clantag = "53 56 57 8B DA 8B F9 FF 15";
+//     let index = find_pattern(data, dw_set_clantag);
+//     println!("found {index:?}");
+// }
