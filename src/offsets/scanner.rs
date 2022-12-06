@@ -2,6 +2,7 @@
 // for use with memflow-rs
 
 use ::std::collections::BTreeMap;
+use ::std::convert::TryInto;
 use ::std::time::Duration;
 
 use failure::Fail;
@@ -81,11 +82,14 @@ impl Scanner {
             .map_or_else(
                 || {
                     info!("Dumping {}",sig.module);
-                    let mod_buf = proc
+                    let mod_buff = proc
                         .read_raw(module_info.base, module_info.size as usize)
-                        .data_part().map_or(None, |d| Some(d));
+                        .data().map_or(None, |d| Some(d));
                     write_bytes_to_map = true;
-                    mod_buf
+                    if mod_buff.is_none() {
+                        debug!("Failed to dump module {}", sig.module);
+                    }
+                    mod_buff
                 },
                 |d| Some(d.to_vec())// this will copy the whole ass module dump every signature scan. Kill me please fix this
             );
@@ -94,41 +98,49 @@ impl Scanner {
             if write_bytes_to_map {
                 self.module_bytes.insert(sig.module.to_owned(), module_bytes.clone());
             }
-            let mut addr = find_pattern(module_bytes, sig.pattern.as_str()).ok_or(ScanError::ModuleNotFound)?;
+            let mut addr = find_pattern(module_bytes, sig.pattern.as_str()).ok_or(ScanError::PatternNotFound)?;
             debug!(
                 "Pattern found at: {:#X} (+ base = {:#X})",
                 addr,
                 module_info.base + addr
             );
+
             for (i, o) in sig.offsets.iter().enumerate() {
                 debug!("Offset #{}: ptr: {:#X} offset: {:#X}", i, addr, o);
 
                 let pos = (addr as isize).wrapping_add(*o) as usize;
-                let data = module_bytes.get(pos).ok_or_else(|| {
-                    debug!("WARN OOB - ptr: {:#X} module size: {:#X}", pos, module_info.size);
-                    ScanError::OffsetOutOfBounds
-                })?;
+                // let data_u32 = module_bytes.get(pos).ok_or_else(|| {
+                //     debug!("WARN OOB - ptr: {:#X} module size: {:#X}", pos, module_info.size);
+                //     ScanError::OffsetOutOfBounds
+                // })?;
+                // let data_u64 = module_bytes.get(pos).ok_or_else(|| {
+                //     debug!("WARN OOB - ptr: {:#X} module size: {:#X}", pos, module_info.size);
+                //     ScanError::OffsetOutOfBounds
+                // })?;
 
+                //let arch = module_info.arch;
                 let arch = proc.info().proc_arch;
                 let sys_arch = proc.info().sys_arch;
 
                 let is_wow64 = match arch {
-                    ArchitectureIdent::AArch64(p) => true,
-                    ArchitectureIdent::X86(b,e) => {
+                    ArchitectureIdent::AArch64(_) => false,
+                    ArchitectureIdent::X86(32,_) => {
                         match sys_arch {
-                            ArchitectureIdent::AArch64(p) => true,
+                            ArchitectureIdent::AArch64(_) => true,
+                            ArchitectureIdent::X86(64,_) => true,
                             _ => false,
                         }
                     },
+                    ArchitectureIdent::X86(64,_) => false,
                     _ => false,
                 };
 
-
+                debug!("wow64 is {} for {}", is_wow64, module_info.name);
                 let tmp = if is_wow64 {
-                    let raw: u32 = unsafe { std::mem::transmute_copy(data) };
+                    let raw: u32 = u32::from_le_bytes(module_bytes[pos..pos+4].try_into().map_err(|_|ScanError::OffsetOutOfBounds)?);//= unsafe { std::mem::transmute(data) };
                     raw as usize
                 } else {
-                    let raw: u64 = unsafe { std::mem::transmute_copy(data) };
+                    let raw: u64 = u64::from_le_bytes(module_bytes[pos..pos+8].try_into().map_err(|_|ScanError::OffsetOutOfBounds)?);
                     raw as usize
                 };
 
@@ -144,6 +156,7 @@ impl Scanner {
                 addr = (addr as isize).wrapping_add(sig.rip_offset) as usize;
                 debug!("rip_relative: addr = {:#X}", addr);
         
+                debug!("getting raw");
                 let rip: u32 = get_raw(module_bytes, module_info.base.to_umem() as usize, addr, true)
                     .ok_or(ScanError::RIPRelativeFailed)?;
         
@@ -171,6 +184,7 @@ impl Scanner {
         
             Ok(addr)
         } else {
+            debug!("Module not found at get_moudle_bytes");
             Err(ScanError::ModuleNotFound)
         }
     }
