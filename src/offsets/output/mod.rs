@@ -84,6 +84,18 @@ impl Results {
         }
     }
 
+    pub fn update(&mut self, signatures: &mut Map<usize>, netvars: &mut Option<Map<isize>>) {
+        self.timestamp = Utc::now();
+        self.signatures.append(signatures);
+        if let Some(net) = netvars {
+            if let Some(old_net) = &mut self.netvars {
+                old_net.append(net);
+            } else {
+                self.netvars = netvars.clone();
+            }
+        }
+    }
+
     pub fn dump_all(&self, filename: &str) -> ::std::io::Result<()> {
         let mut out_json = File::create(format!("{}.json", filename))?;
         let mut out_min_json = File::create(format!("{}.min.json", filename))?;
@@ -105,5 +117,11 @@ impl Results {
         out_vbnet.dump()?;
 
         Ok(())
+    }
+
+    pub fn load_from(filename: &str) -> ::std::io::Result<Self> {
+        let in_json = File::open(format!("{}.json", filename))?;
+        let data: Self = serde_json::from_reader(in_json)?;
+        Ok(data)
     }
 }

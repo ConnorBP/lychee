@@ -76,14 +76,17 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         modules.insert("client.dll".to_string(), client_module.to_owned());
         modules.insert("engine.dll".to_string(), engine_module.to_owned());
         let mut scanner = Scanner::init_with_info(modules);
-        let sigs = scanner.scan_signatures(&mut process);
-        let netvars = scanner.scan_netvars(&sigs);
+        let mut sigs = scanner.scan_signatures(&mut process);
+        let mut netvars = scanner.scan_netvars(&sigs);
 
         // write out the results to disk
         let out_path = "hazedumper/csgo";
         //let out_path = "csgo";
-        let results = offsets::output::Results::new(sigs, netvars);
-        results.dump_all(&out_path).expect("Dump results");
+        let mut original_results = offsets::output::Results::load_from(&out_path).unwrap_or(offsets::output::Results::new(sigs.clone(), netvars.clone()));
+        original_results.update(&mut sigs, &mut netvars);
+        original_results.dump_all(&out_path).expect("Dump results");
+        // let results = offsets::output::Results::new(sigs, netvars);
+        // results.dump_all(&out_path).expect("Dump results");
     }
 
     //let bat = process.batcher();
