@@ -30,12 +30,12 @@ pub fn generate_regex(raw: &str) -> Option<Regex> {
         .to_string()
         .split_whitespace()
         .map(|x| match &x {
-            &"?" => ".".to_string(),
+            &"?" => "(?s:.)".to_string(),
             x => format!("\\x{}", x),
         })
         .collect::<Vec<_>>()
         .join("");
-    res.insert_str(0, "(?s-u)");
+    res.insert_str(0, "(?-u)");
     Regex::new(&res).ok()
 }
 
