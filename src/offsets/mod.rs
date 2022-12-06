@@ -7,8 +7,8 @@ mod findpattern;
 pub use findpattern::*;
 
 use self::hconfig::HConfig;
-mod scanner;
-mod hconfig;
+pub mod scanner;
+pub mod hconfig;
 
 lazy_static! {
     /// The csgo offset config values
@@ -79,7 +79,7 @@ fn load_offset(key: &str) -> u32 {
 // }
 
 fn load_hazed_config() -> HConfig {
-    let conf_path = "hazed/config.json";
+    let conf_path = "hazedumper/config.json";
     debug!("Loading config: {}", conf_path);
     hconfig::HConfig::load(&conf_path).expect("loading hazedumper signatures config")
 }

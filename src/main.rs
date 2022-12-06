@@ -13,11 +13,12 @@ use log::{info, Level};
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use render::MapData;
-use ::std::{time::{Duration, SystemTime}, sync::mpsc};
+use ::std::{time::{Duration, SystemTime}, sync::mpsc, collections::BTreeMap};
 
 use human_interface::*;
 
 use utils::thread::*;
+use offsets::scanner::Scanner;
 
 //use crate::features::recoil_replay;
 
@@ -68,6 +69,12 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     //let clientDataSect = process.module_section_by_name(&clientModule, ".data")?;
     let mut engine_module = wait_for(process.module_by_name("engine.dll"), Duration::from_secs(5));
     info!("Got Engine Module:\n {:?}", engine_module);
+
+    let mut modules = BTreeMap::new();
+    modules.insert("client.dll".to_string(), client_module.to_owned());
+    modules.insert("engine.dll".to_string(), engine_module.to_owned());
+    let mut scanner = Scanner::init_with_info(modules);
+    scanner.scan_signatures(&mut process);
 
     //let bat = process.batcher();
 
