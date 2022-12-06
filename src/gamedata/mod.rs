@@ -46,6 +46,7 @@ pub struct GameData {
 impl GameData {
     pub fn new(proc: &mut (impl Process + MemoryView), engine_base: Address, client_base: Address, map_tx: mpsc::Sender<MapData>) -> std::result::Result<Self, Box<dyn std::error::Error>> {
         let client_state = proc.read_addr32(engine_base.add(*DW_CLIENTSTATE)).data()?;
+        info!("current client state address (non relative): {:?}", client_state);
         //let get_local_idx = proc.read::<u32>(client_state.add(*DW_CLIENTSTATE_GETLOCALPLAYER)).data()?;
 
         if !client_state.is_valid() || client_state.is_null() {
