@@ -1,6 +1,6 @@
 [package]
 name = "lyche"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["segfault <segfault#1337>"]
 edition = "2018"
 resolver = "2"
@@ -57,6 +57,9 @@ cgmath = "0.18"
 # uncomment if you wanna run performance traces on the code
 # [profile.release]
 # debug = true
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.11"
 
 [features]
 bhop_sus = []
