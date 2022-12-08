@@ -38,10 +38,11 @@ format-bytes = "0.3"
 config = { version = "^0.13", features = ["toml"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_yaml = "0.8.11"
+serde_yaml = "0.9"
 toml = "0.5.6"
 chrono = { version = "0.4", features = ["serde"] }
 nom = "4.2.3"
+notify = "5.0"
 
 # read valve vdf key value format for map info
 keyvalues-parser = "0.1.0"

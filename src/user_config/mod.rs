@@ -3,7 +3,10 @@ use log::info;
 use serde::{Serialize, Deserialize};
 
 mod default_config;
+pub mod config_watcher;
+
 use default_config::DefaultConfig;
+
 
 
 /// Loads the user config from a given location or initializes it if it does not exist

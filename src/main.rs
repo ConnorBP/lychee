@@ -24,11 +24,13 @@ use offsets::scanner::Scanner;
 //use crate::features::recoil_replay;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    user_config::init_user_config("user_config")?;
     // parse args and act accordingly
     let matches = parse_args();
     let scan_sigs = matches.get_one::<bool>("scan").copied().unwrap_or(false);
     extract_args(&matches);
+
+    let mut config = user_config::init_user_config("user_config")?;
+    let config_watcher = user_config::config_watcher::ConfigWatcher::init("user_config")?;
 
     let (tx, map_tx) = render::start_window_render()?;
 
@@ -129,6 +131,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         };
         time = SystemTime::now();
 
+        // reload config values if file was changed
+        config_watcher.watch(&mut config);
+
         if process.state().is_dead() {
             // if process dies set connected to false
             let framedata = render::FrameData{
@@ -212,7 +217,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             //atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
-            atrigger.update_data_then_trigger(&mut keyboard, &mut human, &mut game_data, delta, &mut process);
+            if config.get::<bool>("trigger.enabled").unwrap_or(false) {
+                atrigger.update_data_then_trigger(&mut keyboard, &mut human, &mut game_data, delta, &mut process);
+            }
             //features::incross_trigger(&mut keyboard, &mut human, &game_data);
             // collect recoil data for weapons
             //recoil_data.process_frame(&game_data, false);
