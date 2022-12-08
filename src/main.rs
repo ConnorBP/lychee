@@ -6,6 +6,7 @@ mod features;
 mod render;
 mod human_interface;
 mod bsp_parser;
+mod user_config;
 
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
 use gamedata::GameData;
@@ -23,6 +24,7 @@ use offsets::scanner::Scanner;
 //use crate::features::recoil_replay;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    user_config::init_user_config("user_config")?;
     // parse args and act accordingly
     let matches = parse_args();
     let scan_sigs = matches.get_one::<bool>("scan").copied().unwrap_or(false);

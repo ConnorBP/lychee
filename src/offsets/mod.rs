@@ -1,5 +1,6 @@
-use config::Config;
+use config::{Config, File, Source};
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 use std::sync::RwLock;
 use log::{info, debug};
 
@@ -59,12 +60,12 @@ lazy_static! {
 
 }
 
-// TODO: also add a source in here from a passed in config arg
+/// Loads the hazedumper offsets from a config file of the given location
 fn init_offsets(name: &str) -> std::result::Result<Config, Box<dyn std::error::Error>>{
     info!("initializing offsets config");
      let offsets = Config::builder()
-    .add_source(config::File::with_name(format!("hazedumper/{name}").as_str()).required(false))
-    .add_source(config::File::with_name(name).required(false))
+    .add_source(config::File::with_name(format!("hazedumper/{name}").as_str()).required(true))
+    //.add_source(config::File::with_name(name).required(false))
     .build()?;
     Ok(offsets)
 }

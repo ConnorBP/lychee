@@ -1,0 +1,19 @@
+{
+  "radar": {
+    "enabled": true,
+    "show_usernames": true,
+    "camera_type": "Static"
+  },
+  "trigger": {
+    "enabled": true,
+    "visibility_check": true,
+    "delay_ms": 0,
+    "keybind": 6
+  },
+  "aimbot": {
+    "enabled": false,
+    "visibility_check": false,
+    "delay_ms": 0
+  },
+  "bhop_enabled": false
+}
