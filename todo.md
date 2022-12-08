@@ -14,10 +14,11 @@
         - tried this and broke aimbot. TODO: FIX AIMBOT
 
 # feature improvements
-    - pattern scanning
-    - netvar manager
-    - convar manager
+    - pattern scanning CHECK
     - other internal features / future proofing
+        - convar manager
+        - netvar manager CHECK
+        - interface manager
     - BSP parsing vischeck tracing
     - aimbot
     - reoil recorder for more legit looking recoil
