@@ -1,19 +1,37 @@
 {
+  "keybinds": {
+    "trigger": 6
+  },
   "radar": {
     "enabled": true,
     "show_usernames": true,
     "camera_type": "Static"
   },
-  "trigger": {
-    "enabled": true,
+  "bhop_enabled": false,
+  "trigger_enabled": true,
+  "trigger_defaults": {
     "visibility_check": true,
     "delay_ms": 0,
-    "keybind": 6
+    "max_inaccuracy": 0.065,
+    "max_velocity": 5.0
   },
-  "aimbot": {
-    "enabled": false,
+  "aimbot_enabled": false,
+  "aimbot_defaults": {
     "visibility_check": false,
     "delay_ms": 0
   },
-  "bhop_enabled": false
+  "weapons": {
+    "Ak47": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 0,
+        "max_inaccuracy": 0.065,
+        "max_velocity": 1.0
+      }
+    }
+  }
 }

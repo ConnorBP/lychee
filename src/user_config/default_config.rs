@@ -1,8 +1,10 @@
 use std::fmt;
 
-use config::Config;
+use config::{Config, Map};
 use log::info;
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, Serializer, ser::SerializeMap};
+
+use crate::datatypes::game::WeaponId;
 
 #[derive(Serialize,Deserialize, Debug, Clone, Default)]
 pub enum CameraType {
@@ -47,34 +49,91 @@ struct Radar {
 
 #[derive(Serialize,Deserialize, Debug, Clone, Default)]
 struct Trigger {
-    enabled: bool,
     visibility_check: bool,
     delay_ms: u32,
-    keybind: u32,
+    max_inaccuracy: f32,
+    max_velocity: f32,
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone, Default)]
 struct AimBot {
-    enabled: bool,
     visibility_check: bool,
     delay_ms: u32,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
-pub struct DefaultConfig {
-    radar: Radar,
-    trigger: Trigger,
+#[derive(Serialize,Deserialize, Debug, Clone, Default)]
+struct WeaponConfig {
     aimbot: AimBot,
+    trigger: Trigger,
+}
+
+#[derive(Serialize,Deserialize, Debug, Clone)]
+struct KeyBindings {
+    trigger: u32,
+}
+
+impl Default for KeyBindings {
+    fn default() -> Self {
+        Self { trigger: 0x06 }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct WeaponConfigList(Map<WeaponId, WeaponConfig>);
+
+#[derive(Serialize, Debug, Clone)]
+pub struct DefaultConfig {
+    keybinds: KeyBindings,
+    radar: Radar,
     bhop_enabled: bool,
+    trigger_enabled: bool,
+    trigger_defaults: Trigger,
+    aimbot_enabled: bool,
+    aimbot_defaults: AimBot,
+    weapons: WeaponConfigList,
+}
+
+impl Serialize for WeaponConfigList {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map = serializer.serialize_map(Some(self.0.len()))?;
+        for (k, v) in &self.0 {
+            map.serialize_entry(&k.to_string(), &v)?;
+        }
+        map.end()
+    }
 }
 
 impl Default for DefaultConfig {
     fn default() -> Self {
-        Self { 
-            radar: Radar { enabled: true, show_usernames: true, camera_type: Default::default() },
+
+        let mut weapons = Map::new();
+        weapons.insert(WeaponId::Ak47, WeaponConfig {
             aimbot: Default::default(),
-            trigger: Trigger { enabled: true, visibility_check: true, delay_ms: 0, keybind: 0x06 },
+            trigger: Trigger { 
+                visibility_check: true,
+                delay_ms: 0,
+                max_inaccuracy: 0.065,
+                max_velocity: 1.,
+            },
+        });
+
+        Self { 
+            keybinds: Default::default(),
+            radar: Radar { enabled: true, show_usernames: true, camera_type: Default::default() },
             bhop_enabled: false,
+            aimbot_enabled: false,
+            trigger_enabled: true,
+            aimbot_defaults: Default::default(),
+            trigger_defaults: Trigger { 
+                visibility_check: true,
+                delay_ms: 0,
+                max_inaccuracy: 0.065,
+                max_velocity: 5.,
+            },
+            weapons: WeaponConfigList(weapons),
         }
     }
 }
