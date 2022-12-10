@@ -1,7 +1,6 @@
 use std::fmt;
 
-use config::{Config, Map};
-use log::info;
+use config::Map;
 use serde::{Serialize, Deserialize, Serializer, ser::SerializeMap};
 
 use crate::datatypes::game::WeaponId;
@@ -48,28 +47,28 @@ struct Radar {
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone, Default)]
-struct Trigger {
-    visibility_check: bool,
-    delay_ms: u32,
-    max_inaccuracy: f32,
-    max_velocity: f32,
+pub struct Trigger {
+    pub visibility_check: bool,
+    pub delay_ms: u32,
+    pub max_inaccuracy: f32,
+    pub max_velocity: f32,
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone, Default)]
-struct AimBot {
-    visibility_check: bool,
-    delay_ms: u32,
+pub struct AimBot {
+    pub visibility_check: bool,
+    pub delay_ms: u32,
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone, Default)]
-struct WeaponConfig {
-    aimbot: AimBot,
-    trigger: Trigger,
+pub struct WeaponConfig {
+    pub aimbot: AimBot,
+    pub trigger: Trigger,
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
-struct KeyBindings {
-    trigger: u32,
+pub struct KeyBindings {
+    pub trigger: i32,
 }
 
 impl Default for KeyBindings {
@@ -116,7 +115,65 @@ impl Default for DefaultConfig {
                 visibility_check: true,
                 delay_ms: 0,
                 max_inaccuracy: 0.065,
+                max_velocity: 90.,
+            },
+        });
+        weapons.insert(WeaponId::Awp, WeaponConfig {
+            aimbot: Default::default(),
+            trigger: Trigger { 
+                visibility_check: true,
+                delay_ms: 5,
+                max_inaccuracy: 0.045,
                 max_velocity: 1.,
+            },
+        });
+        weapons.insert(WeaponId::Mag7, WeaponConfig {
+            aimbot: Default::default(),
+            trigger: Trigger { 
+                visibility_check: true,
+                delay_ms: 0,
+                max_inaccuracy: 8.,
+                max_velocity: 380.,
+            },
+        });
+
+        weapons.insert(WeaponId::Glock, WeaponConfig {
+            aimbot: Default::default(),
+            trigger: Trigger { 
+                visibility_check: true,
+                delay_ms: 0,
+                max_inaccuracy: 0.7,
+                max_velocity: 320.,
+            },
+        });
+
+        weapons.insert(WeaponId::Usps, WeaponConfig {
+            aimbot: Default::default(),
+            trigger: Trigger { 
+                visibility_check: true,
+                delay_ms: 0,
+                max_inaccuracy: 0.7,
+                max_velocity: 200.,
+            },
+        });
+
+        weapons.insert(WeaponId::Taser, WeaponConfig {
+            aimbot: Default::default(),
+            trigger: Trigger { 
+                visibility_check: false,
+                delay_ms: 0,
+                max_inaccuracy: 99.,
+                max_velocity: 400.,
+            },
+        });
+
+        weapons.insert(WeaponId::Knife, WeaponConfig {
+            aimbot: Default::default(),
+            trigger: Trigger { 
+                visibility_check: false,
+                delay_ms: 0,
+                max_inaccuracy: 99.,
+                max_velocity: 400.,
             },
         });
 
@@ -131,7 +188,7 @@ impl Default for DefaultConfig {
                 visibility_check: true,
                 delay_ms: 0,
                 max_inaccuracy: 0.065,
-                max_velocity: 5.,
+                max_velocity: 80.,
             },
             weapons: WeaponConfigList(weapons),
         }

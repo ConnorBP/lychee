@@ -2,7 +2,7 @@ use config::Config;
 use log::info;
 use serde::{Serialize, Deserialize};
 
-mod default_config;
+pub mod default_config;
 pub mod config_watcher;
 
 use default_config::DefaultConfig;

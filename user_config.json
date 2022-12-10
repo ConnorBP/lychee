@@ -13,7 +13,7 @@
     "visibility_check": true,
     "delay_ms": 0,
     "max_inaccuracy": 0.065,
-    "max_velocity": 5.0
+    "max_velocity": 80.0
   },
   "aimbot_enabled": false,
   "aimbot_defaults": {
@@ -21,6 +21,66 @@
     "delay_ms": 0
   },
   "weapons": {
+    "Awp": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 5,
+        "max_inaccuracy": 0.045,
+        "max_velocity": 1.0
+      }
+    },
+    "Glock": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 0,
+        "max_inaccuracy": 0.7,
+        "max_velocity": 320.0
+      }
+    },
+    "Mag7": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 0,
+        "max_inaccuracy": 8.0,
+        "max_velocity": 380.0
+      }
+    },
+    "Taser": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": false,
+        "delay_ms": 0,
+        "max_inaccuracy": 99.0,
+        "max_velocity": 400.0
+      }
+    },
+    "Usps": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 0,
+        "max_inaccuracy": 0.7,
+        "max_velocity": 200.0
+      }
+    },
     "Ak47": {
       "aimbot": {
         "visibility_check": false,
@@ -30,7 +90,19 @@
         "visibility_check": true,
         "delay_ms": 0,
         "max_inaccuracy": 0.065,
-        "max_velocity": 1.0
+        "max_velocity": 90.0
+      }
+    },
+    "Knife": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": false,
+        "delay_ms": 0,
+        "max_inaccuracy": 99.0,
+        "max_velocity": 400.0
       }
     }
   }

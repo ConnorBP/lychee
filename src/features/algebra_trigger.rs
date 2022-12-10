@@ -1,6 +1,6 @@
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
-use crate::{utils::math::get_dist_from_crosshair,gamedata::GameData, human_interface::HumanInterface, offsets::DW_CLIENTSTATE_VIEWANGLES};
+use crate::{utils::math::get_dist_from_crosshair,gamedata::GameData, human_interface::HumanInterface, offsets::DW_CLIENTSTATE_VIEWANGLES, user_config::default_config::Trigger};
 use super::zuesknife;
 
 // const PREFIRE_FACTOR: f64 = 5.;
@@ -17,23 +17,23 @@ impl AlgebraTrigger {
     }
 
     /// this updates positions of player and target to be as fresh as possible before running trigger calc
-    pub fn update_data_then_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &mut GameData, delta: f64, proc: &mut (impl Process + MemoryView)) {
+    pub fn update_data_then_trigger(&mut self, human: &mut HumanInterface, game_data: &mut GameData, config: &Trigger, delta: f64, proc: &mut (impl Process + MemoryView)) {
         if let Some(closest_player) = game_data.entity_list.closest_player {
             {
                 let mut bat = proc.batcher();
                 crate::gamedata::entitylist::update_bones(&mut bat, &mut game_data.entity_list.entities[closest_player]);
                 bat.read_into(game_data.client_state + *DW_CLIENTSTATE_VIEWANGLES, &mut game_data.local_player.view_angles);
             } // drops batcher to commit it
-            self.algebra_trigger(kb, human, game_data, delta);
+            self.algebra_trigger(human, game_data, config, delta);
         }
     }
-    pub fn algebra_trigger(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &GameData, delta: f64) {
-        if !kb.is_down(0x06) {return}
+
+    pub fn algebra_trigger(&mut self, human: &mut HumanInterface, game_data: &GameData, config: &Trigger, delta: f64) {
         //println!("Delta FPS: {}", 1./delta);
         if game_data.local_player.shots_fired > 1 {return}
-        if game_data.local_player.aimpunch_angle.magnitude() > 0.065 {return} // force acuracy
-        //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
-        //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
+        if game_data.local_player.aimpunch_angle.magnitude() > config.max_inaccuracy {return} // force acuracy
+        //println!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
+        if game_data.local_player.vec_velocity.magnitude() > config.max_velocity {return}
         if let Some(closest_player) = game_data.entity_list.closest_player {
             if game_data.entity_list.get_team_for(closest_player).unwrap_or(game_data.local_player.team_num) == game_data.local_player.team_num {return}
     

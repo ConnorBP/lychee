@@ -44,7 +44,8 @@ impl ConfigWatcher {
 
 
     /// hot reload the config if it gets changed
-    pub fn watch(&self, config_ref: &mut Config) {
+    /// returns true if config was reloaded or false otherwise
+    pub fn watch(&self, config_ref: &mut Config) -> bool {
         match self.rx.try_recv() {
             Ok(Ok(Event {
                 kind: notify::event::EventKind::Modify(_),
@@ -52,9 +53,16 @@ impl ConfigWatcher {
             })) => {
                 println!(" * user config file changed; refreshing configuration ...");
                 //config_ref.refresh().unwrap();
-                *config_ref = Config::builder()
+                let tmp = Config::builder()
                     .add_source(config::File::with_name(self.config_name.as_str()).required(true))
-                    .build().expect("reloading config");
+                    .build();
+                if let Ok(newval) = tmp {
+                    *config_ref = newval;
+                    return true;
+                } else {
+                    println!("ERROR IN CONFIG. Failed to reload config. Please check your json syntax")
+                }
+                
             }
             Ok(Err(e)) => warn!("config file watcher error: {:?}", e),
 
@@ -67,5 +75,6 @@ impl ConfigWatcher {
                 warn!("config file watcher encountered unknown error: {:?}", x);
             }
         }
+        false
     }
 }

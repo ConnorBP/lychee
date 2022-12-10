@@ -21,6 +21,9 @@ use human_interface::*;
 use utils::thread::*;
 use offsets::scanner::Scanner;
 
+use user_config::default_config::{WeaponConfig, KeyBindings};
+use datatypes::game::WeaponId;
+
 //use crate::features::recoil_replay;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -29,8 +32,16 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let scan_sigs = matches.get_one::<bool>("scan").copied().unwrap_or(false);
     extract_args(&matches);
 
+    // vars for managing current config values
     let mut config = user_config::init_user_config("user_config")?;
     let config_watcher = user_config::config_watcher::ConfigWatcher::init("user_config")?;
+    // currently held weapon config
+    let mut weapon_config: WeaponConfig = WeaponConfig::default();
+    // last held weapon for detecting if held weapon changes
+    let mut last_weapon: WeaponId = WeaponId::None;
+    // holds the key values for the keybinds
+    let mut keybinds = KeyBindings::default();
+
 
     let (tx, map_tx) = render::start_window_render()?;
 
@@ -132,7 +143,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         time = SystemTime::now();
 
         // reload config values if file was changed
-        config_watcher.watch(&mut config);
+        if config_watcher.watch(&mut config) {
+            // config was updated, update some vars
+            keybinds = config.get("keybinds").unwrap_or_default();
+        }
 
         if process.state().is_dead() {
             // if process dies set connected to false
@@ -184,6 +198,24 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             continue 'mainloop;
         }
 
+        // update per weapon config if weapon id changed
+        if game_data.local_player.weapon_id != last_weapon { //TODO ALSO REFRESH THIS IF CONFIG FILE WAS RELOADED
+            // update weapon config to be the currently loaded configs data 
+            println!("Weapon held switched getting config for weapon {}", game_data.local_player.weapon_id);
+            weapon_config = config.get(
+                format!("weapons.{}", game_data.local_player.weapon_id.to_string())
+                .as_str()
+            )
+            .unwrap_or(
+                WeaponConfig {
+                    aimbot: config.get("aimbot_defaults")?,
+                    trigger: config.get("trigger_defaults")?,
+                }
+            );
+            // update last weapon
+            last_weapon = game_data.local_player.weapon_id;
+        }
+
         let mut framedata = render::FrameData::default();
         framedata.connected = true;
         framedata.local_position = render::PlayerLoc{
@@ -217,8 +249,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             //atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
-            if config.get::<bool>("trigger_enabled").unwrap_or(false) {
-                atrigger.update_data_then_trigger(&mut keyboard, &mut human, &mut game_data, delta, &mut process);
+            if config.get::<bool>("trigger_enabled").unwrap_or(false) && keyboard.is_down(keybinds.trigger as i32) {
+                atrigger.update_data_then_trigger(&mut human, &mut game_data, &weapon_config.trigger, delta, &mut process);
             }
             //features::incross_trigger(&mut keyboard, &mut human, &game_data);
             // collect recoil data for weapons
