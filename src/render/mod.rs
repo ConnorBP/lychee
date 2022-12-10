@@ -40,6 +40,7 @@ pub struct FrameData {
     pub connected: bool,
     pub local_position: PlayerLoc,
     pub locations: Vec<PlayerLoc>,
+    pub velocity: f32,
 }
 
 #[derive(Default)]
@@ -764,7 +765,7 @@ pub fn start_window_render(
                         screen_position: (30.0, 30.0),
                         bounds: (size.width as f32, size.height as f32),
                         text: vec![Text::new(
-                            format!("status: {} map {} cam center: {} {}", if framedata.connected {"connected"} else {"waiting"}, map_data.map_name.clone().unwrap_or("none".to_string()), camera.target.x,camera.target.y).as_str(),
+                            format!("status: {} map {} velocity: {}", if framedata.connected {"connected"} else {"waiting"}, map_data.map_name.clone().unwrap_or("none".to_string()), framedata.velocity).as_str(),
                         )
                         .with_color([1.0, 1.0, 1.0, 1.0])
                         .with_scale(24.0)],

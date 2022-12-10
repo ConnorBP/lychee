@@ -218,6 +218,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
         let mut framedata = render::FrameData::default();
         framedata.connected = true;
+        framedata.velocity = game_data.local_player.vec_velocity.magnitude();
         framedata.local_position = render::PlayerLoc{
             world_pos: game_data.local_player.vec_origin,
             rotation: game_data.local_player.view_angles.xy(),
