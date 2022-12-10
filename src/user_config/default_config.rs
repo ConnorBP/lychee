@@ -124,7 +124,7 @@ impl Default for DefaultConfig {
                 visibility_check: true,
                 delay_ms: 5,
                 max_inaccuracy: 0.045,
-                max_velocity: 1.,
+                max_velocity: 34.1,
             },
         });
         weapons.insert(WeaponId::Mag7, WeaponConfig {
