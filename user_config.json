@@ -21,6 +21,30 @@
     "delay_ms": 0
   },
   "weapons": {
+    "Usps": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 0,
+        "max_inaccuracy": 0.7,
+        "max_velocity": 200.0
+      }
+    },
+	"Deagle": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 0,
+        "max_inaccuracy": 0.4,
+        "max_velocity": 90.0
+      }
+    },
     "Awp": {
       "aimbot": {
         "visibility_check": false,
@@ -45,6 +69,18 @@
         "max_velocity": 320.0
       }
     },
+    "Ak47": {
+      "aimbot": {
+        "visibility_check": false,
+        "delay_ms": 0
+      },
+      "trigger": {
+        "visibility_check": true,
+        "delay_ms": 0,
+        "max_inaccuracy": 0.065,
+        "max_velocity": 90.0
+      }
+    },
     "Mag7": {
       "aimbot": {
         "visibility_check": false,
@@ -54,7 +90,7 @@
         "visibility_check": true,
         "delay_ms": 0,
         "max_inaccuracy": 8.0,
-        "max_velocity": 380.0
+        "max_velocity": 180.0
       }
     },
     "Taser": {
@@ -67,30 +103,6 @@
         "delay_ms": 0,
         "max_inaccuracy": 99.0,
         "max_velocity": 400.0
-      }
-    },
-    "Usps": {
-      "aimbot": {
-        "visibility_check": false,
-        "delay_ms": 0
-      },
-      "trigger": {
-        "visibility_check": true,
-        "delay_ms": 0,
-        "max_inaccuracy": 0.7,
-        "max_velocity": 200.0
-      }
-    },
-    "Ak47": {
-      "aimbot": {
-        "visibility_check": false,
-        "delay_ms": 0
-      },
-      "trigger": {
-        "visibility_check": true,
-        "delay_ms": 0,
-        "max_inaccuracy": 0.065,
-        "max_velocity": 90.0
       }
     },
     "Knife": {
