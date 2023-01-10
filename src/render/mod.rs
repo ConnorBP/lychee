@@ -113,7 +113,7 @@ const PLANE_INDICES: &[u16] = &[
 /// the center origin for us to place our map mesh at. This is equal to half our map scale value (10)
 const MAP_CENTER: (f32,f32) = (5.,-5.0);
 
-pub fn start_window_render(rx: mpsc::Receiver<FrameData>, map_rx: mpsc::Receiver<MapData>) -> std::result::Result<(), Box<dyn std::error::Error>> {
+pub fn start_window_render(rx: mpsc::Receiver<FrameData>, map_rx: mpsc::Receiver<MapData>, kill_rx: mpsc::Receiver<()>) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // our frame data to be rendered (a list of player screen positions)
     let mut framedata = FrameData::default();
     // info about the currently played map
@@ -479,6 +479,10 @@ pub fn start_window_render(rx: mpsc::Receiver<FrameData>, map_rx: mpsc::Receiver
     window.request_redraw();
 
     event_loop.run(move |event, _, control_flow| {
+        // if there is any message in the kill channel then exit the program
+        if let Ok(_) = kill_rx.try_recv() {
+            *control_flow = winit::event_loop::ControlFlow::Exit;
+        }
         // this is to make sure that resources are cleaned up properly.
         // Since event loop run never returns we need it to take ownership of resources
         let _ = (&instance,&shader,&render_pipeline_layout, &vertex_buffer, &camera_buffer, &index_buffer, &instance_buffer);

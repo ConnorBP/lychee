@@ -31,16 +31,19 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     let (tx, rx) = mpsc::channel::<FrameData>();
     let (map_tx, map_rx) = mpsc::channel::<MapData>();
+    let (kill_tx,kill_rx) = mpsc::channel::<()>();
 
     thread::spawn(move || { 
         match main_thread(tx,map_tx) {
             Err(e) => {
                 error!("Encountered error in main thread: {:?}", e);
+                // kill the gui since main thread is dead
+                kill_tx.send(()).expect("failed to kill gui thread");
             },
             _=>{}
         }
     }); // thread
-    render::start_window_render(rx,map_rx)?;
+    render::start_window_render(rx,map_rx,kill_rx)?;
 
     Ok(())
 }
