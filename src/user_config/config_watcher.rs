@@ -1,13 +1,13 @@
 use config::Config;
 use log::warn;
-use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher, Error, ReadDirectoryChangesWatcher};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher, Error, recommended_watcher};
 use std::path::Path;
 use std::sync::mpsc::{channel, Receiver, TryRecvError};
 use std::time::Duration;
 
 pub struct ConfigWatcher {
     rx: Receiver<Result<Event, Error>>,
-    watcher: ReadDirectoryChangesWatcher,
+    watcher: RecommendedWatcher,
     config_name: String,
 }
 
@@ -21,10 +21,11 @@ impl ConfigWatcher {
 
         // Automatically select the best implementation for your platform.
         // You can also access each implementation directly e.g. INotifyWatcher.
-        let mut watcher: RecommendedWatcher = Watcher::new(
-            tx,
-            notify::Config::default().with_poll_interval(Duration::from_secs(2)),
-        )?;
+        let mut watcher: RecommendedWatcher = recommended_watcher(tx)?;
+        // let mut watcher: RecommendedWatcher = Watcher::new(
+        //     tx,
+        //     notify::Config::default().with_poll_interval(Duration::from_secs(2)),
+        // )?;
 
         // Add a path to be watched. All files and directories at that path and
         // below will be monitored for changes.

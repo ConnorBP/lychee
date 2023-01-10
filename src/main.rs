@@ -10,11 +10,11 @@ mod user_config;
 
 use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
 use gamedata::GameData;
-use log::{info, Level};
+use log::{info, Level, error};
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
-use render::MapData;
-use ::std::{time::{Duration, SystemTime}, sync::mpsc, collections::BTreeMap};
+use render::{MapData, FrameData};
+use ::std::{thread, time::{Duration, SystemTime}, sync::mpsc, collections::BTreeMap};
 
 use human_interface::*;
 
@@ -27,6 +27,25 @@ use datatypes::game::WeaponId;
 //use crate::features::recoil_replay;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+    
+
+    let (tx, rx) = mpsc::channel::<FrameData>();
+    let (map_tx, map_rx) = mpsc::channel::<MapData>();
+
+    thread::spawn(move || { 
+        match main_thread(tx,map_tx) {
+            Err(e) => {
+                error!("Encountered error in main thread: {:?}", e);
+            },
+            _=>{}
+        }
+    }); // thread
+    render::start_window_render(rx,map_rx)?;
+
+    Ok(())
+}
+
+fn main_thread(tx: mpsc::Sender<FrameData>, map_tx: mpsc::Sender<MapData>) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // parse args and act accordingly
     let matches = parse_args();
     let scan_sigs = matches.get_one::<bool>("scan").copied().unwrap_or(false);
@@ -41,9 +60,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut last_weapon: WeaponId = WeaponId::None;
     // holds the key values for the keybinds
     let mut keybinds = KeyBindings::default();
-
-
-    let (tx, map_tx) = render::start_window_render()?;
 
     // a "human" we get to tell what to do
     let mut human = HumanInterface::new()?;
@@ -266,7 +282,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
         human.process_unclicks()?;
     }
-
     Ok(())
 }
 
