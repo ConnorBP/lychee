@@ -35,9 +35,18 @@ impl HumanInterface {
         for p in ports {
             info!("{}", p.port_name);
         }
-        let port = serialport::new("COM9", 9_600)
+
+        // TODO: TAKE IN COMMAND LINE ARG FOR WHICH SERIAL PORT TO USE
+
+        #[cfg(target_family="unix")]
+        let port = "/dev/ttyUSB0";
+        #[cfg(target_family="windows")]
+        let port = "COM9";
+        
+
+        let port = serialport::new(port, 9_600)
             .timeout(Duration::from_millis(10))
-            .open()?;
+            .open().map_err(|e| format!("Error connecting to serial port: {e:?}"))?;
         
         // example usage for mouse left click:
         //port.write(b"ml\n")?;
