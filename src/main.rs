@@ -54,6 +54,11 @@ fn main_thread(tx: mpsc::Sender<FrameData>, map_tx: mpsc::Sender<MapData>) -> st
     let scan_sigs = matches.get_one::<bool>("scan").copied().unwrap_or(false);
     extract_args(&matches);
 
+    #[allow(unused)]
+    let conn_name = matches
+        .value_of("connector")
+        .expect("no connector specified");
+
     // vars for managing current config values
     let mut config = user_config::init_user_config("user_config")?;
     let config_watcher = user_config::config_watcher::ConfigWatcher::init("user_config")?;
@@ -67,17 +72,87 @@ fn main_thread(tx: mpsc::Sender<FrameData>, map_tx: mpsc::Sender<MapData>) -> st
     // a "human" we get to tell what to do
     let mut human = HumanInterface::new()?;
 
-    // create inventory + os
-    let connector_args : ConnectorArgs = ":device=FPGA".parse()?;
-    let connector = memflow_pcileech::create_connector(&connector_args)?;
+    
+    //: OsInstanceArcBox<'static> 
+    let mut os = match conn_name.to_lowercase().as_str() {
+        // "" | "memflow-pcileech" => {
+        //     // fpga connector
+        //     //create inventory + os
+        //     let pcileech_args : ConnectorArgs = matches
+        //         .value_of("connector-args")
+        //         .unwrap_or(":device=FPGA")
+        //         .parse()
+        //         .expect("unable to parse connector arguments");
+        //     let connector = memflow_pcileech::create_connector(&pcileech_args)?;
 
-    let mut os = Win32Kernel::builder(connector)
-        .build_default_caches()
-        //.arch(ArchitectureIdent::X86(64, false))
-        .build()?;
+        //     Win32Kernel::builder(connector)
+        //         .build_default_caches()
+        //         //.arch(ArchitectureIdent::X86(64, false))
+        //         .build()?
+        // },
+        "" | "memflow-pcileech" => {
+            let conn_args = matches
+                .value_of("connector-args")
+                .unwrap_or(":device=FPGA")
+                .parse()
+                .expect("unable to parse connector arguments");
+            // load connector/os via inventory
+            let inventory = Inventory::scan();
+            let connector = inventory.create_connector(conn_name, None, Some(&conn_args))?;
+            Win32Kernel::builder(connector)
+                .build_default_caches()
+                .build()
+                ?
+        },
+        // "qemu" => {
+        //     let conn_args = matches
+        //         .value_of("connector-args")
+        //         .unwrap_or_default()
+        //         .parse()
+        //         .expect("unable to parse connector arguments");
+        //     // load connector/os statically
+        //     let connector =
+        //     memflow_qemu::create_connector(&conn_args).expect("unable to create qemu connector");
+
+        //     Win32Kernel::builder(connector)
+        //         .build_default_caches()
+        //         .build()
+        //         ?
+        // }
+        _=> {
+            let conn_args = matches
+                .value_of("connector-args")
+                .unwrap_or_default()
+                .parse()
+                .expect("unable to parse connector arguments");
+            // load connector/os via inventory
+            let inventory = Inventory::scan();
+            let connector = inventory.create_connector(conn_name, None, Some(&conn_args))?;
+            Win32Kernel::builder(connector)
+                .build_default_caches()
+                .build()
+                ?
+            // inventory
+            //     .builder()
+            //     .connector(conn_name)
+            //     .args(conn_args)
+            //     .os("win32")
+            //     .build()?
+
+        },
+    };
 
     // load keyboard reader
+    // if !os.check_impl_oskeyboard() {
+    //     return Err(
+    //         Error(ErrorOrigin::Other, ErrorKind::UnsupportedOptionalFeature)
+    //             .log_error("keyboard feature is not implemented for the given os plugin"),
+    //     );
+    // }
+
+    // let mut keyboard = into!(os impl OsKeyboard).unwrap().into_keyboard()?;
     let mut keyboard = os.clone().into_keyboard()?;
+    
 
     // get process info from victim computer
 
@@ -93,10 +168,10 @@ fn main_thread(tx: mpsc::Sender<FrameData>, map_tx: mpsc::Sender<MapData>) -> st
         }
         proc_info
     };
-    let process_info = os.process_info_from_base_info(base_info)?;
+    //let process_info = os.process_info_from_base_info(base_info)?;
     //let mut process = Win32Process::with_kernel(os, process_info.clone());
     let mut process = os.clone().into_process_by_name("csgo.exe")?;
-    info!("Got Proccess:\n {:?}", process_info);
+    info!("Got Proccess:\n {:?}", process.info());
 
     // fetch info about modules from the process
     let mut client_module = wait_for(process.module_by_name("client.dll"),Duration::from_secs(10));
@@ -324,14 +399,21 @@ fn parse_args() -> ArgMatches {
                 .required(false)
                 .help("if provided then signatures from config.json will be scanned and offsets saved before running")
         )
-        // .arg(
-        //     Arg::new("connector")
-        //         .long("connector")
-        //         .short('c')
-        //         .takes_value(true)
-        //         .required(false)
-        //         .multiple_values(true),
-        // )
+        .arg(
+            Arg::new("connector")
+                .long("connector")
+                .short('c')
+                .takes_value(true)
+                .required(false)
+                .multiple_values(true),
+        )
+        .arg(
+            Arg::new("connector-args")
+            .help("Additional arguments supplied to the connector.")
+                .long("connector-args")
+                .short('a')
+                .takes_value(true),
+        )
         // .arg(
         //     Arg::new("os")
         //         .long("os")
