@@ -1,6 +1,6 @@
 [package]
 name = "lyche"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["segfault <segfault#1337>"]
 edition = "2018"
 resolver = "2"
@@ -10,10 +10,12 @@ resolver = "2"
 [dependencies]
 
 # memflow stuff
-memflow = "0.2.0-beta9"
-memflow-win32 = "0.2.0-beta9"
-memflow-pcileech = { git = "https://github.com/memflow/memflow-pcileech", branch = "main" }
-
+memflow = {version = "0.2.0-beta7"}
+#memflow = { git = "https://github.com/memflow/memflow", branch = "main", features = ["plugins"] }
+memflow-win32 = "0.2.0-beta7"
+#memflow-win32 = { git = "https://github.com/memflow/memflow-win32", branch = "main" }
+memflow-pcileech = { git = "https://github.com/memflow/memflow-pcileech", branch = "main" , optional = true}
+memflow-qemu = { git = "https://github.com/memflow/memflow-qemu", branch = "main", optional = true }
 
 # for pattern scanning
 regex = "^1.5"
@@ -63,4 +65,7 @@ cgmath = "0.18"
 winres = "0.1.11"
 
 [features]
+default = ["memflow-pcileech", "memflow-qemu"]
 bhop_sus = []
+pcileech = ["memflow-pcileech"]
+#qemu = ["memflow-qemu"]
