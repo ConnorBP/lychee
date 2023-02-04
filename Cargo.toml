@@ -1,6 +1,6 @@
 [package]
 name = "lyche"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["segfault <segfault#1337>"]
 edition = "2018"
 resolver = "2"

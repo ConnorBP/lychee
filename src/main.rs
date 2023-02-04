@@ -250,7 +250,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             #[cfg(feature = "aimbot")]
             aimbot.aimbot(&mut keyboard, &mut human, &game_data);
             //atrigger.algebra_trigger(&mut keyboard, &mut human, &game_data, delta);
-            if config.get::<bool>("trigger_enabled").unwrap_or(false) && keyboard.is_down(keybinds.trigger as i32) {
+            if config.get::<bool>("trigger_enabled").unwrap_or(false) {// && keyboard.is_down(keybinds.trigger as i32) {
                 atrigger.update_data_then_trigger(&mut human, &mut game_data, &weapon_config.trigger, delta, &mut process);
             }
             //features::incross_trigger(&mut keyboard, &mut human, &game_data);
