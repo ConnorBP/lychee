@@ -7,7 +7,7 @@ mod zuesknife;
 mod human_speedtest;
 //mod recoil_recorder;
 //mod recoil_replay;
-#[cfg(all(feature = "aimbot", feature = "viewmatrix"))]
+#[cfg(feature = "aimbot")]
 mod aimbot;
 #[cfg(feature = "aimbot")]
 pub use aimbot::*;

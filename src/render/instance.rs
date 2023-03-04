@@ -1,6 +1,7 @@
 use cgmath::prelude::*;
 use memflow::prelude::Pod;
 
+#[derive(Copy,Clone)]
 pub enum InstanceType {
     MapTexture,
     LocalPlayer,

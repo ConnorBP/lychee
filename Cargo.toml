@@ -1,6 +1,6 @@
 [package]
 name = "lyche"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["segfault <segfault#1337>"]
 edition = "2018"
 resolver = "2"
@@ -64,3 +64,4 @@ winres = "0.1.11"
 
 [features]
 bhop_sus = []
+aimbot = []

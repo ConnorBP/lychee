@@ -98,8 +98,20 @@ impl HumanInterface {
         if let Some(goal) = &mut self.goal_pos {
             *goal = *goal + destination;
         } else {
-            self.goal_pos = Some(destination)
+            self.goal_pos = Some(destination);
         }
+    }
+
+    /// replaces the goal pos
+    #[allow(dead_code)]
+    pub fn set_goal(&mut self, destination: tmp_vec2) {
+        self.goal_pos = Some(destination);
+    }
+
+    /// removes the goal (stops the mouse move)
+    #[allow(dead_code)]
+    pub fn clear_goal(&mut self) {
+        self.goal_pos = None;
     }
 
     pub fn process_unclicks(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {

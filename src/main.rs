@@ -260,7 +260,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             //recoil_replay(&game_data, &recoil_data, &mut human);
 
             // run any mouse moves that acumulate from the above features
-            //human.process_smooth_mouse();
+            human.process_smooth_mouse()?;
             //features::shoot_speed_test(&mut keyboard, &mut human);
         }
         // auto send unclick commands to the arduino since we now need to specify mouse down and up commands

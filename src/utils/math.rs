@@ -56,7 +56,7 @@ pub fn angle_to_vec(x:f32, y:f32) -> tmp_vec3 {
     rad_to_vec(d2r(x), d2r(y))
 }
 
-pub fn rad_to_vec(x:f32,y:f32) -> tmp_vec3{
+pub fn rad_to_vec(x:f32,y:f32) -> tmp_vec3 {
     tmp_vec3 {
         x: f32::cos(x) * f32::cos(y),
         y: f32::cos(x) * f32::sin(y),
@@ -64,8 +64,27 @@ pub fn rad_to_vec(x:f32,y:f32) -> tmp_vec3{
     }
 }
 
+pub fn vec_to_angle(vec: tmp_vec3) -> tmp_vec2 {
+    let rad = vec_to_rad(vec);
+    tmp_vec2 {
+        x: r2d(rad.x),
+        y: r2d(rad.y)
+    }
+}
+
+pub fn vec_to_rad(vec: tmp_vec3) -> tmp_vec2 {
+    tmp_vec2 {
+        x: (-vec.z).atan2(vec.x.hypot(vec.y)),
+        y: vec.y.atan2(vec.x),
+    }
+}
+
 pub fn d2r(d:f32)->f32{
     (d as f64*(std::f64::consts::PI/180.)) as f32
+}
+
+pub fn r2d(r:f32)->f32 {
+    ((r as f64) * (180. / std::f64::consts::PI)) as f32
 }
 
 /// this is used by recoil recorder and other stuff to get a world point a distance in from the screen center (at look direction)
@@ -78,6 +97,7 @@ pub fn get_crosshair_world_point_at_dist(to_dist: f32, our_pos: tmp_vec3, eye_an
     our_pos + eye_vec*to_dist
 }
 
+/// takes in target position, our position, and our view angles and returns the distance (magnitude) to them
 pub fn get_dist_from_crosshair(to_pos: tmp_vec3, our_pos: tmp_vec3, eye_ang: tmp_vec2) -> f32 {
     // difference
     let diff = to_pos - our_pos;
@@ -93,6 +113,23 @@ pub fn get_dist_from_crosshair(to_pos: tmp_vec3, our_pos: tmp_vec3, eye_ang: tmp
     // now get the distance from this new point to the target point
     let diff2 = to_pos - point;
     diff2.magnitude()
+}
+
+pub fn get_angle_from_crosshair(to_pos: tmp_vec3, our_pos: tmp_vec3, eye_ang: tmp_vec2) -> tmp_vec2 {
+    // difference
+    let diff = to_pos - our_pos;
+    // get direction vector for our view angles
+    // let eye_vec = angle_to_vec(eye_ang.x, eye_ang.y);
+    // let eye_vec = eye_vec.norm(eye_vec.magnitude());
+    // get the magnitide (distance) between to and from
+    let dnorm = diff.norm(diff.magnitude());
+
+    // get the difference between the normals
+    //let norm_diff = eye_vec - dnorm;
+
+    // the final angle is the norm converted back to degrees
+    //vec_to_angle(norm_diff.norm(norm_diff.magnitude()))
+    norm_angles(norm_angles(vec_to_angle(dnorm)) - eye_ang)
 }
 
 pub fn round_up(num_in: u64, up_to_multiple: u64) -> u64 {
@@ -128,6 +165,24 @@ pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:Opti
  }
 
 (nx,ny)
+}
+
+pub fn norm_angles(vec: tmp_vec2) -> tmp_vec2 {
+    tmp_vec2{
+        x: norm_x_angle(vec.x),
+        y: norm_y_angle(vec.y)
+    }
+}
+
+pub fn norm_x_angle(x:f32) -> f32 {
+    let mut nx = x;
+    while nx > 89. {
+        nx -= 180.;
+    }
+    while nx < -89. {
+        nx += 180.;
+    }
+    nx
 }
 
 pub fn norm_y_angle(y:f32) -> f32 {

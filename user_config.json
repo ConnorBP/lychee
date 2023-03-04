@@ -41,7 +41,7 @@
       "trigger": {
         "visibility_check": true,
         "delay_ms": 0,
-        "max_inaccuracy": 0.4,
+        "max_inaccuracy": 0.35,
         "max_velocity": 90.0
       }
     },

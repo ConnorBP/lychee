@@ -10,9 +10,9 @@ use log::info;
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
-use crate::gamedata::GameData;
-use crate::gamedata::entitylist::{tmp_vec2, tmp_vec3};
-use crate::math;
+use crate::{gamedata::GameData, human_interface::HumanInterface, utils::math::get_angle_from_crosshair};
+use crate::datatypes::{tmp_vec2,tmp_vec3};
+use crate::utils::math;
 use format_bytes::format_bytes;
 
 pub struct AimBot {
@@ -38,19 +38,30 @@ impl AimBot {
             old_punch: Default::default(),
         }
     }
-    pub fn aimbot(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, port: &mut Box<dyn SerialPort>, game_data: &GameData) {
+    pub fn aimbot(&mut self, kb: &mut Win32Keyboard<impl MemoryView>, human: &mut HumanInterface, game_data: &GameData) {        
         //if !kb.is_down(0x06) {return}
         if !kb.is_down(0x01) {
             // reset target when not using
             self.got_new_target = true;
             self.old_target = None;
             self.old_punch = Default::default();
+            human.clear_goal();
             return;
         }
         //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
         //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
         if let Some(closest_player) = game_data.entity_list.closest_player {
+            
+            // let dist_angle = get_angle_from_crosshair(
+            //     game_data.entity_list.entities[closest_player].head_pos,
+            //     game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+            //     game_data.local_player.view_angles.xy()
+            // );
     
+            // println!("angle: {:?} view: {:?}", dist_angle, game_data.local_player.view_angles.xy());
+            // // my angle calc is wack apparently
+
+
             if let Some(old_target) = self.old_target {
                 // if the old target is not the new one then we have a new target
                 if old_target != closest_player {
@@ -65,26 +76,25 @@ impl AimBot {
             }
     
             // reset the targetfound time when there is a new target
-            if self.got_new_target == true {
-                self.target_aquired_time = SystemTime::now();
-                //self.old_punch = Default::default();
-                info!("GOT NEW TARGET");
-                // reset newtarget var
-                self.got_new_target = false
-            }
-    
+            // if self.got_new_target == true {
+            //     self.target_aquired_time = SystemTime::now();
+            //     //self.old_punch = Default::default();
+            //     info!("GOT NEW TARGET");
+            //     // reset newtarget var
+            //     self.got_new_target = false
+            // }
             if game_data.local_player.shots_fired < 2 {return}
     
-            let targeting:bool = 
-            if let Ok(elap) = self.target_aquired_time.elapsed() {
-                if elap.as_millis() < new_target_delay_ms {
-                    false
-                } else {
-                    true
-                }
-            } else {
-                false
-            };
+            // let targeting: bool = 
+            // if let Ok(elap) = self.target_aquired_time.elapsed() {
+            //     if elap.as_millis() < new_target_delay_ms {
+            //         false
+            //     } else {
+            //         true
+            //     }
+            // } else {
+            //     false
+            // };
             
             let skew = 
             if let Ok(elap) = self.target_aquired_time.elapsed() {
@@ -104,119 +114,54 @@ impl AimBot {
             
             let angles = game_data.local_player.view_angles;
             let recoil = game_data.local_player.aimpunch_angle*2.;
-            info!("aimpunch: {:?}\nskew: {:?}", game_data.local_player.aimpunch_angle, skew);
-    
-            // where the center of the screen is in world coords at enemy dist
-            let crosshair_world = get_crosshair_world_point_at_dist(
-                10.,
+
+            let dist_angle = get_angle_from_crosshair(
+                game_data.entity_list.entities[closest_player].head_pos,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
-                angles
+                angles.xy() + recoil
             );
+
+            human.set_goal(tmp_vec2 { x: -dist_angle.y, y: dist_angle.x });
+
+            // println!("aimpunch: {:?}\nskew: {:?}\nangle: {:?}", game_data.local_player.aimpunch_angle, skew, dist_angle);
+            
+
+
+            // // where the center of the screen is in world coords at enemy dist
+            // let crosshair_world = get_crosshair_world_point_at_dist(
+            //     10.,
+            //     game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+            //     angles
+            // );
     
             // get where the crosshair is + aimpunch in world coords at the distance of the enemy
             // if in rcs mode (not targeting enemy yet) also remove the aimpunch of last frame to avoid drift
-            let recoil_world = 
-            if targeting {
-                get_crosshair_world_point(
-                    game_data.entity_list.entities[closest_player].head_pos,
-                    game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
-                    angles + recoil //- *old_punch
-                )
-            } else {
-                get_crosshair_world_point(
-                    game_data.entity_list.entities[closest_player].head_pos,
-                    game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
-                    angles + recoil - self.old_punch
-                )
-            };
+            // let recoil_world = 
+            // if targeting {
+            //     get_crosshair_world_point(
+            //         game_data.entity_list.entities[closest_player].head_pos,
+            //         game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+            //         angles + recoil //- *old_punch
+            //     )
+            // } else {
+            //     get_crosshair_world_point(
+            //         game_data.entity_list.entities[closest_player].head_pos,
+            //         game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+            //         angles + recoil - self.old_punch
+            //     )
+            // };
             
             self.old_punch = recoil;
     
-            let target_pos:tmp_vec3 = 
-            if targeting {
-                // move to target
-                game_data.entity_list.entities[closest_player].head_pos + skew
-            } else {
-                // move to target center screen
-                crosshair_world + skew
-            };
-            
-    
-            // TODO: Store the distance_from_bone values in game_data to re use in both the triggerbot and in the aimbot
-            // then make a nearest bone aimbot
-            if let Some(target_screen) = math::world_2_screen(
-                &target_pos.into(),
-                &game_data.vm,
-                None,
-                None
-            ) {
-                if let Some(recoil_screen) = math::world_2_screen(
-                    &recoil_world.into(),
-                    &game_data.vm,
-                    None,
-                    None,
-                ) {
-                    let diff: tmp_vec2 = tmp_vec2::from(target_screen.xy()) -  tmp_vec2::from(recoil_screen.xy());
-                    let direction = diff.norm(diff.magnitude()) * move_speed;
-    
-    
-                    //
-                    // move the mouse
-                    //
-                    info!("sending move x{} y{}", direction.x, direction.y);
-                    let x = direction.x as i32;
-                    let y = direction.y as i32;
-                    let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);
-                    port.write(cmd.as_bytes()).expect("could not write to serial port");
-                    
-                    // for debugging if sent serial data was valid
-                    // let mut serial_buf: Vec<u8> = vec![0; 200];
-                    // if let Ok(t) = port.read(serial_buf.as_mut_slice()) {
-                    //     std::io::stdout().write_all(&serial_buf[..t]).expect("failed to read serial");
-                    // }
-                }
-            }
-            
-        } /*else if let Ok(elap) = self.last_targeting_time.elapsed() {
-            // if there is currently no valid target but we were recently targeting an enemy then continue to spray control for a bit
-            if elap.as_millis() < continue_spray_delay_ms {
-                //TODO rework spray system to be recorded screen pixel values
-                let angles = game_data.local_player.view_angles;
-                let recoil = game_data.local_player.aimpunch_angle*2.;
-                let recoil_world = get_crosshair_world_point_at_dist(
-                    10.,
-                    game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
-                    angles + recoil - self.old_punch
-                );
-                let crosshair_world = get_crosshair_world_point_at_dist(
-                    10.,
-                    game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
-                    angles
-                );
-                self.old_punch = recoil;
-                if let Some(recoil_at) = math::world_2_screen(
-                    &recoil_world.into(),
-                    &game_data.vm,
-                    None,
-                    None,
-                ) {
-                    if let Some(target) = math::world_2_screen(
-                        &crosshair_world.into(),
-                        &game_data.vm,
-                        None,
-                        None
-                    ) {
-                        let diff: tmp_vec2 = tmp_vec2::from(target.xy()) -  tmp_vec2::from(recoil_at.xy());
-                        let direction = diff.norm(diff.magnitude()) * move_speed;
-                        // move the mouse
-                        let x = direction.x as i32;
-                        let y = direction.y as i32;
-                        let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);
-                        port.write(cmd.as_bytes()).expect("could not write to serial port");
-                    }
-                }
-            }
-        }*/
+            // let target_angle: tmp_vec2 = 
+            // if targeting {
+            //     // move to target
+            //     game_data.entity_list.entities[closest_player].head_pos + skew
+            // } else {
+            //     // move to target center screen
+            //     crosshair_world + skew
+            // };
+        } 
     
     }
 }
