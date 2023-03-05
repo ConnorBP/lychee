@@ -15,7 +15,7 @@
     "max_inaccuracy": 0.065,
     "max_velocity": 80.0
   },
-  "aimbot_enabled": false,
+  "aimbot_enabled": true,
   "aimbot_defaults": {
     "visibility_check": false,
     "delay_ms": 0

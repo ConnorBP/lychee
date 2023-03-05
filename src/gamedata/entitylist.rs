@@ -150,7 +150,13 @@ impl EntityList {
         let mut bat3 = proc.batcher();
         for (i, ent) in self.entities.iter_mut().enumerate() {
             if i == local_player_idx {continue};
-            if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
+            if(ent.dormant &1 == 1) || ent.lifestate > 0 {
+                ent.dormant = 1;
+                continue
+            }
+
+            //println!("not dormant: {i}, team: {}", ent.team_num);
+
             update_bones(&mut bat3, ent);
         }
         bat3.commit_rw().data_part()?;

@@ -10,7 +10,7 @@ use log::info;
 use memflow::prelude::v1::*;
 use memflow_win32::prelude::v1::*;
 use serialport::SerialPort;
-use crate::{gamedata::GameData, human_interface::HumanInterface, utils::math::get_angle_from_crosshair};
+use crate::{gamedata::GameData, human_interface::HumanInterface, utils::math::get_angle_from_crosshair, datatypes::game::WeaponId};
 use crate::datatypes::{tmp_vec2,tmp_vec3};
 use crate::utils::math;
 use format_bytes::format_bytes;
@@ -48,9 +48,31 @@ impl AimBot {
             human.clear_goal();
             return;
         }
+
+        if game_data.local_player.weapon_id == WeaponId::None {
+            return;
+        }
+
         //info!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
         //if game_data.local_player.vec_velocity.magnitude() > 1. {return}
         if let Some(closest_player) = game_data.entity_list.closest_player {
+
+
+            if closest_player <= 0 {return}
+            let ent = &game_data.entity_list.entities[closest_player];
+
+            //println!("current target: {closest_player} lifestate: {} dormant: {} health: {}", ent.lifestate, ent.dormant &1, ent.health);
+
+            if (ent.dormant &1 == 1)
+            || ent.health <= 0
+            || ent.lifestate > 0
+            || ent.team_num == game_data.local_player.team_num
+            || game_data.local_player.observing_id == 0 || closest_player == game_data.local_player.observing_id as usize -1
+            //|| ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0
+            {
+                return
+            }
+
             
             // let dist_angle = get_angle_from_crosshair(
             //     game_data.entity_list.entities[closest_player].head_pos,
@@ -76,41 +98,45 @@ impl AimBot {
             }
     
             // reset the targetfound time when there is a new target
-            // if self.got_new_target == true {
-            //     self.target_aquired_time = SystemTime::now();
-            //     //self.old_punch = Default::default();
-            //     info!("GOT NEW TARGET");
-            //     // reset newtarget var
-            //     self.got_new_target = false
-            // }
+            if self.got_new_target == true {
+                self.target_aquired_time = SystemTime::now();
+                //self.old_punch = Default::default();
+                info!("GOT NEW TARGET");
+                // reset newtarget var
+                self.got_new_target = false
+            }
+
+
+
+
             if game_data.local_player.shots_fired < 2 {return}
     
-            // let targeting: bool = 
-            // if let Ok(elap) = self.target_aquired_time.elapsed() {
-            //     if elap.as_millis() < new_target_delay_ms {
-            //         false
-            //     } else {
-            //         true
-            //     }
-            // } else {
-            //     false
-            // };
-            
-            let skew = 
+            let targeting: bool = 
             if let Ok(elap) = self.target_aquired_time.elapsed() {
-                let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f32();
-                let deviation = f32::min(elap.as_secs_f32()/2., 1.);
-    
-                tmp_vec3 {
-                    x: deviation * f32::cos(now*0.8),
-                    y: deviation * f32::sin(now*0.6),
-                    z: deviation/2. * f32::sin(now),
+                if elap.as_millis() < new_target_delay_ms {
+                    false
+                } else {
+                    true
                 }
             } else {
-                tmp_vec3 {
-                    x:0.,y:0.,z:0.
-                }
+                false
             };
+            
+            // let skew = 
+            // if let Ok(elap) = self.target_aquired_time.elapsed() {
+            //     let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f32();
+            //     let deviation = f32::min(elap.as_secs_f32()/2., 1.);
+    
+            //     tmp_vec3 {
+            //         x: deviation * f32::cos(now*0.8),
+            //         y: deviation * f32::sin(now*0.6),
+            //         z: deviation/2. * f32::sin(now),
+            //     }
+            // } else {
+            //     tmp_vec3 {
+            //         x:0.,y:0.,z:0.
+            //     }
+            // };
             
             let angles = game_data.local_player.view_angles;
             let recoil = game_data.local_player.aimpunch_angle*2.;
@@ -121,9 +147,13 @@ impl AimBot {
                 angles.xy() + recoil
             );
 
-            human.set_goal(tmp_vec2 { x: -dist_angle.y, y: dist_angle.x });
+            // max fov check
+            if dist_angle.magnitude() > 20. {return}
 
-            // println!("aimpunch: {:?}\nskew: {:?}\nangle: {:?}", game_data.local_player.aimpunch_angle, skew, dist_angle);
+            human.set_goal(tmp_vec2 { x: -dist_angle.y, y: dist_angle.x });
+            //human.mouse_move(tmp_vec2 { x: math::angle_to_mouse(-dist_angle.y, 1.2), y: math::angle_to_mouse(dist_angle.x,1.2) }).expect("mouse move");
+
+            //println!("aimpunch: {:?} angle: {:?}", game_data.local_player.aimpunch_angle, dist_angle);
             
 
 

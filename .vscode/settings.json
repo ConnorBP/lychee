@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "webradar.h": "c"
-    }
+    },
+    "rust-analyzer.cargo.features": "all"
 }

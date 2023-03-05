@@ -166,7 +166,7 @@ impl GameData {
             client_base,
             self.client_state,
             self.local_player.ent_idx as usize,
-            self.local_player.view_angles,
+            self.local_player.view_angles + self.local_player.aimpunch_angle*2.,
             self.local_player.vec_origin + self.local_player.vec_view_offset
         )?;
 

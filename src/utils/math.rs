@@ -129,7 +129,7 @@ pub fn get_angle_from_crosshair(to_pos: tmp_vec3, our_pos: tmp_vec3, eye_ang: tm
 
     // the final angle is the norm converted back to degrees
     //vec_to_angle(norm_diff.norm(norm_diff.magnitude()))
-    norm_angles(norm_angles(vec_to_angle(dnorm)) - eye_ang)
+    norm_angles(vec_to_angle(dnorm) - eye_ang)
 }
 
 pub fn round_up(num_in: u64, up_to_multiple: u64) -> u64 {
@@ -165,6 +165,14 @@ pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:Opti
  }
 
 (nx,ny)
+}
+
+pub fn angle_within_fov(angle_to_check: tmp_vec2, view_angle: tmp_vec2, fov: f32) -> bool {
+    (angle_to_check - view_angle).magnitude() < fov
+}
+
+pub fn angle_to_mouse(angle: f32, game_sens: f32) -> f32 {
+    2.4*angle/game_sens
 }
 
 pub fn norm_angles(vec: tmp_vec2) -> tmp_vec2 {

@@ -5,7 +5,7 @@ use memflow::prelude::{PodMethods};
 use serialport::SerialPort;
 use format_bytes::format_bytes;
 
-use crate::datatypes::tmp_vec2;
+use crate::datatypes::{tmp_vec2, tmp_vec3};
 
 const MOUSE_CLICK_DELAY_MS: u32 = 100;
 const MOUSE_UNCLICK_DELAY_MS: u32 = 70;
@@ -73,13 +73,21 @@ impl HumanInterface {
         Ok(())
     }
     #[allow(dead_code)]
-    fn mouse_move(&mut self, direction: tmp_vec2) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    pub fn mouse_move(&mut self, direction: tmp_vec2) -> std::result::Result<(), Box<dyn std::error::Error>> {
         //
         // move the mouse
         //
         info!("sending move x{} y{}", direction.x, direction.y);
-        let x = direction.x.round() as i32;
-        let y = direction.y.round() as i32;
+        let mut x = direction.x.round() as i32;
+        let mut y = direction.y.round() as i32;
+
+        // cap at max i16 with no overflow
+        if x > i16::MAX as i32 {x = i16::MAX as i32}
+        if x < i16::MIN as i32 {x = i16::MIN as i32}
+        if y > i16::MAX as i32 {y = i16::MAX as i32}
+        if y < i16::MIN as i32 {y = i16::MIN as i32}
+
+        
         let cmd = format_bytes!(b"mv<{}><{}>\n", x,y);
         self.port.write(cmd.as_bytes())?;
 
@@ -142,7 +150,9 @@ impl HumanInterface {
         // only run if a goal is set
         if let Some(goal) = self.goal_pos {
 
-            let move_speed = 2.; // todo make this configurable
+            let drift = drift();
+
+            let move_speed = 2. * drift.z; // todo make this configurable
             let distance = goal.magnitude();
             let direction = goal.norm(distance) * move_speed;
 
@@ -151,9 +161,18 @@ impl HumanInterface {
             self.goal_pos = None;
 
             // then send the mouse move or return error
-            self.mouse_move(direction)?;
+            self.mouse_move(direction + drift.xy())?;
 
         }
         Ok(())
+    }
+}
+
+fn drift() -> tmp_vec3 {
+    let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64();
+    tmp_vec3 {
+        x: 0.5 * f64::cos(now*0.8) as f32,
+        y: 0.5 * f64::sin(now*0.6) as f32,
+        z: 1.4 + f64::sin(now) as f32,
     }
 }
