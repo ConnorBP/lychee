@@ -10,8 +10,8 @@ resolver = "2"
 [dependencies]
 
 # memflow stuff
-memflow = "0.2.0-beta9"
-memflow-win32 = "0.2.0-beta9"
+memflow = "0.2.0-beta10"
+memflow-win32 = "0.2.0-beta10"
 memflow-pcileech = { git = "https://github.com/memflow/memflow-pcileech", branch = "main" }
 
 
