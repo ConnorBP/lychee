@@ -5,6 +5,7 @@ mod trigger;
 mod algebra_trigger;
 mod zuesknife;
 mod human_speedtest;
+mod onebwalls;
 //mod recoil_recorder;
 //mod recoil_replay;
 #[cfg(feature = "aimbot")]
@@ -17,5 +18,6 @@ pub use bhop::*;
 pub use trigger::*;
 pub use algebra_trigger::*;
 pub use human_speedtest::shoot_speed_test;
+pub use onebwalls::*;
 //pub use recoil_recorder::*;
 //pub use recoil_replay::*;

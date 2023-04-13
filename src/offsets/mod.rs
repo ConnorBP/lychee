@@ -27,6 +27,7 @@ lazy_static! {
 
     // Offsets
 
+    pub static ref DW_DRAWOTHERMODELS: u32 = load_offset("signatures.dwDrawOtherModels");
     pub static ref DW_CLIENTSTATE: u32 = load_offset("signatures.dwClientState");
     pub static ref DW_CLIENTSTATE_GETLOCALPLAYER: u32 = load_offset("signatures.dwClientState_GetLocalPlayer");
     pub static ref DW_CLIENTSTATE_VIEWANGLES: u32 = load_offset("signatures.dwClientState_ViewAngles");
