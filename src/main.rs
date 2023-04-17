@@ -129,6 +129,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "aimbot")]
     let mut aimbot = features::AimBot::new();
 
+    let mut esp = features::Esp::new(&mut process)?;
+
     let mut atrigger = features::AlgebraTrigger::new();
     //let mut recoil_data = features::RecoilRecorder::new();
     #[cfg(feature = "bhop_sus")]
