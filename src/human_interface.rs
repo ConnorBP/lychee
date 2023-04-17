@@ -5,7 +5,7 @@ use memflow::prelude::{PodMethods};
 use serialport::SerialPort;
 use format_bytes::format_bytes;
 
-use crate::datatypes::{tmp_vec2, tmp_vec3};
+use crate::{datatypes::{tmp_vec2, tmp_vec3}, utils::math::angle_to_mouse};
 
 const MOUSE_CLICK_DELAY_MS: u32 = 100;
 const MOUSE_UNCLICK_DELAY_MS: u32 = 70;
@@ -19,6 +19,7 @@ pub struct HumanInterface {
     // timers for making sure we don't spam the serial port
     last_leftclick: SystemTime,
     last_rightclick: SystemTime,
+    last_move: SystemTime,
 
     left_clicked: bool,
     right_clicked: bool,
@@ -45,6 +46,7 @@ impl HumanInterface {
             port,
             last_leftclick: SystemTime::now(),
             last_rightclick: SystemTime::now(),
+            last_move: SystemTime::now(),
 
             left_clicked: false,
             right_clicked: false,
@@ -116,6 +118,14 @@ impl HumanInterface {
         self.goal_pos = Some(destination);
     }
 
+    #[allow(dead_code)]
+    pub fn set_goal_angle(&mut self, destination_angle: tmp_vec2) {
+        self.goal_pos = Some(tmp_vec2 {
+            x: angle_to_mouse(destination_angle.x) as f32,
+            y: angle_to_mouse(destination_angle.y) as f32,
+        });
+    }
+
     /// removes the goal (stops the mouse move)
     #[allow(dead_code)]
     pub fn clear_goal(&mut self) {
@@ -150,18 +160,30 @@ impl HumanInterface {
         // only run if a goal is set
         if let Some(goal) = self.goal_pos {
 
+            // don't run faster than 1Khz
+            if let Ok(elap) = self.last_rightclick.elapsed() {
+                if elap.as_micros() < 1000 {
+                    return Ok(())
+                }
+            } else {
+                return Ok(())
+            }
+            self.last_move = SystemTime::now();
+
             let drift = drift();
 
-            let move_speed = 2. * drift.z; // todo make this configurable
+            //let move_speed = 2. * drift.z; // todo make this configurable
             let distance = goal.magnitude();
-            let direction = goal.norm(distance) * move_speed;
+            let direction = (goal/*+drift.xy()*/) /10.;//goal.norm(distance) * move_speed;
+            
+            // bypass smooth
 
             // finally reset goal pos
             // (so that if things don't set it next frame cause they wanna stop targeting it doesn't keep going)
             self.goal_pos = None;
 
             // then send the mouse move or return error
-            self.mouse_move(direction + drift.xy())?;
+            self.mouse_move(direction)?;
 
         }
         Ok(())
@@ -171,8 +193,8 @@ impl HumanInterface {
 fn drift() -> tmp_vec3 {
     let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64();
     tmp_vec3 {
-        x: 0.5 * f64::cos(now*0.8) as f32,
-        y: 0.5 * f64::sin(now*0.6) as f32,
-        z: 1.4 + f64::sin(now) as f32,
+        x: 0.5 * f64::cos(now*0.8) as f32 / 10.,
+        y: 0.5 * f64::sin(now*0.6) as f32 / 50.,
+        z: 1.4 + f64::sin(now) as f32 / 10.,
     }
 }

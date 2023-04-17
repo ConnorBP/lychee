@@ -110,6 +110,8 @@ impl AimBot {
 
 
             if game_data.local_player.shots_fired < 2 {return}
+            // check remaining bullets
+            //if game_data.local_player.clip
     
             let targeting: bool = 
             if let Ok(elap) = self.target_aquired_time.elapsed() {
@@ -141,6 +143,12 @@ impl AimBot {
             let angles = game_data.local_player.view_angles;
             let recoil = game_data.local_player.aimpunch_angle*2.;
 
+            // TODO: make this standalone spray control when not targeting
+            if !targeting {
+                self.old_punch = recoil;
+                return;
+            }
+
             let dist_angle = get_angle_from_crosshair(
                 game_data.entity_list.entities[closest_player].head_pos,
                 game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
@@ -150,8 +158,8 @@ impl AimBot {
             // max fov check
             if dist_angle.magnitude() > 20. {return}
 
-            human.set_goal(tmp_vec2 { x: -dist_angle.y, y: dist_angle.x });
-            //human.mouse_move(tmp_vec2 { x: math::angle_to_mouse(-dist_angle.y, 1.2), y: math::angle_to_mouse(dist_angle.x,1.2) }).expect("mouse move");
+            human.set_goal_angle(tmp_vec2 { x: -dist_angle.y, y: dist_angle.x });
+            //human.mouse_move(tmp_vec2 { x: math::angle_to_mouse(-dist_angle.y) as f32, y: math::angle_to_mouse(dist_angle.x) as f32 }).expect("mouse move");
 
             //println!("aimpunch: {:?} angle: {:?}", game_data.local_player.aimpunch_angle, dist_angle);
             

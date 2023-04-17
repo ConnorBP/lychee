@@ -171,8 +171,9 @@ pub fn angle_within_fov(angle_to_check: tmp_vec2, view_angle: tmp_vec2, fov: f32
     (angle_to_check - view_angle).magnitude() < fov
 }
 
-pub fn angle_to_mouse(angle: f32, game_sens: f32) -> f32 {
-    2.4*angle/game_sens
+// hard coded for 1.2 game sens for the moment
+pub fn angle_to_mouse(angle: f32) -> f64 {
+    angle as f64 * 37.878787
 }
 
 pub fn norm_angles(vec: tmp_vec2) -> tmp_vec2 {
