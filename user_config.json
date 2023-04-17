@@ -7,7 +7,7 @@
     "show_usernames": true,
     "camera_type": "Static"
   },
-  "bhop_enabled": false,
+  "bhop_enabled": true,
   "trigger_enabled": true,
   "trigger_defaults": {
     "visibility_check": true,
