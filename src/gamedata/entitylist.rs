@@ -30,6 +30,9 @@ pub struct EntityInfo {
     pub middle_body_pos: tmp_vec3,
     pub lower_body_pos: tmp_vec3,
     pub pelvis_pos: tmp_vec3,
+
+    pub left_foot_pos: tmp_vec3,
+    pub right_foot_pos: tmp_vec3,
     
     pub spotted_by_mask: u64,
 }
@@ -54,6 +57,8 @@ impl Default for EntityInfo {
             middle_body_pos: Default::default(),
             lower_body_pos: Default::default(),
             pelvis_pos: Default::default(),
+            left_foot_pos: Default::default(),
+            right_foot_pos: Default::default(),
             spotted_by_mask: Default::default(),
         }
     }
@@ -246,6 +251,9 @@ pub fn update_bones<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + Memory
     load_bone_batch(bat, 5, addr, &mut out.middle_body_pos); // middle body bone
     load_bone_batch(bat, 4, addr, &mut out.lower_body_pos); // belly bone
     //load_bone_batch(&mut bat3, 0, addr, &mut ent.pelvis_pos); // pelvis bone
+    // feet are 79 and two https://www.unknowncheats.me/forum/counterstrike-global-offensive/195653-csgo-bone-id.html
+    load_bone_batch(bat, 72, addr, &mut out.left_foot_pos);
+    load_bone_batch(bat, 79, addr, &mut out.right_foot_pos);
 }
 
 fn load_bone_batch<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, bone_id: i32, bone_matrix: Address, out: &'bat mut tmp_vec3) {

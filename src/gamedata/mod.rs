@@ -27,7 +27,7 @@ pub struct GameData {
     pub entity_list: EntityList,
 
     // viewmatrix for using the games existing viewmatrix if desired
-    //pub vm : [[f32;4];4],
+    pub vm : [[f32;4];4],
 
     /// The currently being played map name string
     pub current_map: Option<String>,
@@ -75,7 +75,7 @@ impl GameData {
                     weapon_id: WeaponId::None,
                 },
                 entity_list: Default::default(),
-                //vm: Default::default(),
+                vm: Default::default(),
                 current_map: None,
                 current_map_info: None,
 
@@ -137,7 +137,7 @@ impl GameData {
         let mut bat = proc.batcher();
         self.local_player.load_data(&mut bat, self.client_state);
 
-        //bat.read_into(client_base + *DW_VIEWMATRIX, &mut self.vm);
+        bat.read_into(client_base + *DW_VIEWMATRIX, &mut self.vm);
 
         // finally, commit all the reads and writes at once:
         bat.commit_rw().data_part()?;

@@ -30,6 +30,15 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // parse args and act accordingly
     let matches = parse_args();
     let scan_sigs = matches.get_one::<bool>("scan").copied().unwrap_or(false);
+    let espmod: Option<(Address, u32)> = matches.get_many::<u32>("espmod").map(|v| {
+        let x = v.collect::<Vec<&u32>>();
+        if x.len() < 2 {
+            log::error!("Incorrect number of arguments to esp base arg. -e requires both module origin and size. See help for more info.");
+            return (0.into(),0);// TODO MAKE THIS ERROR OUT OF THE PROGRAM OR RETURN NONE SOMEHOW
+        }
+        ((*x[0]).into(),*x[1])
+    });
+    log::info!("get esp args: {espmod:?}");
     extract_args(&matches);
 
     // vars for managing current config values
@@ -129,7 +138,11 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "aimbot")]
     let mut aimbot = features::AimBot::new();
 
-    let mut esp = features::Esp::new(&mut process)?;
+    // init Esp or return None if failed (don't run ESP process if init failed)
+    let mut esp = features::Esp::new(&mut process, espmod).ok();
+    if esp.is_none() {
+        println!("failed to init esp");
+    }
 
     let mut atrigger = features::AlgebraTrigger::new();
     //let mut recoil_data = features::RecoilRecorder::new();
@@ -271,6 +284,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             // run any mouse moves that acumulate from the above features
             human.process_smooth_mouse()?;
             //features::shoot_speed_test(&mut keyboard, &mut human);
+            if let Some(e) = &mut esp {
+                e.render_esp(&mut process, &game_data);
+            }
         }
         // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
         human.process_unclicks()?;
@@ -314,6 +330,17 @@ fn parse_args() -> ArgMatches {
                 .action(clap::ArgAction::SetTrue)
                 .required(false)
                 .help("if provided then signatures from config.json will be scanned and offsets saved before running")
+        )
+        .arg(
+            Arg::new("espmod")
+                .long("espmod")
+                .short('e')
+                .action(clap::ArgAction::Set)
+                //.multiple_values(true)
+                .number_of_values(2)
+                .value_parser(clap_num::maybe_hex::<u32>)
+                .required(false)
+                .help("if provided, then the ESP Module will be retreived from the module base address and size specified ex: '-e 0xb9ff0a9fff 0x300000'")
         )
         // .arg(
         //     Arg::new("connector")

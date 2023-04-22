@@ -2,7 +2,7 @@
 name = "lyche"
 version = "0.3.3"
 authors = ["segfault <segfault#1337>"]
-edition = "2018"
+edition = "2021"
 resolver = "2"
 
 # to future me: When features are stable, Clean Up This File Please............
@@ -24,6 +24,7 @@ clearscreen = "^1.0"
 log = "0.4"
 env_logger = "0.9"
 clap = { version = "^3.0.5", features = ["cargo"]}
+clap-num = "1.0"
 simplelog = "^0.12"
 futures = {version = "0.3", features = ["executor"]}
 anyhow = "1.0"
