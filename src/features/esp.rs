@@ -19,7 +19,22 @@ struct BoxCommand {
     y: i32,
     w: i32,
     h: i32,
-    //col: DXCOLOR,
+    name_ptr: u32,
+}
+
+#[repr(C)]
+#[derive(Pod)]
+struct BoxCommandPosOnly {
+    x: i32,
+    y: i32,
+    w: i32,
+    h: i32,
+}
+
+impl From<BoxCommand> for BoxCommandPosOnly {
+    fn from(c: BoxCommand) -> Self {
+        BoxCommandPosOnly { x: c.x, y: c.y, w: c.w, h: c.h }
+    }
 }
 
 #[repr(C)]
@@ -47,6 +62,7 @@ pub struct Esp {
     mod_base: Address,
     buffer_addr: umem,
     buffer_info: BoxCommandBuffer,
+    last_name_update: SystemTime,
 }
 
 impl Esp {
@@ -74,6 +90,7 @@ impl Esp {
                 mod_base,
                 buffer_addr: addr as umem,
                 buffer_info,
+                last_name_update: SystemTime::now(),
             }
         )
     }
@@ -151,7 +168,7 @@ impl Esp {
                 y: top_left.y as i32,
                 w: wh.x as i32,
                 h: wh.y as i32,
-                //col: DXCOLOR{ col: 0},
+                name_ptr: if e.ent_info.is_null() {0} else {(e.ent_info + 0x10u32).to_umem() as u32},
             });
             //println!("pushed esp box for {i}");
         }
@@ -159,10 +176,23 @@ impl Esp {
         let command_size =  std::mem::size_of::<BoxCommand>();
         let buffer_addr = self.buffer_addr + std::mem::size_of::<BoxCommandBuffer>() as umem;
         let bs;
+        let finalbuf;
         let mut batch = proc.batcher();
+
+        // if let Ok(elap) = self.last_name_update.elapsed() {
+
+        // }
+
+        let mut boxbuf = vec![];
+
         for (i,draw_box) in boxes.iter().enumerate() {
-            batch.write_into(self.mod_base + (buffer_addr + (i as u64 * command_size as u64)), draw_box);
+            //println!("writing name ptr {} for idx {}", draw_box.name_ptr, i);
+            //batch.write_into(self.mod_base + (buffer_addr + (i as u64 * command_size as u64)), draw_box);
+            boxbuf.push(draw_box.as_bytes());
         }
+
+        finalbuf = boxbuf.concat();
+        batch.write_raw_into(self.mod_base + buffer_addr, &finalbuf);
 
         // set the draw_ready bitand count
         //proc.write((self.buffer_addr + 0x4).into(), &1).data().unwrap();

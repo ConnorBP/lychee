@@ -14,6 +14,7 @@ pub struct EntityInfo {
     //b_is_local_player: bool,
     //is_enemy: bool,
     pub name: String,
+    pub ent_info: Address,
 
     pub lifestate: i32,
     pub health: i32,
@@ -42,6 +43,7 @@ impl Default for EntityInfo {
         EntityInfo {
             dormant: 1,
             name: "".to_string(),
+            ent_info: Default::default(),
             u32address: Default::default(),
             address: Default::default(),
             lifestate: Default::default(),
@@ -210,8 +212,9 @@ impl EntityList {
         
         for (i, ent) in self.entities.iter_mut().enumerate() {
             //if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            if let Ok(name) = get_entity_name(proc,items,i) {
+            if let Ok((info, name)) = get_entity_name(proc,items,i) {
                 ent.name = name;
+                ent.ent_info = info;
                 //println!("name: {}", ent.name);
             }
         }
@@ -231,11 +234,11 @@ impl EntityList {
 // }
 
 /// given the pointer to the player info items list read out an entity username
-fn get_entity_name(proc: &mut (impl Process + MemoryView), items: Address, ent_idx: usize) -> Result<String> {
+fn get_entity_name(proc: &mut (impl Process + MemoryView), items: Address, ent_idx: usize) -> Result<(Address, String)> {
     let player_info_ptr = proc.read_addr32(items.add(0x28 + (ent_idx * 0x34))).data()?;
-    if player_info_ptr.is_null() {return Ok("NO NAME".to_string())}
+    if player_info_ptr.is_null() {return Ok((Address::NULL,"NO NAME".to_string()))}
     let bytes = proc.read_raw(player_info_ptr.add(0x10), 32).data()?;
-    Ok(std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string())
+    Ok((player_info_ptr, std::str::from_utf8(bytes.as_bytes()).unwrap_or("NO NAME").to_string()))
 }
 
 pub fn update_bones<'bat>(bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>, out: &'bat mut EntityInfo) {
