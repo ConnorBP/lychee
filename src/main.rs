@@ -36,9 +36,20 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             log::error!("Incorrect number of arguments to esp base arg. -e requires both module origin and size. See help for more info.");
             return (0.into(),0);// TODO MAKE THIS ERROR OUT OF THE PROGRAM OR RETURN NONE SOMEHOW
         }
+        log::info!("got esp args: base addr {:?} size {:?}", x[0], x[1]);
         ((*x[0]).into(),*x[1])
     });
-    log::info!("get esp args: {espmod:?}");
+
+    let kernelesp: Option<(Address, umem)> = matches.get_many::<umem>("kernelesp").map(|v| {
+        let x = v.collect::<Vec<&umem>>();
+        if x.len() < 2 {
+            log::error!("Incorrect number of arguments to esp base arg. -e requires both module origin and size. See help for more info.");
+            return (0.into(),0);// TODO MAKE THIS ERROR OUT OF THE PROGRAM OR RETURN NONE SOMEHOW
+        }
+        log::info!("got kernel esp args: base addr {:?} size {:?}", x[0], x[1]);
+        ((*x[0]).into(),*x[1])
+    });
+
     extract_args(&matches);
 
     // vars for managing current config values
@@ -142,6 +153,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut esp = features::Esp::new(&mut process, espmod).ok();
     if esp.is_none() {
         println!("failed to init esp");
+    }
+    let mut kernel_esp = features::kernel_esp::KernEsp::new(os.clone(), kernelesp, None).ok();
+    if kernel_esp.is_none() {
+        println!("failed to init kern esp");
     }
 
     let mut atrigger = features::AlgebraTrigger::new();
@@ -287,6 +302,10 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             if let Some(e) = &mut esp {
                 e.render_esp(&mut process, &game_data);
             }
+
+            if let Some(e) = &mut kernel_esp {
+                e.render_esp(&game_data);
+            }
         }
         // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
         human.process_unclicks()?;
@@ -340,7 +359,18 @@ fn parse_args() -> ArgMatches {
                 .number_of_values(2)
                 .value_parser(clap_num::maybe_hex::<u32>)
                 .required(false)
-                .help("if provided, then the ESP Module will be retreived from the module base address and size specified ex: '-e 0xb9ff0a9fff 0x300000'")
+                .help("if provided, then the injected ESP Module will be retreived from the module base address and size specified ex: '-e 0xb9ff0a9fff 0x300000'")
+        )
+        .arg(
+            Arg::new("kernelesp")
+                .long("kernelesp")
+                .short('k')
+                .action(clap::ArgAction::Set)
+                //.multiple_values(true)
+                .number_of_values(2)
+                .value_parser(clap_num::maybe_hex::<umem>)
+                .required(false)
+                .help("if provided, then the KERNEL ESP Module will be scanned for from the module base address and size specified ex: '-k 0xb9ff0a9fff 0x300000'")
         )
         // .arg(
         //     Arg::new("connector")

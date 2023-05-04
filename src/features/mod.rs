@@ -7,6 +7,7 @@ mod zuesknife;
 mod human_speedtest;
 //mod onebwalls;
 mod esp;
+pub mod kernel_esp;
 //mod recoil_recorder;
 //mod recoil_replay;
 #[cfg(feature = "aimbot")]
