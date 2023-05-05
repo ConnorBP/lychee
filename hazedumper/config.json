@@ -380,13 +380,13 @@
     },
     {
       "name": "dwViewMatrix",
-      "extra": 176,
+      "extra": 144,
       "relative": true,
       "module": "client.dll",
       "offsets": [
         3
       ],
-      "pattern": "0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9"
+      "pattern": "0F 10 05 ? ? ? ? 0F 11 ? ? 0F 28"
     },
     {
       "name": "dwWeaponTable",
