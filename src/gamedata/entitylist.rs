@@ -148,24 +148,6 @@ impl EntityList {
         std::mem::drop(bat1);
         
         trace!("dropped first playerlist batcher");
-
-        let local_eye_pos = self.local_player.vec_origin + self.local_player.vec_view_offset;
-
-        // apply the bit mask to convert handles to an index
-        self.local_player.observing_id &= 0xFFF;
-        self.local_player.weapon_ent_id &= 0xFFF;
-
-        if self.local_player.weapon_ent_id == 0 {
-            self.local_player.weapon_id = WeaponId::None;
-        } else {
-            let weapon_ptr = proc.read_addr32(client_module_addr.add(*DW_ENTITYLIST + (self.local_player.weapon_ent_id-1) * 0x10)).data()?;
-            let mut weapon_id:u32 = proc.read(weapon_ptr.add(*NET_ITEM_DEF_INDEX)).data()?;
-            weapon_id &= 0xFFF;
-            self.local_player.weapon_id = weapon_id.into();
-        }
-        //println!("weapon id: {:?}", self.local_player.weapon_id);
-        //println!("spec target: {} local: {} origin {:?}", self.local_player.observing_id, local_player_idx, self.local_player.vec_origin);
-
         
 
         trace!("starting second playerlist batcher");
@@ -205,6 +187,27 @@ impl EntityList {
         bat2.commit_rw().data_part()?;// tbh idk if its better to use data() or data_part() here
         trace!("done comitting second playerlist batcher");
         std::mem::drop(bat2);
+
+
+        let local_eye_pos = self.local_player.vec_origin + self.local_player.vec_view_offset;
+
+        // apply the bit mask to convert handles to an index
+        self.local_player.observing_id &= 0xFFF;
+        self.local_player.weapon_ent_id &= 0xFFF;
+
+        if self.local_player.weapon_ent_id == 0 {
+            self.local_player.weapon_id = WeaponId::None;
+        } else {
+            let weapon_ptr = proc.read_addr32(client_module_addr.add(*DW_ENTITYLIST + (self.local_player.weapon_ent_id-1) * 0x10)).data()?;
+            let mut weapon_id:u32 = proc.read(weapon_ptr.add(*NET_ITEM_DEF_INDEX)).data()?;
+            weapon_id &= 0xFFF;
+            self.local_player.weapon_id = weapon_id.into();
+        }
+        //println!("weapon id: {:?}", self.local_player.weapon_id);
+        //println!("spec target: {} local: {} origin {:?}", self.local_player.observing_id, local_player_idx, self.local_player.vec_origin);
+
+
+
         trace!("running world to screen on entities");
 
         // get head positions
