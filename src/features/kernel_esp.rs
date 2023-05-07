@@ -4,7 +4,7 @@ use ::std::{ops::Add, time::SystemTime, convert::TryInto};
 use crate::{offsets::{find_pattern}, gamedata::GameData, utils::math, datatypes::{tmp_vec3, tmp_vec2}};
 
 
-const BUFFER_MAX: usize = 256;
+const BUFFER_MAX: usize = 32;
 
 #[repr(C)]
 #[derive(Pod)]
@@ -12,13 +12,38 @@ struct DXCOLOR {
     col: u32
 }
 
+impl DXCOLOR {
+    fn from_rgb(r:u32,g:u32,b:u32)-> Self {
+        let v: u32 = (r as u32) | (g as u32) << 8 | (b as u32) << 16;
+        Self {col:v }
+    }
+}
+
 #[repr(C)]
-#[derive(Pod)]
+#[derive(Pod,Debug)]
 struct BoxCommand {
     x: u32,
     y: u32,
     w: u32,
     h: u32,
+}
+
+#[repr(C)]
+#[derive(Pod)]
+struct RelativePoint {
+    x: i16,
+    y: i16,
+}
+
+#[repr(C)]
+#[derive(Pod)]
+struct Bones {
+    head: RelativePoint,
+    body: RelativePoint,
+    lhand: RelativePoint,
+    rhand: RelativePoint,
+    lfoot: RelativePoint,
+    rfoot: RelativePoint,
 }
 
 #[repr(C)]
@@ -100,7 +125,9 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
     pub fn render_esp(&mut self, game_data: &GameData) {
         
         let mut boxes = vec![];
-        
+        let mut relative_bones = vec![];
+        let mut idxbuf = vec![];
+
         for (i,e) in game_data.entity_list.entities.iter().enumerate() {
             if e.team_num == game_data.local_player.team_num {continue}
             if e.lifestate > 0 {continue}
@@ -169,6 +196,28 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
                 w: wh.x as u32,
                 h: wh.y as u32,
             });
+
+            let head = head_w2s.unwrap_or(tmp_vec3 {x:top_left.x,y:top_left.y,z:0.0});
+            let body = body_w2s.unwrap_or(tmp_vec3 {x:top_left.x,y:top_left.y,z:0.0});
+            let lfoot = left_foot_w2s.unwrap_or(tmp_vec3 {x:top_left.x,y:top_left.y,z:0.0});
+            let rfoot = right_foot_w2s.unwrap_or(tmp_vec3 {x:top_left.x,y:top_left.y,z:0.0});
+            let lhand = tmp_vec3 {x:top_left.x,y:top_left.y+50.0,z:0.0};
+            let rhand = tmp_vec3 {x:top_left.x+100.0,y:top_left.y+50.0,z:0.0};
+
+            relative_bones.push(Bones{
+                head: RelativePoint { x: (head.x-top_left.x) as i16, y: (head.y-top_left.y) as i16 },
+                body: RelativePoint { x: (body.x-top_left.x) as i16, y: (body.y-top_left.y) as i16 },
+                lhand: RelativePoint { x: (lhand.x-top_left.x) as i16, y: (lhand.y-top_left.y) as i16 },
+                rhand: RelativePoint { x: (rhand.x-top_left.x) as i16, y: (rhand.y-top_left.y) as i16 },
+                lfoot: RelativePoint { x: (lfoot.x-top_left.x) as i16, y: (lfoot.y-top_left.y) as i16 },
+                rfoot: RelativePoint { x: (rfoot.x-top_left.x) as i16, y: (rfoot.y-top_left.y) as i16 },
+            });
+
+            let idx = i as u16;
+            let idxb = idx.to_le_bytes();
+            idxbuf.push(idxb);
+
+
             //println!("pushed esp box for {i}");
         }
 
@@ -176,6 +225,8 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
         let buffer_addr = self.buffer_addr + std::mem::size_of::<BoxCommandBuffer>() as umem;
         let bs;
         let finalbuf;
+        let finalbonebuf;
+        let finalidxbuf;
         let mut batch = self.os.batcher();
 
         // if let Ok(elap) = self.last_name_update.elapsed() {
@@ -183,25 +234,34 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
         // }
 
         let mut boxbuf = vec![];
+        let mut bonebuf = vec![];//relative_bones.as_bytes();
 
+        //let mut idx;
         for (i,draw_box) in boxes.iter().enumerate() {
             //println!("writing name ptr {} for idx {}", draw_box.name_ptr, i);
             //batch.write_into(self.mod_base + (buffer_addr + (i as u64 * command_size as u64)), draw_box);
-            if i >= 32 {break;} // break if we reach the max buffer of 32 (no overflow pls)
+            if i >= BUFFER_MAX {break;} // break if we reach the max buffer of 32 (no overflow pls)
+            //print!("drawing box: {draw_box:?}");
             boxbuf.push(draw_box.as_bytes());
+            bonebuf.push(relative_bones[i].as_bytes());
         }
 
         finalbuf = boxbuf.concat();
+        finalbonebuf = bonebuf.concat();
+        finalidxbuf = idxbuf.concat();
+        
         batch.write_raw_into(self.mod_base + buffer_addr, &finalbuf);
+        batch.write_raw_into(self.mod_base + buffer_addr + command_size*BUFFER_MAX, &finalbonebuf);
+        batch.write_raw_into(self.mod_base + buffer_addr + command_size*BUFFER_MAX + std::mem::size_of::<Bones>() * BUFFER_MAX, &finalidxbuf);
 
         // set the draw_ready bitand count
         //proc.write((self.buffer_addr + 0x4).into(), &1).data().unwrap();
 
         let size = boxes.len() as u32;
-        bs = [size.as_bytes(),1u32.as_bytes()].concat();
+        bs = [DXCOLOR::from_rgb(100, 100, 160).as_bytes(),size.as_bytes(),1u32.as_bytes()].concat();
         //println!("writing {:#02x?}", bs);
         
-        batch.write_raw_into(self.mod_base + (self.buffer_addr+ 0xC), &bs);
+        batch.write_raw_into(self.mod_base + (self.buffer_addr+ 0x8), &bs);
         // batch.write_into(self.mod_base + (self.buffer_addr + 0x18), &1u32);
         // batch.write_into(self.mod_base + (self.buffer_addr + 0x14), &size);
         batch.commit_rw().data_part().unwrap();
