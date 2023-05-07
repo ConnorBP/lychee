@@ -1,10 +1,10 @@
 #pragma once
 #include <cstdint>
 
-// 2023-05-05 23:53:24.639843 UTC
+// 2023-05-06 05:48:01.985011900 UTC
 
 namespace hazedumper {
-constexpr ::std::int64_t timestamp = 1683330804;
+constexpr ::std::int64_t timestamp = 1683352081;
 namespace netvars {
 constexpr ::std::ptrdiff_t cs_gamerules_data = 0x0;
 constexpr ::std::ptrdiff_t m_ArmorValue = 0x117CC;
@@ -103,7 +103,7 @@ constexpr ::std::ptrdiff_t m_zoomLevel = 0x33E0;
 } // namespace netvars
 namespace signatures {
 constexpr ::std::ptrdiff_t anim_overlays = 0x2990;
-constexpr ::std::ptrdiff_t client_state_deref = 0xFBF60010;
+constexpr ::std::ptrdiff_t client_state_deref = 0xFC2A0010;
 constexpr ::std::ptrdiff_t clientstate_choked_commands = 0x4D30;
 constexpr ::std::ptrdiff_t clientstate_delta_ticks = 0x174;
 constexpr ::std::ptrdiff_t clientstate_last_outgoing_command = 0x4D2C;
@@ -149,7 +149,7 @@ constexpr ::std::ptrdiff_t dwYawPtr = 0xDED928;
 constexpr ::std::ptrdiff_t dwZoomSensitivityRatioPtr = 0xDF3398;
 constexpr ::std::ptrdiff_t dwbSendPackets = 0xDD2B2;
 constexpr ::std::ptrdiff_t dwppDirect3DDevice9 = 0xA62C0;
-constexpr ::std::ptrdiff_t find_hud_element = 0x2C0BF370;
+constexpr ::std::ptrdiff_t find_hud_element = 0x2CAFF370;
 constexpr ::std::ptrdiff_t force_update_spectator_glow = 0x3D898A;
 constexpr ::std::ptrdiff_t interface_engine_cvar = 0x3FA9C;
 constexpr ::std::ptrdiff_t is_c4_owner = 0x3E61A0;

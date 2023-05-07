@@ -1,7 +1,7 @@
-' 2023-05-05 23:53:24.639843 UTC
+' 2023-05-06 05:48:01.985011900 UTC
 
 Namespace hazedumper
-    Public Const timestamp as Integer = &H645596F4
+    Public Const timestamp as Integer = &H6455EA11
     Public Shared Class netvars
         Public Const cs_gamerules_data as Integer = &H0
         Public Const m_ArmorValue as Integer = &H117CC
@@ -100,7 +100,7 @@ Namespace hazedumper
     End Class
     Public Shared Class signatures
         Public Const anim_overlays as Integer = &H2990
-        Public Const client_state_deref as Integer = &HFBF60010
+        Public Const client_state_deref as Integer = &HFC2A0010
         Public Const clientstate_choked_commands as Integer = &H4D30
         Public Const clientstate_delta_ticks as Integer = &H174
         Public Const clientstate_last_outgoing_command as Integer = &H4D2C
@@ -146,7 +146,7 @@ Namespace hazedumper
         Public Const dwZoomSensitivityRatioPtr as Integer = &HDF3398
         Public Const dwbSendPackets as Integer = &HDD2B2
         Public Const dwppDirect3DDevice9 as Integer = &HA62C0
-        Public Const find_hud_element as Integer = &H2C0BF370
+        Public Const find_hud_element as Integer = &H2CAFF370
         Public Const force_update_spectator_glow as Integer = &H3D898A
         Public Const interface_engine_cvar as Integer = &H3FA9C
         Public Const is_c4_owner as Integer = &H3E61A0

@@ -1,8 +1,8 @@
 {
-  "timestamp": 1683330804,
+  "timestamp": 1683352081,
   "signatures": {
     "anim_overlays": 10640,
-    "client_state_deref": 4227203088,
+    "client_state_deref": 4230610960,
     "clientstate_choked_commands": 19760,
     "clientstate_delta_ticks": 372,
     "clientstate_last_outgoing_command": 19756,
@@ -48,7 +48,7 @@
     "dwZoomSensitivityRatioPtr": 14627736,
     "dwbSendPackets": 905906,
     "dwppDirect3DDevice9": 680640,
-    "find_hud_element": 738980720,
+    "find_hud_element": 749728624,
     "force_update_spectator_glow": 4032906,
     "interface_engine_cvar": 260764,
     "is_c4_owner": 4088224,
