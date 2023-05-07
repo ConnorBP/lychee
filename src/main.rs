@@ -237,11 +237,11 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         }
 
         // update per weapon config if weapon id changed
-        if game_data.local_player.weapon_id != last_weapon { //TODO ALSO REFRESH THIS IF CONFIG FILE WAS RELOADED
+        if game_data.entity_list.local_player.weapon_id != last_weapon { //TODO ALSO REFRESH THIS IF CONFIG FILE WAS RELOADED
             // update weapon config to be the currently loaded configs data 
-            println!("Weapon held switched getting config for weapon {}", game_data.local_player.weapon_id);
+            println!("Weapon held switched getting config for weapon {}", game_data.entity_list.local_player.weapon_id);
             weapon_config = config.get(
-                format!("weapons.{}", game_data.local_player.weapon_id.to_string())
+                format!("weapons.{}", game_data.entity_list.local_player.weapon_id.to_string())
                 .as_str()
             )
             .unwrap_or(
@@ -251,23 +251,23 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                 }
             );
             // update last weapon
-            last_weapon = game_data.local_player.weapon_id;
+            last_weapon = game_data.entity_list.local_player.weapon_id;
         }
 
         let mut framedata = render::FrameData::default();
         framedata.connected = true;
-        framedata.velocity = game_data.local_player.vec_velocity.magnitude();
+        framedata.velocity = game_data.entity_list.local_player.vec_velocity.magnitude();
         framedata.local_position = render::PlayerLoc{
-            world_pos: game_data.local_player.vec_origin,
-            rotation: game_data.local_player.view_angles.xy(),
-            team: game_data.local_player.team_num,
+            world_pos: game_data.entity_list.local_player.vec_origin,
+            rotation: game_data.view_angles.xy(),
+            team: game_data.entity_list.local_player.team_num,
             name: "local".to_string(),
         };
         // send location data to renderer
         for (i, ent) in game_data.entity_list.entities.iter().enumerate() {
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
-            if i == game_data.local_player.ent_idx as usize {continue}
-            if game_data.local_player.observing_id == 0 || i == game_data.local_player.observing_id as usize -1 {continue}
+            if i == game_data.local_player_idx as usize {continue}
+            if game_data.entity_list.local_player.observing_id == 0 || i == game_data.entity_list.local_player.observing_id as usize -1 {continue}
             //if ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0 {continue}
 
             framedata.locations.push(render::PlayerLoc{
@@ -282,7 +282,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             break 'mainloop;
         }
 
-        if game_data.local_player.health > 0 || game_data.local_player.lifestate == 0 {
+        if game_data.entity_list.local_player.health > 0 || game_data.entity_list.local_player.lifestate == 0 {
             #[cfg(feature = "bhop_sus")]
             bhop_sus.bhop_sus(&mut keyboard, &mut process, &game_data, client_module.base)?;
             //#[cfg(feature = "walls")]
@@ -305,17 +305,19 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             human.process_smooth_mouse()?;
             //features::shoot_speed_test(&mut keyboard, &mut human);
             
-            #[cfg(feature = "esp")]
-            {
-                if let Some(e) = &mut esp {
-                    e.render_esp(&mut process, &game_data);
-                }
+        }
 
-                if let Some(e) = &mut kernel_esp {
-                    e.render_esp(&game_data);
-                }
+        #[cfg(feature = "esp")]
+        {
+            if let Some(e) = &mut esp {
+                e.render_esp(&mut process, &game_data);
+            }
+
+            if let Some(e) = &mut kernel_esp {
+                e.render_esp(&game_data);
             }
         }
+
         // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
         human.process_unclicks()?;
     }

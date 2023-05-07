@@ -39,7 +39,7 @@ impl SusBhop {
             return Ok(());
         }
         if kb.is_down(0x20) {
-            let flags: u64 = proc.read(game_data.local_player.address.add(*NET_FLAGS)).data().unwrap_or(0);
+            let flags: u64 = proc.read(game_data.entity_list.local_player.address.add(*NET_FLAGS)).data().unwrap_or(0);
             let on_ground: bool = flags & 1 > 0;
             if on_ground {
                 proc.write(client_base.add(*DW_FORCEJUMP), &0x5u8).data()?;

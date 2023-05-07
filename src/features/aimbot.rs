@@ -49,7 +49,7 @@ impl AimBot {
             return;
         }
 
-        if game_data.local_player.weapon_id == WeaponId::None {
+        if game_data.entity_list.local_player.weapon_id == WeaponId::None {
             return;
         }
 
@@ -66,8 +66,8 @@ impl AimBot {
             if (ent.dormant &1 == 1)
             || ent.health <= 0
             || ent.lifestate > 0
-            || ent.team_num == game_data.local_player.team_num
-            || game_data.local_player.observing_id == 0 || closest_player == game_data.local_player.observing_id as usize -1
+            || ent.team_num == game_data.entity_list.local_player.team_num
+            || game_data.entity_list.local_player.observing_id == 0 || closest_player == game_data.entity_list.local_player.observing_id as usize -1
             //|| ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0
             {
                 return
@@ -109,7 +109,7 @@ impl AimBot {
 
 
 
-            if game_data.local_player.shots_fired < 2 {return}
+            if game_data.entity_list.local_player.shots_fired < 2 {return}
             // check remaining bullets
             //if game_data.local_player.clip
     
@@ -140,8 +140,8 @@ impl AimBot {
             //     }
             // };
             
-            let angles = game_data.local_player.view_angles;
-            let recoil = game_data.local_player.aimpunch_angle*2.;
+            let angles = game_data.view_angles;
+            let recoil = game_data.entity_list.local_player.aimpunch_angle*2.;
 
             // TODO: make this standalone spray control when not targeting
             if !targeting {
@@ -151,7 +151,7 @@ impl AimBot {
 
             let dist_angle = get_angle_from_crosshair(
                 game_data.entity_list.entities[closest_player].head_pos,
-                game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+                game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset,
                 angles.xy() + recoil
             );
 

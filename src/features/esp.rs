@@ -103,7 +103,7 @@ impl Esp {
         let mut boxes = vec![];
         
         for (i,e) in game_data.entity_list.entities.iter().enumerate() {
-            if e.team_num == game_data.local_player.team_num {continue}
+            if e.team_num == game_data.entity_list.local_player.team_num {continue}
             if e.lifestate > 0 {continue}
             if e.dormant &1 == 1 {continue}
             //if i == game_data.local_player.ent_idx {continue}

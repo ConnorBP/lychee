@@ -9,12 +9,12 @@ pub fn zues_knife_bot(human: &mut HumanInterface, game_data: &GameData, closest_
     let entity_world_distance = 
             (
                 entity.head_pos
-                - (game_data.local_player.vec_origin + game_data.local_player.vec_view_offset)
+                - (game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset)
             ).magnitude();
-    if game_data.local_player.weapon_id == WeaponId::Taser {
+    if game_data.entity_list.local_player.weapon_id == WeaponId::Taser {
         if entity_world_distance >= 182.5 {return false}
     }
-    if game_data.local_player.weapon_id == WeaponId::Knife {
+    if game_data.entity_list.local_player.weapon_id == WeaponId::Knife {
         //println!("dist: {}", entity_world_distance);
         if entity_world_distance >= 70. {return false}
         if entity_world_distance < 45. {

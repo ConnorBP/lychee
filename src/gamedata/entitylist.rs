@@ -3,7 +3,7 @@ use ::std::{ops::Add, time::SystemTime};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 use log::trace;
 
-use crate::{offsets::*, utils::math, datatypes::tmp_vec3};
+use crate::{offsets::*, utils::math, datatypes::{tmp_vec3, game::WeaponId, tmp_vec2}};
 
 #[derive(Clone,Debug)]
 #[repr(C)]
@@ -68,6 +68,9 @@ impl Default for EntityInfo {
 
 #[derive(Debug)]
 pub struct EntityList {
+    /// Local Player Info
+    pub local_player: LocalPlayer,
+
     pub entities: [EntityInfo; 32],// can be up to 64 (in theory) but we are gonna save some time with only reading 32
     pub closest_player: Option<usize>,
 
@@ -78,6 +81,23 @@ pub struct EntityList {
 impl Default for EntityList {
     fn default() -> EntityList {
         EntityList {
+            local_player: LocalPlayer {
+                addr32: 0,
+                address: Address::null(), // this will be loaded in when gd.load_data is called
+                health: 0,
+                incross: 0,
+                dormant: 0,
+                lifestate: 0,
+                team_num: 0,
+                aimpunch_angle: Default::default(),
+                shots_fired: 0,
+                vec_origin: Default::default(),
+                vec_view_offset: Default::default(),
+                vec_velocity: Default::default(),
+                observing_id: 0,
+                weapon_ent_id: 0,
+                weapon_id: WeaponId::None,
+            },
             entities: Default::default(),// can be up to 64 (in theory) but we are gonna save some time with only reading 32
             closest_player: None,
             last_name_refresh: SystemTime::now(),
@@ -105,30 +125,62 @@ impl EntityList {
 
     /// Takes in a reference to the game process and the client module base address and then walks the entity list tree
     /// Data retreived from this is stored into the EntityList struct this is called on
-    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, client_state: Address, local_player_idx: usize, local_view_angles: tmp_vec3, local_eye_pos: tmp_vec3) -> Result<()> {
+    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, client_state: Address, local_player_idx: usize, local_view_angles: tmp_vec3) -> Result<()> {
         trace!("entering pop playerlist");
         let mut bat1 = proc.batcher();
+        bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (local_player_idx as u32 * 0x10)), &mut self.local_player.addr32);
         for (i, ent) in self.entities.iter_mut().enumerate() {
-            if i == local_player_idx {continue};
+            if i == local_player_idx {         
+                continue;
+            };
             // clear the spot first so if there is an error reading it ends up not valid
             ent.u32address = 0;
             // add a u32 sized read at the expected adress for the entity address to be at
             bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (i as u32 * 0x10)), &mut ent.u32address);
         }
+        
+
         trace!("comitting first playerlist batcher");
         bat1.commit_rw().data_part()?;
 
         trace!("done comitting first playerlist batcher");
 
         std::mem::drop(bat1);
-
+        
         trace!("dropped first playerlist batcher");
+
+        let local_eye_pos = self.local_player.vec_origin + self.local_player.vec_view_offset;
+
+        // apply the bit mask to convert handles to an index
+        self.local_player.observing_id &= 0xFFF;
+        self.local_player.weapon_ent_id &= 0xFFF;
+
+        if self.local_player.weapon_ent_id == 0 {
+            self.local_player.weapon_id = WeaponId::None;
+        } else {
+            let weapon_ptr = proc.read_addr32(client_module_addr.add(*DW_ENTITYLIST + (self.local_player.weapon_ent_id-1) * 0x10)).data()?;
+            let mut weapon_id:u32 = proc.read(weapon_ptr.add(*NET_ITEM_DEF_INDEX)).data()?;
+            weapon_id &= 0xFFF;
+            self.local_player.weapon_id = weapon_id.into();
+        }
+        //println!("weapon id: {:?}", self.local_player.weapon_id);
+        //println!("spec target: {} local: {} origin {:?}", self.local_player.observing_id, local_player_idx, self.local_player.vec_origin);
+
+        
 
         trace!("starting second playerlist batcher");
         let mut bat2 = proc.batcher();
         trace!("created second playerlist batcher");
+
+        // load local player with the rest of the entities
+        self.local_player.address = Address::from(self.local_player.addr32);
+        if self.local_player.address.is_valid() {
+            self.local_player.load_data(&mut bat2);
+        }
         for (i, ent) in self.entities.iter_mut().enumerate() {
-            if i == local_player_idx {continue};
+            if i == local_player_idx {                
+                continue;
+            };
             trace!("converting u32 to address");
             ent.address = Address::from(ent.u32address);
             if ent.address.is_valid() && !ent.address.is_null() {
@@ -158,7 +210,9 @@ impl EntityList {
         // get head positions
         let mut bat3 = proc.batcher();
         for (i, ent) in self.entities.iter_mut().enumerate() {
-            if i == local_player_idx {continue};
+            if i == local_player_idx {
+                continue;
+            };
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {
                 ent.dormant = 1;
                 continue
@@ -175,14 +229,16 @@ impl EntityList {
         let mut closest_dist = None;
         // get world2screen data
         for (i, ent) in self.entities.iter_mut().enumerate() {
-            if i == local_player_idx {continue};
+            if i == local_player_idx {
+                continue;
+            };
             if(ent.dormant &1 == 1) || ent.lifestate > 0 {continue}
             
             const disable_vischeck: bool = true;
             // only check for closest on visible entities
             if disable_vischeck || (ent.spotted_by_mask & (1 << local_player_idx) > 0) {
                 // need access to local player data to calculate distance
-                let dist = math::get_dist_from_crosshair(ent.head_pos, local_eye_pos, local_view_angles.xy());
+                let dist = math::get_dist_from_crosshair(ent.head_pos, local_eye_pos, (local_view_angles + self.local_player.aimpunch_angle*2.).xy());
                 if self.closest_player.is_none() || dist < closest_dist.unwrap() {
                     closest_dist = Some(dist);
                     self.closest_player = Some(i);
@@ -224,6 +280,50 @@ impl EntityList {
             }
         }
         Ok(())
+    }
+}
+
+
+#[derive(Debug)]
+pub struct LocalPlayer {
+    addr32: u32,
+    pub address: Address,
+    pub incross: i32,
+
+    pub dormant: u8,
+    pub lifestate: i32,
+    pub health: i32,
+    pub team_num: i32,
+    pub aimpunch_angle: tmp_vec2,
+    pub shots_fired: i32,
+    pub observing_id: u64,
+    pub weapon_ent_id: u32,
+    pub weapon_id: WeaponId,
+
+    pub vec_origin: tmp_vec3,
+    pub vec_view_offset: tmp_vec3,
+    pub vec_velocity: tmp_vec3,
+}
+
+impl LocalPlayer {
+    fn load_data<'bat>(&'bat mut self, bat: &mut MemoryViewBatcher<'bat,impl Process + MemoryView>) {
+        trace!("entering localplayer load data");
+        //let health: i32 = process.read(local_player.add(*offsets::NET_HEALTH)).data()?;
+        //if let Ok(incross) = process.read::<i32>(local_player.add(*offsets::NET_CROSSHAIRID)).data()
+        bat
+        .read_into(self.address.add(*NET_HEALTH), &mut self.health)
+        .read_into(self.address.add(*NET_CROSSHAIRID), &mut self.incross)
+        .read_into(self.address.add(*M_BDORMANT), &mut self.dormant)
+        .read_into(self.address.add(*NET_TEAM), &mut self.team_num)
+        .read_into(self.address.add(*NET_LIFESTATE), &mut self.lifestate)
+        .read_into(self.address.add(*NET_AIMPUNCH_ANGLE), &mut self.aimpunch_angle)
+        .read_into(self.address.add(*NET_SHOTSFIRED), &mut self.shots_fired)
+        .read_into(self.address.add(*NET_VEC_ORIGIN), &mut self.vec_origin)
+        .read_into(self.address.add(*NET_VEC_VIEWOFFSET), &mut self.vec_view_offset)
+        .read_into(self.address.add(*NET_VEC_VELOCITY), &mut self.vec_velocity)
+        .read_into(self.address.add(*NET_OBSERVER_TARGET), &mut self.observing_id)
+        .read_into(self.address.add(*NET_ACTIVE_WEAPON), &mut self.weapon_ent_id);
+        trace!("exiting localplayer load data");
     }
 }
 

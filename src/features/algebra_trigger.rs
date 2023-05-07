@@ -22,7 +22,7 @@ impl AlgebraTrigger {
             {
                 let mut bat = proc.batcher();
                 crate::gamedata::entitylist::update_bones(&mut bat, &mut game_data.entity_list.entities[closest_player]);
-                bat.read_into(game_data.client_state + *DW_CLIENTSTATE_VIEWANGLES, &mut game_data.local_player.view_angles);
+                bat.read_into(game_data.client_state + *DW_CLIENTSTATE_VIEWANGLES, &mut game_data.view_angles);
             } // drops batcher to commit it
             self.algebra_trigger(human, game_data, config, delta);
         }
@@ -30,14 +30,14 @@ impl AlgebraTrigger {
 
     pub fn algebra_trigger(&mut self, human: &mut HumanInterface, game_data: &GameData, config: &Trigger, delta: f64) {
         //println!("Delta FPS: {}", 1./delta);
-        if game_data.local_player.shots_fired > 1 {return}
-        if game_data.local_player.aimpunch_angle.magnitude() > config.max_inaccuracy {return} // force acuracy
+        if game_data.entity_list.local_player.shots_fired > 1 {return}
+        if game_data.entity_list.local_player.aimpunch_angle.magnitude() > config.max_inaccuracy {return} // force acuracy
         //println!("velocity: {} vec: {:?}", game_data.local_player.vec_velocity.magnitude(),game_data.local_player.vec_velocity);
-        if game_data.local_player.vec_velocity.magnitude() > config.max_velocity {return}
+        if game_data.entity_list.local_player.vec_velocity.magnitude() > config.max_velocity {return}
         if let Some(closest_player) = game_data.entity_list.closest_player {
-            if game_data.entity_list.get_team_for(closest_player).unwrap_or(game_data.local_player.team_num) == game_data.local_player.team_num {return}
+            if game_data.entity_list.get_team_for(closest_player).unwrap_or(game_data.entity_list.local_player.team_num) == game_data.entity_list.local_player.team_num {return}
     
-            let angles = game_data.local_player.view_angles + (game_data.local_player.aimpunch_angle*2.);
+            let angles = game_data.view_angles + (game_data.entity_list.local_player.aimpunch_angle*2.);
             //info!("angle: {:?}",game_data.local_player.aimpunch_angle);
             
             //let dist_from_head = glm::distance(&point.into(), &to.into());
@@ -48,7 +48,7 @@ impl AlgebraTrigger {
             let vel = entity.vec_velocity * (1. + delta) as f32;
             let dist_from_head = get_dist_from_crosshair(
                 entity.head_pos + vel,
-                game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+                game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset,
                 angles.xy()
             );
     
@@ -70,7 +70,7 @@ impl AlgebraTrigger {
     
             let dist_from_neck = get_dist_from_crosshair(
                 entity.neck_pos + vel,
-                game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+                game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset,
                 angles.xy()
             );
 
@@ -81,7 +81,7 @@ impl AlgebraTrigger {
 
             let dist_from_body = get_dist_from_crosshair(
                 entity.upper_body_pos + vel,
-                game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+                game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset,
                 angles.xy()
             );
 
@@ -98,7 +98,7 @@ impl AlgebraTrigger {
 
             let dist_from_lower = get_dist_from_crosshair(
                 entity.lower_body_pos + vel,
-                game_data.local_player.vec_origin + game_data.local_player.vec_view_offset,
+                game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset,
                 angles.xy()
             );
 

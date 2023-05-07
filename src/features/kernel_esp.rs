@@ -139,10 +139,10 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
         let mut batch = self.os.batcher();
 
         for (i,e) in game_data.entity_list.entities.iter().enumerate() {
-            if e.team_num == game_data.local_player.team_num {continue}
+            if e.team_num == game_data.entity_list.local_player.team_num {continue}
             if e.lifestate > 0 {continue}
             if e.dormant &1 == 1 {continue}
-            if game_data.local_player.observing_id == 0 || i == game_data.local_player.observing_id as usize -1 {continue}
+            if game_data.entity_list.local_player.observing_id == 0 || i == game_data.entity_list.local_player.observing_id as usize {continue}
             //if i == game_data.local_player.ent_idx {continue}
             
             let head_w2s = math::world_2_screen(&(e.head_pos+tmp_vec3{x:0.,y:0.,z:5.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
