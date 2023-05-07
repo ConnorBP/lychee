@@ -66,3 +66,4 @@ winres = "0.1.11"
 [features]
 bhop_sus = []
 aimbot = []
+esp = []

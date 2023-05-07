@@ -6,7 +6,9 @@ mod algebra_trigger;
 mod zuesknife;
 mod human_speedtest;
 //mod onebwalls;
+#[cfg(feature = "esp")]
 mod esp;
+#[cfg(feature = "esp")]
 pub mod kernel_esp;
 //mod recoil_recorder;
 //mod recoil_replay;
@@ -20,6 +22,7 @@ pub use bhop::*;
 pub use trigger::*;
 pub use algebra_trigger::*;
 pub use human_speedtest::shoot_speed_test;
+#[cfg(feature = "esp")]
 pub use esp::*;
 //pub use onebwalls::*;
 //pub use recoil_recorder::*;

@@ -148,16 +148,21 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // store features that need to retain data
     #[cfg(feature = "aimbot")]
     let mut aimbot = features::AimBot::new();
-
+    
     // init Esp or return None if failed (don't run ESP process if init failed)
+    #[cfg(feature = "esp")]
     let mut esp = features::Esp::new(&mut process, espmod).ok();
+    #[cfg(feature = "esp")]
     if esp.is_none() {
         println!("failed to init esp");
     }
+    #[cfg(feature = "esp")]
     let mut kernel_esp = features::kernel_esp::KernEsp::new(os.clone(), kernelesp, None).ok();
+    #[cfg(feature = "esp")]
     if kernel_esp.is_none() {
         println!("failed to init kern esp");
     }
+    
 
     let mut atrigger = features::AlgebraTrigger::new();
     //let mut recoil_data = features::RecoilRecorder::new();
@@ -299,12 +304,16 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             // run any mouse moves that acumulate from the above features
             human.process_smooth_mouse()?;
             //features::shoot_speed_test(&mut keyboard, &mut human);
-            if let Some(e) = &mut esp {
-                e.render_esp(&mut process, &game_data);
-            }
+            
+            #[cfg(feature = "esp")]
+            {
+                if let Some(e) = &mut esp {
+                    e.render_esp(&mut process, &game_data);
+                }
 
-            if let Some(e) = &mut kernel_esp {
-                e.render_esp(&game_data);
+                if let Some(e) = &mut kernel_esp {
+                    e.render_esp(&game_data);
+                }
             }
         }
         // auto send unclick commands to the arduino since we now need to specify mouse down and up commands
