@@ -133,6 +133,7 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
         let buffer_addr = self.buffer_addr + std::mem::size_of::<BoxCommandBuffer>() as umem;
         let bs;
         let finalbuf;
+        #[cfg(feature="bones")]
         let finalbonebuf;
         let finalidxbuf;
         let mut batch = self.os.batcher();
@@ -247,6 +248,7 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
         // }
 
         let mut boxbuf = vec![];
+        #[cfg(feature="bones")]
         let mut bonebuf = vec![];//relative_bones.as_bytes();
 
         //let mut idx;
@@ -256,16 +258,20 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
             if i >= BUFFER_MAX {break;} // break if we reach the max buffer of 32 (no overflow pls)
             //print!("drawing box: {draw_box:?}");
             boxbuf.push(draw_box.as_bytes());
+            #[cfg(feature="bones")]
             bonebuf.push(relative_bones[i].as_bytes());
 
         }
 
         finalbuf = boxbuf.concat();
-        finalbonebuf = bonebuf.concat();
         finalidxbuf = idxbuf.concat();
         
         batch.write_raw_into(self.mod_base + buffer_addr, &finalbuf);
+        #[cfg(feature="bones")]
+        {
+        finalbonebuf = bonebuf.concat();
         batch.write_raw_into(self.mod_base + buffer_addr + command_size*BUFFER_MAX, &finalbonebuf);
+        }
         batch.write_raw_into(self.mod_base + buffer_addr + command_size*BUFFER_MAX + std::mem::size_of::<Bones>() * BUFFER_MAX, &finalidxbuf);
 
         // set the draw_ready bitand count
