@@ -5,6 +5,7 @@ use crate::{offsets::{find_pattern}, gamedata::GameData, utils::math, datatypes:
 
 
 const BUFFER_MAX: usize = 32;
+const NAME_LENGTH: usize = 32;
 
 #[repr(C)]
 #[derive(Pod)]
@@ -128,6 +129,14 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
         let mut relative_bones = vec![];
         let mut idxbuf = vec![];
 
+        let command_size =  std::mem::size_of::<BoxCommand>();
+        let buffer_addr = self.buffer_addr + std::mem::size_of::<BoxCommandBuffer>() as umem;
+        let bs;
+        let finalbuf;
+        let finalbonebuf;
+        let finalidxbuf;
+        let mut batch = self.os.batcher();
+
         for (i,e) in game_data.entity_list.entities.iter().enumerate() {
             if e.team_num == game_data.local_player.team_num {continue}
             if e.lifestate > 0 {continue}
@@ -167,6 +176,18 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
             let esp_box = esp_box.unwrap();
 
 
+            // batch.write_raw_into(self.mod_base + buffer_addr + command_size*BUFFER_MAX + std::mem::size_of::<Bones>() * BUFFER_MAX, &finalidxbuf);
+            if game_data.entity_list.names_just_updated {
+                batch.write_into(
+                    self.mod_base + buffer_addr
+                    + command_size*BUFFER_MAX
+                    + std::mem::size_of::<Bones>() * BUFFER_MAX
+                    + std::mem::size_of::<u16>() * BUFFER_MAX
+                    + NAME_LENGTH * i,
+                    e.name.as_bytes()
+                );
+            }
+            
 
 
             // let foot_dist = 
@@ -221,14 +242,6 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
             //println!("pushed esp box for {i}");
         }
 
-        let command_size =  std::mem::size_of::<BoxCommand>();
-        let buffer_addr = self.buffer_addr + std::mem::size_of::<BoxCommandBuffer>() as umem;
-        let bs;
-        let finalbuf;
-        let finalbonebuf;
-        let finalidxbuf;
-        let mut batch = self.os.batcher();
-
         // if let Ok(elap) = self.last_name_update.elapsed() {
 
         // }
@@ -244,6 +257,7 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
             //print!("drawing box: {draw_box:?}");
             boxbuf.push(draw_box.as_bytes());
             bonebuf.push(relative_bones[i].as_bytes());
+
         }
 
         finalbuf = boxbuf.concat();

@@ -72,6 +72,7 @@ pub struct EntityList {
     pub closest_player: Option<usize>,
 
     last_name_refresh: SystemTime,
+    pub names_just_updated: bool,
 }
 
 impl Default for EntityList {
@@ -80,6 +81,7 @@ impl Default for EntityList {
             entities: Default::default(),// can be up to 64 (in theory) but we are gonna save some time with only reading 32
             closest_player: None,
             last_name_refresh: SystemTime::now(),
+            names_just_updated: false,
         }
     }
 }
@@ -195,6 +197,9 @@ impl EntityList {
             if elap.as_secs_f32() > 30. {
                 self.update_entity_names(proc, client_state)?;
                 self.last_name_refresh = SystemTime::now();
+                self.names_just_updated = true;
+            } else {
+                self.names_just_updated = false;
             }
         }
 
