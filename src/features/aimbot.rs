@@ -68,7 +68,7 @@ impl AimBot {
             || ent.lifestate > 0
             || ent.team_num == game_data.entity_list.local_player.team_num
             || game_data.entity_list.local_player.observing_id == 0 || closest_player == game_data.entity_list.local_player.observing_id as usize -1
-            //|| ent.spotted_by_mask & (1 << game_data.local_player.ent_idx) > 0
+            || ent.spotted_by_mask & (1 << game_data.local_player_idx) > 0
             {
                 return
             }
