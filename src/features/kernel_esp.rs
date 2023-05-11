@@ -145,7 +145,7 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
             if game_data.entity_list.local_player.observing_id == 0 || i == game_data.entity_list.local_player.observing_id as usize -1 {continue}
             //if i == game_data.local_player.ent_idx {continue}
             
-            let head_w2s = math::world_2_screen(&(e.head_pos+tmp_vec3{x:0.,y:0.,z:5.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
+            let head_w2s = math::world_2_screen(&(e.head_pos+tmp_vec3{x:0.,y:0.,z:8.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
             let origin_w2s = math::world_2_screen(&e.vec_origin,&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
             let right_foot_w2s = math::world_2_screen(&e.right_foot_pos,&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));//.unwrap_or_default();
             let left_foot_w2s = math::world_2_screen(&e.left_foot_pos,&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));//.unwrap_or_default();
