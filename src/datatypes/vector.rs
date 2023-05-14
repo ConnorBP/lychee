@@ -1,7 +1,8 @@
-use std::ops::Div;
-use ::std::{ops::{Add, Sub, Mul}};
+use std::ops::{Div, DivAssign, AddAssign, IndexMut};
+use ::std::{ops::{Add, Sub, Mul, Index}};
 use memflow::prelude::Pod;
 use serde::{Serialize,Deserialize};
+use vbsp::Vector;
 
 #[repr(C)]
 #[derive(Copy, Clone,Debug, Default, Pod, Serialize, Deserialize)]
@@ -138,11 +139,24 @@ impl tmp_vec3 {
             z: self.z / magnitude,
         }
     }
+    pub fn dot(&self,other:tmp_vec3) -> f32 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
     /// Swizzling woohoo
     pub fn xy(&self) -> tmp_vec2 {
         tmp_vec2 {
             x: self.x,
             y: self.y,
+        }
+    }
+}
+
+impl Into<tmp_vec3> for Vector {
+    fn into(self) -> tmp_vec3 {
+        tmp_vec3{
+            x: self.x,
+            y: self.y,
+            z: self.z
         }
     }
 }
@@ -192,6 +206,58 @@ impl Mul<f32> for tmp_vec3 {
             x: self.x*rhs,
             y: self.y*rhs,
             z: self.z*rhs
+        }
+    }
+}
+
+impl DivAssign<f32> for tmp_vec3 {
+
+    fn div_assign(&mut self, rhs: f32) {
+        self.x /=rhs;
+        self.y /=rhs;
+        self.z /=rhs;
+    }
+}
+
+impl AddAssign<f32> for tmp_vec3 {
+
+    fn add_assign(&mut self, rhs: f32) {
+        self.x +=rhs;
+        self.y +=rhs;
+        self.z +=rhs;
+    }
+}
+
+impl AddAssign<tmp_vec3> for tmp_vec3 {
+
+    fn add_assign(&mut self, rhs: tmp_vec3) {
+        self.x +=rhs.x;
+        self.y +=rhs.y;
+        self.z +=rhs.z;
+    }
+}
+
+impl Index<usize> for tmp_vec3 {
+
+    // Required method
+    fn index(&self, index: usize) -> &f32 {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            _ => &self.z,
+        }
+    }
+
+    type Output = f32;
+}
+
+impl IndexMut<usize> for tmp_vec3 {
+
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            _ => &mut self.z,
         }
     }
 }

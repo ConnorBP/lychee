@@ -1,7 +1,9 @@
 use memflow::prelude::{Pod, v1::*};
 use memflow_win32::prelude::v1::*;
 use ::std::{ops::Add, time::SystemTime, convert::TryInto};
-use crate::{offsets::{find_pattern}, gamedata::GameData, utils::math, datatypes::{tmp_vec3, tmp_vec2}};
+use crate::{offsets::{find_pattern}, gamedata::GameData, utils::math, datatypes::{tmp_vec3, tmp_vec2}, bsp_parser};
+
+use super::bsp_vischeck;
 
 
 const BUFFER_MAX: usize = 32;
@@ -144,13 +146,34 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
             if e.dormant &1 == 1 {continue}
             if game_data.entity_list.local_player.observing_id == 0 || i == game_data.entity_list.local_player.observing_id as usize -1 {continue}
             //if i == game_data.local_player.ent_idx {continue}
+
+            if !e.visible {
+                let wall_w2s_tl = math::world_2_screen(&(e.wall_intersect/*+tmp_vec3{x:-5.,y:0.,z:5.}*/),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
+                //let wall_w2s_br = math::world_2_screen(&(wall_intersect+tmp_vec3{x:0.,y:5.,z:-5.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
+                
+                if let Some(tl) = wall_w2s_tl {
+                    // if let Some(br) = wall_w2s_br {
+                        
+                        boxes.push(BoxCommand {
+                            x: tl.x as u32,
+                            y: tl.y as u32,
+                            w: 5,
+                            h: 5,
+                        });
+                        let idx =  30u16;
+                        let idxb = idx.to_le_bytes();
+                        idxbuf.push(idxb);
+                    //}
+                }
+
+                continue;
+            }
             
             let head_w2s = math::world_2_screen(&(e.head_pos+tmp_vec3{x:0.,y:0.,z:8.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
             let origin_w2s = math::world_2_screen(&e.vec_origin,&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
             let right_foot_w2s = math::world_2_screen(&e.right_foot_pos,&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));//.unwrap_or_default();
             let left_foot_w2s = math::world_2_screen(&e.left_foot_pos,&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));//.unwrap_or_default();
             let body_w2s = math::world_2_screen(&e.lower_body_pos, &game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
-
 
             let mut screen_vec = vec![];
 
