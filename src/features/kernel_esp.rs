@@ -147,27 +147,27 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
             if game_data.entity_list.local_player.observing_id == 0 || i == game_data.entity_list.local_player.observing_id as usize -1 {continue}
             //if i == game_data.local_player.ent_idx {continue}
 
-            if !e.visible {
-                let wall_w2s_tl = math::world_2_screen(&(e.wall_intersect/*+tmp_vec3{x:-5.,y:0.,z:5.}*/),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
-                //let wall_w2s_br = math::world_2_screen(&(wall_intersect+tmp_vec3{x:0.,y:5.,z:-5.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
+            // if !e.visible {
+            //     let wall_w2s_tl = math::world_2_screen(&(e.wall_intersect/*+tmp_vec3{x:-5.,y:0.,z:5.}*/),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
+            //     //let wall_w2s_br = math::world_2_screen(&(wall_intersect+tmp_vec3{x:0.,y:5.,z:-5.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
                 
-                if let Some(tl) = wall_w2s_tl {
-                    // if let Some(br) = wall_w2s_br {
+            //     if let Some(tl) = wall_w2s_tl {
+            //         // if let Some(br) = wall_w2s_br {
                         
-                        boxes.push(BoxCommand {
-                            x: tl.x as u32,
-                            y: tl.y as u32,
-                            w: 5,
-                            h: 5,
-                        });
-                        let idx =  30u16;
-                        let idxb = idx.to_le_bytes();
-                        idxbuf.push(idxb);
-                    //}
-                }
+            //             boxes.push(BoxCommand {
+            //                 x: tl.x as u32,
+            //                 y: tl.y as u32,
+            //                 w: 5,
+            //                 h: 5,
+            //             });
+            //             let idx =  30u16;
+            //             let idxb = idx.to_le_bytes();
+            //             idxbuf.push(idxb);
+            //         //}
+            //     }
 
-                continue;
-            }
+            //     continue;
+            // }
             
             let head_w2s = math::world_2_screen(&(e.head_pos+tmp_vec3{x:0.,y:0.,z:8.}),&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
             let origin_w2s = math::world_2_screen(&e.vec_origin,&game_data.vm, Some(self.screen_width as f32), Some(self.screen_height as f32));
@@ -301,10 +301,10 @@ impl <T: 'static + PhysicalMemory + Clone, V: 'static + VirtualTranslate2 + Clon
         //proc.write((self.buffer_addr + 0x4).into(), &1).data().unwrap();
 
         let size = boxes.len() as u32;
-        bs = [DXCOLOR::from_rgb(100, 100, 160).as_bytes(),size.as_bytes(),1u32.as_bytes()].concat();
+        bs = [3u32.as_bytes(),DXCOLOR::from_rgb(100, 100, 160).as_bytes(),size.as_bytes(),1u32.as_bytes()].concat();
         //println!("writing {:#02x?}", bs);
         
-        batch.write_raw_into(self.mod_base + (self.buffer_addr+ 0x8), &bs);
+        batch.write_raw_into(self.mod_base + (self.buffer_addr+ 0x4), &bs);
         // batch.write_into(self.mod_base + (self.buffer_addr + 0x18), &1u32);
         // batch.write_into(self.mod_base + (self.buffer_addr + 0x14), &size);
         batch.commit_rw().data_part().unwrap();
