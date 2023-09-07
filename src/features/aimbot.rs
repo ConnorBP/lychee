@@ -68,8 +68,8 @@ impl AimBot {
             || ent.lifestate > 0
             || ent.team_num == game_data.entity_list.local_player.team_num
             || game_data.entity_list.local_player.observing_id == 0 || closest_player == game_data.entity_list.local_player.observing_id as usize -1
-            || ent.spotted_by_mask & (1 << game_data.local_player_idx) > 0
-            || !ent.visible
+            // || ent.spotted_by_mask & (1 << game_data.local_player_idx) > 0
+            // || !ent.visible
             {
                 return;
             }
@@ -160,9 +160,9 @@ impl AimBot {
             if dist_angle.magnitude() > 20. {return}
 
             human.set_goal_angle(tmp_vec2 { x: -dist_angle.y, y: dist_angle.x });
-            //human.mouse_move(tmp_vec2 { x: math::angle_to_mouse(-dist_angle.y) as f32, y: math::angle_to_mouse(dist_angle.x) as f32 }).expect("mouse move");
+            // human.mouse_move(tmp_vec2 { x: math::angle_to_mouse(-dist_angle.y) as f32, y: math::angle_to_mouse(dist_angle.x) as f32 }).expect("mouse move");
 
-            //println!("aimpunch: {:?} angle: {:?}", game_data.local_player.aimpunch_angle, dist_angle);
+            // println!("aimpunch: {:?} angle: {:?}", game_data.local_player.aimpunch_angle, dist_angle);
             
 
 
