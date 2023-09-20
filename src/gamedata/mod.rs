@@ -6,7 +6,7 @@ use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 
 use ::std::{ops::Add, time::SystemTime, sync::mpsc};
 
-use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3, game::WeaponId}, render::MapData, features::bsp_vischeck::VisibleCheck};
+use crate::{offsets::*, datatypes::{tmp_vec2,tmp_vec3, game::WeaponId}, render::MapData};
 
 pub mod entitylist;
 use entitylist::EntityList;
@@ -33,8 +33,6 @@ pub struct GameData {
     pub current_map: Option<String>,
     /// the info on the current maps radar graphic such as scale and world pos
     pub current_map_info: Option<MapInfo>,
-
-    pub map_bsp: VisibleCheck,
     
     map_tx: mpsc::Sender<MapData>,
 
@@ -66,8 +64,6 @@ impl GameData {
             vm: Default::default(),
             current_map: None,
             current_map_info: None,
-
-            map_bsp: VisibleCheck::new(),
 
             // private for running lazy updates
             map_tx,
@@ -118,9 +114,9 @@ impl GameData {
                     self.old_map_name = self.current_map.clone();
 
                     // update map bsp
-                    if let Some(name) = self.current_map.clone() {
-                        self.map_bsp.load_map(name);
-                    }
+                    // if let Some(name) = self.current_map.clone() {
+                    //     self.map_bsp.load_map(name);
+                    // }
 
                     // minimap info struct update
                     if let Some(name) = self.current_map.clone() {
@@ -152,8 +148,7 @@ impl GameData {
             client_base,
             self.client_state,
             self.local_player_idx as usize,
-            self.view_angles,
-            &self.map_bsp
+            self.view_angles
         )?;
 
         if self.entity_list.local_player.address.is_null() {

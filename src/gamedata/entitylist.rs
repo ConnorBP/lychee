@@ -3,7 +3,7 @@ use ::std::{ops::Add, time::SystemTime};
 use memflow::prelude::{v1::*, memory_view::MemoryViewBatcher};
 use log::trace;
 
-use crate::{offsets::*, utils::math, datatypes::{tmp_vec3, game::WeaponId, tmp_vec2}, features::bsp_vischeck::VisibleCheck};
+use crate::{offsets::*, utils::math, datatypes::{tmp_vec3, game::WeaponId, tmp_vec2}};
 
 #[derive(Clone,Debug)]
 #[repr(C)]
@@ -37,8 +37,8 @@ pub struct EntityInfo {
     
     pub spotted_by_mask: u64,
 
-    pub visible: bool,
-    pub wall_intersect: tmp_vec3,
+    // pub visible: bool,
+    // pub wall_intersect: tmp_vec3,
 }
 
 impl Default for EntityInfo {
@@ -65,8 +65,6 @@ impl Default for EntityInfo {
             left_foot_pos: Default::default(),
             right_foot_pos: Default::default(),
             spotted_by_mask: Default::default(),
-            visible: Default::default(),
-            wall_intersect: Default::default(),
         }
     }
 }
@@ -130,7 +128,7 @@ impl EntityList {
 
     /// Takes in a reference to the game process and the client module base address and then walks the entity list tree
     /// Data retreived from this is stored into the EntityList struct this is called on
-    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, client_state: Address, local_player_idx: usize, local_view_angles: tmp_vec3, map_bsp: &VisibleCheck) -> Result<()> {
+    pub fn populate_player_list(&mut self, proc: &mut (impl Process + MemoryView), client_module_addr: Address, client_state: Address, local_player_idx: usize, local_view_angles: tmp_vec3) -> Result<()> {
         trace!("entering pop playerlist");
         let mut bat1 = proc.batcher();
         bat1.read_into(client_module_addr.add(*DW_ENTITYLIST + (local_player_idx as u32 * 0x10)), &mut self.local_player.addr32);
@@ -255,13 +253,13 @@ impl EntityList {
 
 
             //vischeck test
-            let (visible, wall_intersect) = map_bsp.is_visible(
-                self.local_player.vec_origin + self.local_player.vec_view_offset,
-                ent.head_pos,
-            );
+            // let (visible, wall_intersect) = map_bsp.is_visible(
+            //     self.local_player.vec_origin + self.local_player.vec_view_offset,
+            //     ent.head_pos,
+            // );
 
-            ent.visible = visible;
-            ent.wall_intersect = wall_intersect;
+            // ent.visible = visible;
+            // ent.wall_intersect = wall_intersect;
 
             
         }

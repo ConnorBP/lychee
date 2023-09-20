@@ -23,8 +23,6 @@ pub use algebra_trigger::*;
 #[cfg(any(feature = "bhop_sus", feature = "bhop"))]
 pub use bhop::*;
 
-pub mod bsp_vischeck;
-use bsp_vischeck::*;
 pub mod walkbot;
 
 

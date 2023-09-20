@@ -1,10 +1,7 @@
 use memflow::prelude::{Pod, v1::*};
 use memflow_win32::prelude::v1::*;
 use ::std::{ops::Add, time::SystemTime, convert::TryInto};
-use crate::{offsets::{find_pattern}, gamedata::GameData, utils::math, datatypes::{tmp_vec3, tmp_vec2}, bsp_parser};
-
-use super::bsp_vischeck;
-
+use crate::{offsets::{find_pattern}, gamedata::GameData, utils::math, datatypes::{tmp_vec3, tmp_vec2}};
 
 const BUFFER_MAX: usize = 32;
 const NAME_LENGTH: usize = 32;

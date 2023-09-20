@@ -5,10 +5,9 @@ mod gamedata;
 mod features;
 mod render;
 mod human_interface;
-mod bsp_parser;
 mod user_config;
 
-use clap::{crate_authors, crate_version, Arg, ArgMatches, Command};
+use clap::{crate_authors, crate_version, Arg, ArgMatches, Command, ArgAction};
 use gamedata::GameData;
 use log::{info, Level};
 use memflow::prelude::v1::*;
@@ -352,7 +351,7 @@ fn parse_args() -> ArgMatches {
     Command::new("lyche")
         .version(crate_version!())
         .author(crate_authors!())
-        .arg(Arg::new("verbose").short('v').multiple_occurrences(true))
+        .arg(Arg::new("verbose").short('v').action(ArgAction::Count))
         .arg(
             Arg::new("scan")
                 .long("scan")
@@ -403,7 +402,7 @@ fn parse_args() -> ArgMatches {
 }
 
 fn extract_args(matches: &ArgMatches) {
-    let log_level = match matches.occurrences_of("verbose") {
+    let log_level = match matches.get_count("verbose") {
         0 => Level::Error,
         1 => Level::Warn,
         2 => Level::Info,

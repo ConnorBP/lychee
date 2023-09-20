@@ -2,7 +2,6 @@ use std::ops::{Div, DivAssign, AddAssign, IndexMut};
 use ::std::{ops::{Add, Sub, Mul, Index}};
 use memflow::prelude::Pod;
 use serde::{Serialize,Deserialize};
-use vbsp::Vector;
 
 #[repr(C)]
 #[derive(Copy, Clone,Debug, Default, Pod, Serialize, Deserialize)]
@@ -151,15 +150,15 @@ impl tmp_vec3 {
     }
 }
 
-impl Into<tmp_vec3> for Vector {
-    fn into(self) -> tmp_vec3 {
-        tmp_vec3{
-            x: self.x,
-            y: self.y,
-            z: self.z
-        }
-    }
-}
+// impl Into<tmp_vec3> for Vector {
+//     fn into(self) -> tmp_vec3 {
+//         tmp_vec3{
+//             x: self.x,
+//             y: self.y,
+//             z: self.z
+//         }
+//     }
+// }
 
 impl Add for tmp_vec3 {
     type Output = Self;

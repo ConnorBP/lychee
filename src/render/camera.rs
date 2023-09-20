@@ -11,7 +11,7 @@ We'll define it as follows:
 
 */
 
-use cgmath::Quaternion;
+use cgmath::{Quaternion, Vector3};
 use memflow::prelude::Pod;
 
 // basically a magic matrix
@@ -39,7 +39,14 @@ impl Camera {
         let view = cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up);
         let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
         let rot = cgmath::Matrix4::from(self.rotation);
-        return OPENGL_TO_WGPU_MATRIX * proj * rot * view;
+        let offset = cgmath::Matrix4::from_translation(Vector3{ x: -10.0, y: -6.0, z: 1.0});
+        let mut final_mat = OPENGL_TO_WGPU_MATRIX * proj * offset * rot * view;
+        // final_mat.w.x = 2.0 * (720.0 / 1920.0); // width if not rotated
+        // final_mat.w.x -= 2.5;
+        // final_mat.w.y = 2.0 * 720.0 / 1920.0; // height if not rotated
+        // final_mat.w.y += 2.5;
+        //final_mat.w.z = 2.0 * 720.0 / 1920.0;
+        return final_mat;
     }
     pub fn update_window_size(&mut self, x:f32,y:f32)
     {

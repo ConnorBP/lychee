@@ -13,7 +13,7 @@ use self::{
 
 use cgmath::{Rotation3, MetricSpace};
 // gpu library
-use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout};
+use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout, InstanceDescriptor, Dx12Compiler};
 // fonts rendering library
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 // window creation
@@ -138,8 +138,11 @@ pub fn start_window_render(
             .build(&event_loop)
             .unwrap();
 
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let surface = unsafe { instance.create_surface(&window) };
+        let instance = wgpu::Instance::new(InstanceDescriptor{
+            backends: wgpu::Backends::all(),
+            dx12_shader_compiler: Default::default(),
+        });
+        let surface = unsafe { instance.create_surface(&window).expect("creating surface") };
 
         let (device, queue) = futures::executor::block_on(async {
             let adapter = instance
@@ -176,7 +179,7 @@ pub fn start_window_render(
             rotation: cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
             up: cgmath::Vector3::unit_y(),
             aspect: window_size.width as f32 / window_size.height as f32,
-            fovy: 35.0,
+            fovy: 68.0,
             znear: 0.1,
             zfar: 2000.,
         };
@@ -233,7 +236,7 @@ pub fn start_window_render(
 
         // load the shader
         let shader = device.create_shader_module(include_wgsl!("../../assets/shaders/shader.wgsl"));
-
+        
         // create staging belt
         let mut staging_belt = wgpu::util::StagingBelt::new(1024);
 
@@ -462,6 +465,7 @@ pub fn start_window_render(
                 height: size.height,
                 present_mode: wgpu::PresentMode::AutoNoVsync,
                 alpha_mode: CompositeAlphaMode::Auto,
+                view_formats: vec![],
             },
         );
 
@@ -635,6 +639,7 @@ pub fn start_window_render(
                             height: size.height,
                             present_mode: wgpu::PresentMode::AutoNoVsync,
                             alpha_mode: CompositeAlphaMode::Auto,
+                            view_formats: vec![],
                         },
                     );
                     camera.update_window_size(size.width as f32, size.height as f32);
@@ -718,12 +723,7 @@ pub fn start_window_render(
                                         view,
                                         resolve_target: None,
                                         ops: wgpu::Operations {
-                                            load: wgpu::LoadOp::Clear(wgpu::Color {
-                                                r: 0.03,
-                                                g: 0.03,
-                                                b: 0.05,
-                                                a: 1.0,
-                                            }),
+                                            load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                                             store: true,
                                         },
                                     },
@@ -827,6 +827,8 @@ pub fn start_window_render(
                             size.height,
                         )
                         .expect("Draw queued");
+
+                    
                     // submit the work
                     staging_belt.finish();
                     queue.submit(Some(encoder.finish()));

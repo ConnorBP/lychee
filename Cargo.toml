@@ -10,8 +10,8 @@ resolver = "2"
 [dependencies]
 
 # memflow stuff
-memflow = "0.2.0-beta10"
-memflow-win32 = "0.2.0-beta10"
+memflow = "=0.2.0-beta10"
+memflow-win32 = "=0.2.0-beta10"
 memflow-pcileech = { git = "https://github.com/memflow/memflow-pcileech", branch = "main" }
 
 
@@ -20,10 +20,9 @@ regex = "^1.5"
 
 # util macros and such
 lazy_static = "^1.4"
-clearscreen = "^1.0"
 log = "0.4"
 env_logger = "0.9"
-clap = { version = "^3.0.5", features = ["cargo"]}
+clap = { version = "4.4", features = ["cargo"]}
 clap-num = "1.0"
 simplelog = "^0.12"
 futures = {version = "0.3", features = ["executor"]}
@@ -40,24 +39,24 @@ config = { version = "^0.13", features = ["toml"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
-toml = "0.5.6"
+toml = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 nom = "4.2.3"
-notify = "5.0"
+notify = "6.1"
 
 # read valve vdf key value format for map info
 keyvalues-parser = "0.1.0"
 
 # rendering
-winit = "0.27"
+winit = "0.28.6"
 #crow = "0.7"
-wgpu = "0.14"
-wgpu_glyph = "0.18"
+wgpu = "0.17.0"
+wgpu_glyph = "0.21.0"
 image = "0.24"
 cgmath = "0.18"
 
 #vischeck
-vbsp = {version="*", path="../vbsp"}
+#vbsp = {version="*", path="../vbsp"}
 
 # uncomment if you wanna run performance traces on the code
 # [profile.release]
