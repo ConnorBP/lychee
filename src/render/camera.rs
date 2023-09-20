@@ -27,6 +27,7 @@ pub struct Camera {
     pub eye: cgmath::Point3<f32>,
     pub target: cgmath::Point3<f32>,
     pub rotation: Quaternion<f32>,
+    pub offset: Vector3<f32>,
     pub up: cgmath::Vector3<f32>,
     pub aspect: f32,
     pub fovy: f32,
@@ -39,7 +40,7 @@ impl Camera {
         let view = cgmath::Matrix4::look_at_rh(self.eye, self.target, self.up);
         let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
         let rot = cgmath::Matrix4::from(self.rotation);
-        let offset = cgmath::Matrix4::from_translation(Vector3{ x: -10.0, y: -6.0, z: 1.0});
+        let offset = cgmath::Matrix4::from_translation(self.offset);
         let mut final_mat = OPENGL_TO_WGPU_MATRIX * proj * offset * rot * view;
         // final_mat.w.x = 2.0 * (720.0 / 1920.0); // width if not rotated
         // final_mat.w.x -= 2.5;

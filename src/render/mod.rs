@@ -177,6 +177,7 @@ pub fn start_window_render(
             // have the camera look at the origin
             target: (MAP_CENTER.0,MAP_CENTER.1,0.0).into(),
             rotation: cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
+            offset: cgmath::Vector3{ x: -10.0, y: -6.0, z: 1.0},
             up: cgmath::Vector3::unit_y(),
             aspect: window_size.width as f32 / window_size.height as f32,
             fovy: 68.0,
