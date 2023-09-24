@@ -137,6 +137,19 @@ pub fn round_up(num_in: u64, up_to_multiple: u64) -> u64 {
     num_in + up_to_multiple - remainder
 }
 
+pub fn from_valve_coords(valve_coords: tmp_vec3)->cgmath::Vector3<f32> {
+    cgmath::Vector3::<f32> { // guessed
+        x: valve_coords.x,
+        y: valve_coords.z,
+        z: -valve_coords.y,
+    }
+    // cgmath::Vector3::<f32> { // guessed
+    //     x: valve_coords.x,
+    //     y: valve_coords.y,
+    //     z: valve_coords.z,
+    // }
+}
+
 pub fn radar_scale(x:f32,y:f32,scale:f32, map_x:f32, map_y:f32, window_size:Option<(f32,f32)>) -> (f32,f32) {
  let mut nx = x - map_x;
  let mut ny = y - map_y;

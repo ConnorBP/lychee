@@ -3,26 +3,29 @@
 mod texture;
 mod camera;
 mod instance;
+mod billboard_instance;
 
-use crate::{gamedata::minimap_info::{MapInfo, self}, datatypes::{tmp_vec3, tmp_vec2}, utils, render::instance::InstanceType};
+mod boxpass;
+
+use crate::{gamedata::minimap_info::{MapInfo, self}, datatypes::{tmp_vec3, tmp_vec2}, utils::{self, math::from_valve_coords}, render::{instance::InstanceType, billboard_instance::BillboardInstance}};
 
 use self::{
     camera::{Camera, CameraUniform},
-    instance::{Instance, InstanceRaw},
+    instance::{Instance, InstanceRaw}, boxpass::BoxPass,
 };
 
-use cgmath::{Rotation3, MetricSpace};
+use cgmath::{Rotation3, MetricSpace, Rad, Vector4, Deg, Angle};
 // gpu library
 use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout, InstanceDescriptor, Dx12Compiler};
 // fonts rendering library
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 // window creation
-use winit::event_loop::EventLoopBuilder;
+use winit::{event_loop::EventLoopBuilder, event::ElementState};
 use winit::platform::windows::EventLoopBuilderExtWindows;
 use winit::window::Fullscreen;
 // other utils
 use memflow::prelude::{Pod, PodMethods};
-use std::{sync::mpsc, num::NonZeroU32};
+use std::{sync::mpsc, num::NonZeroU32, ops::ControlFlow, f32::consts::PI};
 use std::thread;
 
 const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as u64;
@@ -175,7 +178,7 @@ pub fn start_window_render(
             // position the camera 1 unit up and 50 units back
             eye: (MAP_CENTER.0,MAP_CENTER.1,15.0).into(),
             // have the camera look at the origin
-            target: (MAP_CENTER.0,MAP_CENTER.1,0.0).into(),
+            target: Some((MAP_CENTER.0,MAP_CENTER.1,0.0).into()),
             rotation: cgmath::Quaternion::from_axis_angle(cgmath::Vector3::unit_x(), cgmath::Deg(0.)),
             offset: cgmath::Vector3{ x: -10.0, y: -6.0, z: 1.0},
             up: cgmath::Vector3::unit_y(),
@@ -183,6 +186,8 @@ pub fn start_window_render(
             fovy: 68.0,
             znear: 0.1,
             zfar: 2000.,
+            pitch: Rad(0.0),
+            yaw: Rad(0.0),
         };
 
         let mut player_minimap_location: tmp_vec3 = tmp_vec3::default();
@@ -457,17 +462,19 @@ pub fn start_window_render(
             multiview: None,
         });
 
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: render_format,
+            width: size.width,
+            height: size.height,
+            present_mode: wgpu::PresentMode::AutoNoVsync,
+            alpha_mode: CompositeAlphaMode::Auto,
+            view_formats: vec![],
+        };
+
         surface.configure(
             &device,
-            &wgpu::SurfaceConfiguration {
-                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                format: render_format,
-                width: size.width,
-                height: size.height,
-                present_mode: wgpu::PresentMode::AutoNoVsync,
-                alpha_mode: CompositeAlphaMode::Auto,
-                view_formats: vec![],
-            },
+            &surface_config,
         );
 
         //
@@ -481,6 +488,13 @@ pub fn start_window_render(
 
         let mut glyph_brush =
             GlyphBrushBuilder::using_font(white_rabbit).build(&device, render_format);
+
+
+        //
+        // Box Pass Init
+        //
+
+        let mut box_rpass = BoxPass::new(&device, &surface_config, render_format);
 
         // stores a list of name labels to be rendered and their minimap locations
         let mut name_list: Vec<MapText> = vec![];
@@ -524,6 +538,14 @@ pub fn start_window_render(
                     });
 
                     // local player
+                    {
+                        let p = from_valve_coords(framedata.local_position.world_pos);
+                        box_rpass.camera.eye = (p.x,p.y,p.z).into();
+                        box_rpass.camera.pitch = Rad(framedata.local_position.rotation.x * PI /180.0);
+                        box_rpass.rotation = Rad(-framedata.local_position.rotation.y * PI / 180.0).normalize()*4.0;
+                        // println!("rot: {:?}", box_rpass.rotation);
+                        box_rpass.camera.yaw = Rad(framedata.local_position.rotation.y * PI / 180.0);
+                    }
 
                     new_instances.push(Instance{
                         position: (player_minimap_location.x,player_minimap_location.y,0.3).into(),
@@ -533,7 +555,32 @@ pub fn start_window_render(
                         instance_type: InstanceType::LocalPlayer,
                     });
 
-                    for (_, data) in framedata.locations.iter().enumerate() {
+                    let mut esp_boxes = vec![];
+                    // esp_boxes.push(BillboardInstance {
+                    //     position: (0.0,0.0,0.0).into(),
+                    //     rotation: Quaternion::from_angle_z(Rad(0.0)),
+                    //     scale: Vector3 { x: 1.0, y: 2.0, z: 1.0 },
+                    //     color: Vector4 { x: 1.0, y: 0.2, z: 0.6, w: 1.0},
+                    // });
+
+                    for data in framedata.locations.iter() {
+
+                        // esp box
+                        {
+                            let mut pos = from_valve_coords(data.world_pos);
+                            pos.y+=30.0;
+                            esp_boxes.push(BillboardInstance {
+                                position: pos,
+                                rotation: Quaternion::from_angle_z(Rad(0.0)),
+                                scale: Vector3 { x: 30.0, y: 100.0, z: 1.0 },
+                                color: if data.team == framedata.local_position.team {
+                                    Vector4 { x: 1.0, y: 0.2, z: 0.6, w: 1.0}
+                                } else {
+                                    Vector4 { x: 1.0, y: 0.0, z: 0.0, w: 1.0}
+                                },
+                            });
+                        }
+
                         let pos = 
                         {
                             let map_detail = map_data.map_details.unwrap_or(MapInfo {
@@ -549,6 +596,8 @@ pub fn start_window_render(
                                 map_detail.pos_y,
                                 Some((10.,10.))
                             );
+
+
                             
                             // accounts for them being slightly out of position visually when not flat / origin is center of sprite and not the feet
                             let y_offset = 0.14;
@@ -570,6 +619,12 @@ pub fn start_window_render(
                             loc: pos,
                         });
                     }
+
+                    {
+                        //submit esp boxes
+                        box_rpass.instances = esp_boxes;
+                    }
+
                     // z sort the data before render 
                     // the location we wanna check distance to
                     let sort_from: Vector3<f32> = (MAP_CENTER.0,-20.,1.0).into();
@@ -627,6 +682,22 @@ pub fn start_window_render(
                     ..
                 } => *control_flow = winit::event_loop::ControlFlow::Exit,
                 winit::event::Event::WindowEvent {
+                    event: winit::event::WindowEvent::KeyboardInput { input, .. },
+                    ..
+                } => {
+                    if input.state == ElementState::Pressed {
+                        if let Some(k) = input.virtual_keycode { match k {
+                            winit::event::VirtualKeyCode::I => {
+                                //my_app.settings_is_open = !my_app.settings_is_open;
+                            },
+                            winit::event::VirtualKeyCode::Q => {
+                                *control_flow = winit::event_loop::ControlFlow::Exit;
+                            }
+                            _=>{}
+                        }};
+                    }
+                },
+                winit::event::Event::WindowEvent {
                     event: winit::event::WindowEvent::Resized(new_size),
                     ..
                 } => {
@@ -644,6 +715,7 @@ pub fn start_window_render(
                         },
                     );
                     camera.update_window_size(size.width as f32, size.height as f32);
+                    box_rpass.camera.update_window_size(size.width as f32, size.height as f32);
                     // re create the depth texture with the new window size
                     depth_texture = texture::Texture::create_depth_texture(&device, &size, "depth_texture");
                 }
@@ -828,6 +900,11 @@ pub fn start_window_render(
                             size.height,
                         )
                         .expect("Draw queued");
+
+                    // boxes pass
+                    {
+                        box_rpass.execute(&device, &mut encoder, &view, None);
+                    }
 
                     
                     // submit the work
