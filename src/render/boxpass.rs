@@ -8,7 +8,6 @@ use memflow::dataview::PodMethods;
 
 use super::PLANE_INDICES;
 
-use super::camera::RotationUniform;
 use super::{billboard_instance::{BillboardInstanceRaw, BillboardInstance}, camera::{CameraUniform, Camera}};
 
 const MAX_BOXES : usize = 64;
@@ -36,11 +35,6 @@ pub struct BoxPass {
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
-
-    // rotation uniform for the billboards cause i couldn't get anything else to work
-    pub rotation: Rad<f32>,
-    rotation_uniform: RotationUniform,
-    rotation_buffer: wgpu::Buffer,
 
     // for delta
     start: SystemTime,
@@ -90,16 +84,6 @@ impl BoxPass {
             }
         );
 
-        let rotation_uniform = RotationUniform::new();
-
-        let rotation_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("ESP Rotation Buffer"),
-                contents: rotation_uniform.as_bytes(),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            }
-        );
-
         //
         // camera projection matrix bind group
         //
@@ -117,17 +101,6 @@ impl BoxPass {
                     },
                     count: None,
                 },
-
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None
-                    },
-                    count: None,
-                }
             ],
             label: Some("camera_bind_group_layout_boxes"),
         });
@@ -139,10 +112,6 @@ impl BoxPass {
                 wgpu::BindGroupEntry {
                     binding: 0,
                     resource: camera_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: rotation_buffer.as_entire_binding(),
                 },
             ],
         });
@@ -203,14 +172,12 @@ impl BoxPass {
         let instances = vec![
             BillboardInstance {
                 position: cgmath::Vector3 { x: 0.5, y: 0.5, z: 0.0 },
-                rotation: camera.rotation,
-                scale: cgmath::Vector3 { x: 0.25, y: 1.0, z: 0.25 },
+                scale: cgmath::Vector2 { x: 0.25, y: 1.0 },
                 color: (0.5,1.0,1.0,1.0).into(),
             },
             BillboardInstance {
                 position: cgmath::Vector3 { x: 4.0, y: 0.5, z: 1.0 },
-                rotation: camera.rotation,
-                scale: cgmath::Vector3 { x: 1.0, y: 0.25, z: 0.25 },
+                scale: cgmath::Vector2 { x: 1.0, y: 0.25 },
                 color: (1.0,0.5,0.5, 1.0).into(),
             },
         ];
@@ -234,10 +201,6 @@ impl BoxPass {
             camera_buffer,
             camera_bind_group,
 
-            rotation: Rad(0.0),
-            rotation_uniform,
-            rotation_buffer,
-
             start: SystemTime::now(),
         }
     }
@@ -255,15 +218,7 @@ impl BoxPass {
             }
         );
         encoder.copy_buffer_to_buffer(&camera_staging_buffer, 0, &self.camera_buffer, 0, camera_staging_buffer.size());
-        //update rotation buffer
-        let rot_staging_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Rotation Staging Buffer"),
-                contents: self.rotation_uniform.as_bytes(),
-                usage: wgpu::BufferUsages::COPY_SRC,
-            }
-        );
-        encoder.copy_buffer_to_buffer(&rot_staging_buffer, 0, &self.rotation_buffer, 0, rot_staging_buffer.size());
+        
         // update instances buffer
         if !self.instances.is_empty() {
             let staging_instance_buffer = device.create_buffer_init(
@@ -300,7 +255,6 @@ impl BoxPass {
             // let time = SystemTime::now().duration_since(self.start).unwrap().as_secs_f32();
             // self.camera.eye = (f32::sin(time*0.2)*15.0,10.0,f32::sin(time*0.1-20.0)*15.0).into();
             self.camera_uniform.update_view_proj(&self.camera);
-            self.rotation_uniform.update_rotation(self.rotation);
 
             self.update_buffers(device, encoder);
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {

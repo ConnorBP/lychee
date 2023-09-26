@@ -86,23 +86,3 @@ impl CameraUniform {
         self.view_proj = camera.build_view_projection_matrix().into();
     }
 }
-
-#[repr(C)]
-#[derive(Debug,Copy,Clone,Pod)]
-pub struct RotationUniform {
-    pub view_proj: [[f32;4];4],
-}
-
-impl RotationUniform {
-    pub fn new() -> Self {
-        use cgmath::SquareMatrix;
-        Self {
-            view_proj: cgmath::Matrix4::identity().into(),
-        }
-    }
-
-    pub fn update_rotation(&mut self, rotation: Rad<f32>) {
-        self.view_proj = (cgmath::Matrix4::from_translation(cgmath::Vector3{x:0.0,y:0.0,z:0.0})
-        * cgmath::Matrix4::from_angle_y(rotation)).into();
-    }
-}

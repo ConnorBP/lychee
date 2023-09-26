@@ -2,19 +2,15 @@ use memflow::prelude::Pod;
 
 pub struct BillboardInstance {
     pub position: cgmath::Vector3<f32>,
-    pub rotation: cgmath::Quaternion<f32>,
-    pub scale: cgmath::Vector3<f32>,
+    pub scale: cgmath::Vector2<f32>,
     pub color: cgmath::Vector4<f32>,
 }
 
 impl BillboardInstance {
     pub fn to_raw(&self) -> BillboardInstanceRaw {
         BillboardInstanceRaw { 
-            model: (
-                cgmath::Matrix4::from_translation(self.position)
-                * cgmath::Matrix4::from(self.rotation)
-                * cgmath::Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z)
-            ).into(),
+            center_pos: self.position.into(),
+            size: self.scale.into(),
             color: self.color.into(),
         }
     }
@@ -23,7 +19,8 @@ impl BillboardInstance {
 #[repr(C)]
 #[derive(Copy, Clone, Pod)]
 pub struct BillboardInstanceRaw {
-    model: [[f32;4];4],
+    center_pos: [f32;3],
+    size: [f32;2],
     color: [f32;4],
 }
 
@@ -37,26 +34,16 @@ impl BillboardInstanceRaw {
                 wgpu::VertexAttribute {
                     offset: 0,
                     shader_location: 5,
-                    format: wgpu::VertexFormat::Float32x4,
+                    format: wgpu::VertexFormat::Float32x3,
                 },
                 wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32;4]>() as wgpu::BufferAddress,
+                    offset: std::mem::size_of::<[f32;3]>() as wgpu::BufferAddress,
                     shader_location: 6,
-                    format: wgpu::VertexFormat::Float32x4,
+                    format: wgpu::VertexFormat::Float32x2,
                 },
                 wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32;8]>() as wgpu::BufferAddress,
+                    offset: std::mem::size_of::<[f32;5]>() as wgpu::BufferAddress,
                     shader_location: 7,
-                    format: wgpu::VertexFormat::Float32x4,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32;12]>() as wgpu::BufferAddress,
-                    shader_location: 8,
-                    format: wgpu::VertexFormat::Float32x4,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32;16]>() as wgpu::BufferAddress,
-                    shader_location: 9,
                     format: wgpu::VertexFormat::Float32x4,
                 },
             ],

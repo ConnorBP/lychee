@@ -542,8 +542,6 @@ pub fn start_window_render(
                         let p = from_valve_coords(framedata.local_position.world_pos);
                         box_rpass.camera.eye = (p.x,p.y,p.z).into();
                         box_rpass.camera.pitch = Rad(framedata.local_position.rotation.x * PI /180.0);
-                        box_rpass.rotation = Rad(-framedata.local_position.rotation.y * PI / 180.0).normalize()*4.0;
-                        // println!("rot: {:?}", box_rpass.rotation);
                         box_rpass.camera.yaw = Rad(framedata.local_position.rotation.y * PI / 180.0);
                     }
 
@@ -571,8 +569,7 @@ pub fn start_window_render(
                             pos.y+=30.0;
                             esp_boxes.push(BillboardInstance {
                                 position: pos,
-                                rotation: Quaternion::from_angle_z(Rad(0.0)),
-                                scale: Vector3 { x: 30.0, y: 100.0, z: 1.0 },
+                                scale: cgmath::Vector2 { x: 30.0, y: 100.0},
                                 color: if data.team == framedata.local_position.team {
                                     Vector4 { x: 1.0, y: 0.2, z: 0.6, w: 1.0}
                                 } else {
