@@ -14,9 +14,9 @@ use self::{
     instance::{Instance, InstanceRaw}, boxpass::BoxPass,
 };
 
-use cgmath::{Rotation3, MetricSpace, Rad, Vector4, Deg, Angle};
+use cgmath::{Rotation3, MetricSpace, Rad, Vector4};
 // gpu library
-use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout, InstanceDescriptor, Dx12Compiler};
+use wgpu::{include_wgsl, CompositeAlphaMode,util::DeviceExt, BindGroupLayout, InstanceDescriptor};
 // fonts rendering library
 use wgpu_glyph::{ab_glyph, GlyphBrushBuilder, Section, Text};
 // window creation
@@ -25,7 +25,7 @@ use winit::platform::windows::EventLoopBuilderExtWindows;
 use winit::window::Fullscreen;
 // other utils
 use memflow::prelude::{Pod, PodMethods};
-use std::{sync::mpsc, num::NonZeroU32, ops::ControlFlow, f32::consts::PI};
+use std::{sync::mpsc, num::NonZeroU32, f32::consts::PI};
 use std::thread;
 
 const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as u64;
@@ -230,14 +230,7 @@ pub fn start_window_render(
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-        // let instance_buffer = device.create_buffer_init(
-        //     &wgpu::util::BufferInitDescriptor {
-        //         label: Some("Instance Buffer"),
-        //         contents: test_data.as_bytes(),
-        //         usage: wgpu::BufferUsages::VERTEX
-        //     }
-        // );
-        let mut staging_instance_buffer = None;
+
         let mut num_instances = 0;
 
         // load the shader
@@ -636,13 +629,15 @@ pub fn start_window_render(
 
                 // now update textures and bindings and such
 
-                staging_instance_buffer = Some(device.create_buffer_init(
-                    &wgpu::util::BufferInitDescriptor {
-                        label: Some("Instance Buffer"),
-                        contents: instance_data.as_bytes(),
-                        usage: wgpu::BufferUsages::MAP_WRITE | wgpu::BufferUsages::COPY_SRC,
-                    }
-                ));
+                queue.write_buffer(&instance_buffer, 0, instance_data.as_bytes());
+
+                // staging_instance_buffer = Some(device.create_buffer_init(
+                //     &wgpu::util::BufferInitDescriptor {
+                //         label: Some("Instance Buffer"),
+                //         contents: instance_data.as_bytes(),
+                //         usage: wgpu::BufferUsages::MAP_WRITE | wgpu::BufferUsages::COPY_SRC,
+                //     }
+                // ));
 
                 // request a redraw if we got new info
                 window.request_redraw();
@@ -723,10 +718,10 @@ pub fn start_window_render(
                             label: Some("Redraw"),
                         });
                     // if instance staging buffer has data then copy it into the instance buffer
-                    if let Some(stage) = &staging_instance_buffer {
-                        encoder.copy_buffer_to_buffer(stage, 0, &instance_buffer, 0, utils::math::round_up(stage.size(), wgpu::COPY_BUFFER_ALIGNMENT));
-                        staging_instance_buffer = None;
-                    }
+                    // if let Some(stage) = &staging_instance_buffer {
+                    //     encoder.copy_buffer_to_buffer(stage, 0, &instance_buffer, 0, utils::math::round_up(stage.size(), wgpu::COPY_BUFFER_ALIGNMENT));
+                    //     staging_instance_buffer = None;
+                    // }
 
                     //
                     // update camera uniform
