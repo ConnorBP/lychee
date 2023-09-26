@@ -65,12 +65,6 @@ fn vs_main(
         + camera_up_worldspace * vertex.y * instance.size.y;
     out.clip_position = camera.view_proj * vec4(vertex_pos_worldpace,1.0);
 
-    // let camera_right = normalize(vec3<f32>(camera.view_proj.x.x,camera.view_proj.y.x,camera.view_proj.z.x));
-    // let camera_up = vec3<f32>(0.0,1.0,0.0);
-    // let world_space = camera_right * vertex.x + camera_up * vertex.y;
-    // let position = camera.view_proj * instance.center_pos * vec4<f32>(world_space, 1.0);
-    // out.clip_position = position;
-
     out.tex_coords = QUAD_TEX_COORDS[in_vertex_index];
     out.vert_pos = out.clip_position.xyz;
     out.color = instance.color;
@@ -89,9 +83,8 @@ fn fs_main(
     let edgeSoftness   = 0.001;
 
     // radius from 0 to 1 (percentage)
-    let radius         = 0.3;
-    
-    let distance: f32       = rounded_box_sdf((1.0 + thickness) * (in.tex_coords - 0.5), size/2.0, radius);
+    let radius = 0.3;
+    let distance: f32 = rounded_box_sdf((1.0 + thickness) * (in.tex_coords - 0.5), size/2.0, radius);
     let smoothedAlpha  = 1.0 - smoothstep(-edgeSoftness, edgeSoftness, abs(distance) - thickness);
     if(smoothedAlpha < 0.01) {
         discard;
