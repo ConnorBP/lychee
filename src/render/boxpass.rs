@@ -208,6 +208,7 @@ impl BoxPass {
         &mut self,
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
+        queue: &wgpu::Queue,
     ) {
         // update camera uniform buffer
         let camera_staging_buffer = device.create_buffer_init(
@@ -221,23 +222,7 @@ impl BoxPass {
         
         // update instances buffer
         if !self.instances.is_empty() {
-            let staging_instance_buffer = device.create_buffer_init(
-                &wgpu::util::BufferInitDescriptor {
-                    label: Some("Instance Staging Buffer"),
-                    contents: self.instances.iter().map(BillboardInstance::to_raw).collect::<Vec<_>>().as_bytes(),
-                    usage: wgpu::BufferUsages::MAP_WRITE | wgpu::BufferUsages::COPY_SRC,
-                }
-            );
-            encoder.copy_buffer_to_buffer(
-                &staging_instance_buffer,
-                0,
-                &self.instance_buffer,
-                0,
-                crate::utils::math::round_up(
-                    staging_instance_buffer.size(),
-                    wgpu::COPY_BUFFER_ALIGNMENT
-                )
-            );
+            queue.write_buffer(&self.instance_buffer,0,self.instances.iter().map(BillboardInstance::to_raw).collect::<Vec<_>>().as_bytes());
         }
     }
 
@@ -245,6 +230,7 @@ impl BoxPass {
         &mut self,
         device: &wgpu::Device,
         encoder: &mut wgpu::CommandEncoder,
+        queue: &wgpu::Queue,
         color_attachment: &wgpu::TextureView,
         clear_color: Option<wgpu::Color>,
     ) {
@@ -256,7 +242,7 @@ impl BoxPass {
             // self.camera.eye = (f32::sin(time*0.2)*15.0,10.0,f32::sin(time*0.1-20.0)*15.0).into();
             self.camera_uniform.update_view_proj(&self.camera);
 
-            self.update_buffers(device, encoder);
+            self.update_buffers(device, encoder, queue);
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {

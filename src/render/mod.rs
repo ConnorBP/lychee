@@ -33,6 +33,7 @@ const MAX_INSTANCE_BUFFER_SIZE: u64 = (std::mem::size_of::<InstanceRaw>()*32) as
 #[derive(Default)]
 pub struct PlayerLoc {
     pub world_pos: tmp_vec3,
+    pub head_pos: tmp_vec3,
     pub rotation: tmp_vec2,
     pub team: i32,
     pub name: String,
@@ -532,7 +533,7 @@ pub fn start_window_render(
 
                     // local player
                     {
-                        let p = from_valve_coords(framedata.local_position.world_pos);
+                        let p = from_valve_coords(framedata.local_position.head_pos);
                         box_rpass.camera.eye = (p.x,p.y,p.z).into();
                         box_rpass.camera.pitch = Rad(framedata.local_position.rotation.x * PI /180.0);
                         box_rpass.camera.yaw = Rad(framedata.local_position.rotation.y * PI / 180.0);
@@ -558,13 +559,13 @@ pub fn start_window_render(
 
                         // esp box
                         {
-                            let mut pos = from_valve_coords(data.world_pos);
-                            pos.y+=30.0;
+                            let mut pos = from_valve_coords((data.world_pos + data.head_pos) / 2.0);
+
                             esp_boxes.push(BillboardInstance {
                                 position: pos,
-                                scale: cgmath::Vector2 { x: 30.0, y: 100.0},
+                                scale: cgmath::Vector2 { x: 40.0, y: (data.world_pos - data.head_pos).magnitude()},
                                 color: if data.team == framedata.local_position.team {
-                                    Vector4 { x: 1.0, y: 0.2, z: 0.6, w: 1.0}
+                                    Vector4 { x: 0.1, y: 0.6, z: 0.6, w: 1.0}
                                 } else {
                                     Vector4 { x: 1.0, y: 0.0, z: 0.0, w: 1.0}
                                 },
@@ -895,7 +896,7 @@ pub fn start_window_render(
 
                     // boxes pass
                     {
-                        box_rpass.execute(&device, &mut encoder, &view, None);
+                        box_rpass.execute(&device, &mut encoder, &queue, &view, None);
                     }
 
                     

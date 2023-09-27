@@ -257,7 +257,8 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         framedata.connected = true;
         framedata.velocity = game_data.entity_list.local_player.vec_velocity.magnitude();
         framedata.local_position = render::PlayerLoc{
-            world_pos: game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset,
+            world_pos: game_data.entity_list.local_player.vec_origin,
+            head_pos: game_data.entity_list.local_player.vec_origin + game_data.entity_list.local_player.vec_view_offset,
             rotation: game_data.view_angles.xy(),
             team: game_data.entity_list.local_player.team_num,
             name: "local".to_string(),
@@ -271,6 +272,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
             framedata.locations.push(render::PlayerLoc{
                 world_pos: ent.vec_origin,
+                head_pos: ent.head_pos,
                 rotation: Default::default(),
                 team: ent.team_num,
                 name: ent.name.clone(),

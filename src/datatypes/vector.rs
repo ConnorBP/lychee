@@ -209,6 +209,17 @@ impl Mul<f32> for tmp_vec3 {
     }
 }
 
+impl Div<f32> for tmp_vec3 {
+    type Output = Self;
+    fn div(self,rhs:f32) -> Self::Output {
+        Self{
+            x: self.x/rhs,
+            y: self.y/rhs,
+            z: self.z/rhs
+        }
+    }
+}
+
 impl DivAssign<f32> for tmp_vec3 {
 
     fn div_assign(&mut self, rhs: f32) {

@@ -29,7 +29,8 @@ struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>, //this is in frame buffer space (real window pixel coords such as 800x600)
     @location(0) vert_pos: vec3<f32>,
     @location(1) tex_coords: vec2<f32>,
-    @location(2) color: vec4<f32>,
+    @location(2) aspect: f32,
+    @location(3) color: vec4<f32>,
 };
 
 @vertex
@@ -67,6 +68,7 @@ fn vs_main(
 
     out.tex_coords = QUAD_TEX_COORDS[in_vertex_index];
     out.vert_pos = out.clip_position.xyz;
+    out.aspect = instance.size.x/instance.size.y;// this will crash if y is 0. Don't set to zero please.
     out.color = instance.color;
 
     return out;
@@ -77,14 +79,14 @@ fn fs_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
     let  size           = vec2<f32>(1.0, 1.0);
-    let thickness      = 0.1;
+    let thickness      = 0.02;
     let shadowSoftness = 0.1;
     let  shadowOffset   = vec2<f32>(0.1, -0.1);
     let edgeSoftness   = 0.001;
 
     // radius from 0 to 1 (percentage)
-    let radius = 0.3;
-    let distance: f32 = rounded_box_sdf((1.0 + thickness) * (in.tex_coords - 0.5), size/2.0, radius);
+    let radius = 0.1;
+    let distance: f32 = rounded_box_sdf((1.0 + thickness) * (in.tex_coords - 0.5) * vec2(in.aspect,1.0), size*vec2(in.aspect,1.0)/2.0, radius);
     let smoothedAlpha  = 1.0 - smoothstep(-edgeSoftness, edgeSoftness, abs(distance) - thickness);
     if(smoothedAlpha < 0.01) {
         discard;
