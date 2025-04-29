@@ -1,5 +1,5 @@
 # Advanced DMA CSGO Memory Trainer Software
-Lychee is a demonstration of advanced cheating techniques for DMA (direct memory access) cheating on counter strike global offensive.
+Lychee is a demonstration of advanced cheating techniques for DMA (direct memory access) cheating on counter strike global offensive. [documentation](https://deepwiki.com/connorbp/lychee)
 
 ## Features
 Features of lychee-csgo include:
